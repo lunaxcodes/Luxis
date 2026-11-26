@@ -3,6 +3,7 @@ using System.IO.Compression;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using System.Text.Json;
 using System.Windows.Forms;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
@@ -250,6 +251,33 @@ public sealed class Bridge
     public Task<string> checkModrinthUpdate(string sha512, string projectId)
         => _modrinth.CheckUpdate(sha512, projectId);
     public Task<string> getProjectIcon(string projectId) => _modrinth.GetProjectIcon(projectId);
+
+    public string bedrockStatus()
+    {
+        try
+        {
+            var psi = new ProcessStartInfo("powershell",
+                "-NoProfile -Command \"(Get-AppxPackage -Name Microsoft.MinecraftUWP | Select-Object -First 1 -ExpandProperty Version)\"")
+            { RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true };
+            using var proc = Process.Start(psi)!;
+            var version = proc.StandardOutput.ReadToEnd().Trim();
+            proc.WaitForExit(5000);
+            return Util.Json(new { installed = !string.IsNullOrEmpty(version), version });
+        }
+        catch { return Util.Json(new { installed = false, version = "" }); }
+    }
+
+    public string launchBedrock()
+    {
+        using var status = JsonDocument.Parse(bedrockStatus());
+        if (!status.RootElement.GetProperty("installed").GetBoolean())
+            throw new Exception("Minecraft Bedrock is not installed on this PC.");
+        // Windows UWP activation is brittle when invoked from another process. Opening the
+        // Minecraft Launcher (same Microsoft account) is the reliable way to reach Bedrock.
+        Process.Start(new ProcessStartInfo("explorer.exe", @"shell:AppsFolder\Microsoft.4297127D64EC6_8wekyb3d8bbwe!Minecraft")
+        { UseShellExecute = true });
+        return Util.Json(new { ok = true, edition = "bedrock", via = "Minecraft Launcher" });
+    }
 
     public Task<string> importMrpack(string path) => _mrpack.Import(path);
 
