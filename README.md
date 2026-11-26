@@ -6,7 +6,7 @@ A next-generation, multi-themed Minecraft: Java Edition launcher for Windows. Ob
 
 ## Download
 
-Grab the latest installer from the [Releases page](../../releases), or use `dist/Lunax-Setup-1.0.0.exe` in this repository for the initial release. The installer is unsigned, so Windows SmartScreen may warn on first run.
+Grab the latest installer from the [Releases page](https://github.com/FpsLover12/Lunax/releases), or use `dist/Lunax-Setup-1.0.0.exe` in this repository for the initial release. The installer is unsigned, so Windows SmartScreen may warn on first run.
 
 ## Features
 
