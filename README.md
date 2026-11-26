@@ -30,6 +30,11 @@ The window is frameless: drag the top bar to move it, and use `─ □ ×` in th
 - **Mod installation** — `Add Mods` opens a native file picker that copies selected `.jar` files into the profile's real `mods/` folder. Dropping files on the instance page also works where WebView2 exposes file paths; otherwise Lunax falls back to the picker.
 - **Launch feedback** — a full-screen animated launch overlay with progress ring, stage checklist and visible errors, in addition to the dock progress bar. Quick Play flags from modern version manifests are correctly filtered, so 26.x/Fabric instances no longer crash with "Only one quick play option can be specified". If the game exits early, the launcher shows the exit code and the last log lines.
 - **Native folder actions** — instance directory buttons open real Explorer windows.
+- **Java auto-detection & installer** — finds official Minecraft launcher runtimes plus common vendor JDKs, with a one-click Temurin download if none is found. Fixes Java 21 installs on other machines.
+- **Config backups** — every launch backs up `config/` and `options.txt`; each instance page has a Restore button.
+- **Updates tab** — a dedicated sidebar page checks GitHub releases on open and on startup, verifies SHA-256, and replaces the exe on restart.
+- **Skins & capes** — accurate 64×64 front/back character rendering (including slim arms), real cape artwork in the library, and equip buttons for capes your Microsoft account actually owns. Preset skins are no longer added automatically.
+- **Lunax Mod** — the in-game module section is a beta placeholder; no mod is bundled or installed.
 
 ## About the Microsoft sign-in page
 
@@ -74,7 +79,7 @@ Run `powershell -ExecutionPolicy Bypass -File .\build-release.ps1` to build a cl
 
 Bump `version.txt` before building a new release — the exe, installer filename/version and manifest all use that single number.
 
-Auto-updates are enabled by default: on startup Lunax checks the latest GitHub release's `version.json`, compares versions, and offers **Download & install** in Settings & Themes → Updates. It verifies SHA-256 and replaces the running exe on restart via a short batch script. You can point it at a different manifest URL in Settings if you self-host releases. New manifests include an explicit `url` for the exe; older ones fall back to `Lunax.exe` beside the manifest.
+Auto-updates are enabled by default: on startup Lunax checks the latest GitHub release's `version.json`, compares versions, and offers **Download & install** in the dedicated **Updates** tab. It verifies SHA-256 and replaces the running exe on restart via a short batch script. You can point it at a different manifest URL in Updates if you self-host releases. New manifests include an explicit `url` for the exe; older ones fall back to `Lunax.exe` beside the manifest.
 
 ## Rebuild
 

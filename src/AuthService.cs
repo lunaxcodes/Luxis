@@ -6,6 +6,14 @@ using System.Text.RegularExpressions;
 
 namespace Lunax;
 
+public sealed class CapeInfo
+{
+    public string id { get; set; } = "";
+    public string name { get; set; } = "";
+    public string url { get; set; } = "";
+    public bool active { get; set; }
+}
+
 public sealed class Account
 {
     public string id { get; set; } = "";
@@ -16,6 +24,7 @@ public sealed class Account
     public DateTime expiresAt { get; set; }
     public string skinUrl { get; set; } = "";
     public string capeUrl { get; set; } = "";
+    public List<CapeInfo> capes { get; set; } = new();
 }
 
 public sealed class McSession
@@ -83,7 +92,12 @@ public sealed class AuthService
                         id = item.Str("id"), username = item.Str("username"), uuid = item.Str("uuid"),
                         type = item.Str("type", "microsoft"), refreshEncrypted = item.Str("refreshEncrypted"),
                         expiresAt = DateTime.TryParse(item.Str("expiresAt"), out var d) ? d : DateTime.MinValue,
-                        skinUrl = item.Str("skinUrl"), capeUrl = item.Str("capeUrl")
+                        skinUrl = item.Str("skinUrl"), capeUrl = item.Str("capeUrl"),
+                        capes = item.Items("capes").Select(c => new CapeInfo
+                        {
+                            id = c.Str("id"), name = c.Str("name", "Cape"), url = c.Str("url"),
+                            active = c.Str("state") == "ACTIVE"
+                        }).ToList()
                     });
             }
         }
@@ -269,7 +283,7 @@ public sealed class AuthService
             id = "ms-" + Guid.NewGuid().ToString("N")[..10],
             username = result.username, uuid = result.uuid, type = "microsoft",
             refreshEncrypted = Encrypt(refresh), expiresAt = DateTime.UtcNow.AddSeconds(expiresIn),
-            skinUrl = result.skinUrl, capeUrl = result.capeUrl
+            skinUrl = result.skinUrl, capeUrl = result.capeUrl, capes = result.capes
         };
         _accounts.RemoveAll(a => a.uuid == result.uuid && a.type == "microsoft");
         _accounts.Add(account);
@@ -283,6 +297,7 @@ public sealed class AuthService
     private sealed class AuthResult
     {
         public string mcToken = "", uuid = "", username = "", skinUrl = "", capeUrl = "";
+        public List<CapeInfo> capes = new();
         public DateTime expires;
     }
 
@@ -427,7 +442,12 @@ public sealed class AuthService
             uuid = profile.Str("id"),
             username = profile.Str("name", "Player"),
             skinUrl = profile.Items("skins").FirstOrDefault().Str("url"),
-            capeUrl = profile.Items("capes").FirstOrDefault().Str("url"),
+            capes = profile.Items("capes").Select(c => new CapeInfo
+            {
+                id = c.Str("id"), name = c.Str("name", "Cape"), url = c.Str("url"),
+                active = c.Str("state") == "ACTIVE"
+            }).ToList(),
+            capeUrl = profile.Items("capes").FirstOrDefault(c => c.Str("state") == "ACTIVE").Str("url"),
             expires = DateTime.UtcNow.AddSeconds(Math.Max(expiresIn, mcDoc.RootElement.Int("expires_in", 3600)) - 60)
         };
     }
@@ -448,7 +468,7 @@ public sealed class AuthService
             var expiresIn = doc.RootElement.Int("expires_in", 3600);
             var newRefresh = doc.RootElement.Str("refresh_token", refresh);
             var result = await CompleteAuth(msToken, newRefresh, expiresIn);
-            a.username = result.username; a.uuid = result.uuid; a.skinUrl = result.skinUrl; a.capeUrl = result.capeUrl;
+            a.username = result.username; a.uuid = result.uuid; a.skinUrl = result.skinUrl; a.capeUrl = result.capeUrl; a.capes = result.capes;
             a.refreshEncrypted = Encrypt(newRefresh); a.expiresAt = DateTime.UtcNow.AddSeconds(expiresIn);
             _sessions[id] = new McSession { Username = result.username, Uuid = result.uuid, Token = result.mcToken, Expires = result.expires, Online = true };
             Save();
@@ -476,6 +496,51 @@ public sealed class AuthService
         var url = kind == "cape" ? a.capeUrl : a.skinUrl;
         if (string.IsNullOrEmpty(url)) throw new Exception("This account has no " + kind + " texture.");
         var bytes = await Util.Http.GetByteArrayAsync(url);
+        return "data:image/png;base64," + Convert.ToBase64String(bytes);
+    }
+
+    public string MojangCapes(string id)
+    {
+        var a = Find(id);
+        return Util.Json(a?.capes ?? new List<CapeInfo>());
+    }
+
+    public async Task<string> SetActiveCape(string id, string capeId)
+    {
+        var a = Find(id);
+        if (a == null || a.type != "microsoft") throw new Exception("Sign in with Microsoft to change your cape.");
+        var session = await GetSession(id);
+        var url = "https://api.minecraftservices.com/minecraft/profile/capes/active";
+        using var req = new HttpRequestMessage(
+            string.IsNullOrEmpty(capeId) || capeId == "none" ? HttpMethod.Delete : HttpMethod.Put, url);
+        req.Headers.Authorization = new("Bearer", session.Token);
+        if (req.Method == HttpMethod.Put)
+            req.Content = new StringContent(Util.Json(new { capeId }), Encoding.UTF8, "application/json");
+        using var res = await Util.Http.SendAsync(req);
+        var text = await res.Content.ReadAsStringAsync();
+        if (!res.IsSuccessStatusCode)
+            throw new Exception("Mojang rejected the cape change: " + Util.Truncate(text, 140));
+        using var doc = Util.ParseJson(text, "Mojang cape endpoint", true);
+        var capes = doc.RootElement.Items("capes").Select(c => new CapeInfo
+        {
+            id = c.Str("id"), name = c.Str("name", "Cape"), url = c.Str("url"),
+            active = c.Str("state") == "ACTIVE"
+        }).ToList();
+        if (capes.Count > 0)
+        {
+            a.capes = capes;
+            a.capeUrl = capes.FirstOrDefault(c => c.active)?.url ?? "";
+        }
+        Save();
+        return Util.Json(new { ok = true, capes = a.capes });
+    }
+
+    public async Task<string> GetCapeTexture(string id, string capeId)
+    {
+        var a = Find(id);
+        var cape = a?.capes?.FirstOrDefault(c => c.id == capeId);
+        if (cape == null || string.IsNullOrEmpty(cape.url)) throw new Exception("Cape texture not found.");
+        var bytes = await Util.Http.GetByteArrayAsync(cape.url);
         return "data:image/png;base64," + Convert.ToBase64String(bytes);
     }
 
@@ -531,7 +596,7 @@ public sealed class AuthService
             id = "ms-" + Guid.NewGuid().ToString("N")[..10],
             username = result.username, uuid = result.uuid, type = "microsoft",
             refreshEncrypted = Encrypt(refresh), expiresAt = DateTime.UtcNow.AddSeconds(expiresIn),
-            skinUrl = result.skinUrl, capeUrl = result.capeUrl
+            skinUrl = result.skinUrl, capeUrl = result.capeUrl, capes = result.capes
         };
         _accounts.RemoveAll(a => a.uuid == result.uuid && a.type == "microsoft");
         _accounts.Add(account);

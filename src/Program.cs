@@ -150,6 +150,10 @@ public sealed class Bridge
     public string setActiveNativeAccount(string id) { _auth.SetActive(id); return "{\"ok\":true}"; }
     public string removeNativeAccount(string id) { _auth.Remove(id); return "{\"ok\":true}"; }
     public string getMsClientId() => _auth.ClientId;
+    public string mojangCapes(string id) => _auth.MojangCapes(id);
+    public Task<string> setMojangCape(string id, string capeId) => _auth.SetActiveCape(id, capeId);
+    public Task<string> getCapeTexture(string id, string capeId) => _auth.GetCapeTexture(id, capeId);
+
     public string javaStatus()
     {
         var majors = new[] { 8, 17, 21, 25 };

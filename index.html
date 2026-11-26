@@ -272,6 +272,7 @@ button:disabled{cursor:not-allowed;opacity:.45}
 .cape-card.active{border-color:var(--accent);background:rgba(var(--accent-rgb),.1)}
 .cape-swatch{height:66px;border-radius:7px;position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.08)}
 .cape-swatch::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,rgba(255,255,255,.16),transparent 40%)}
+.cape-card canvas{width:100%;height:66px;display:block;image-rendering:pixelated;border-radius:7px;border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.25)}
 .cape-card span{display:block;font-size:9.5px;margin-top:5px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* ---------- settings ---------- */
@@ -526,6 +527,7 @@ button:disabled{cursor:not-allowed;opacity:.45}
       <button class="nav-item" data-view="packs" data-tip="Installed resource &amp; shader packs"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M4 10h16M10 5v14"/></svg><span>Resource &amp; Shaders</span></button>
       <button class="nav-item" data-view="wardrobe" data-tip="Skins &amp; capes wardrobe"><svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg><span>Skins &amp; Capes</span></button>
       <button class="nav-item" data-view="lunaxmod" data-tip="Lunax in-game mod - optional install"><svg viewBox="0 0 24 24"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M3 7l9 5 9-5M12 12v10"/></svg><span>Lunax Mod</span></button>
+      <button class="nav-item" data-view="updates" data-tip="Updates - check and install new releases"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.6M20 4v7h-7"/></svg><span>Updates</span></button>
       <button class="nav-item" data-view="settings" data-tip="Settings, themes &amp; accounts"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1-2 2-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21h-3v-.1A1.6 1.6 0 0 0 11 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1-2-2 .1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H6v-3h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1 2-2 .1.1a1.6 1.6 0 0 0 1.8.3H11a1.6 1.6 0 0 0 1-1.5V6h3v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1 2 2-.1.1a1.6 1.6 0 0 0-.3 1.8V11h.1a1.6 1.6 0 0 0 1.5 1H21v3h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg><span>Settings &amp; Themes</span></button>
     </nav>
     <div class="sidebar-spacer"></div>
@@ -555,6 +557,7 @@ button:disabled{cursor:not-allowed;opacity:.45}
       <section class="view" data-view="wardrobe" id="view-wardrobe"></section>
       <section class="view" data-view="capes" id="view-capes"></section>
       <section class="view" data-view="lunaxmod" id="view-lunaxmod"></section>
+      <section class="view" data-view="updates" id="view-updates"></section>
       <section class="view" data-view="settings" id="view-settings"></section>
       <section class="view" data-view="instance" id="view-instance"></section>
     </div>
@@ -691,12 +694,12 @@ function makeSkin(p,slim=false){
   [[8,8,8,8,skin],[24,8,8,8,skin],[0,8,8,8,skin],[16,8,8,8,skin],
    [20,20,8,12,shirt],[32,20,8,12,shirt],[16,20,4,12,shirt],[28,20,4,12,shirt],
    [44,20,4,12,shirt],[52,20,4,12,shirt],[40,20,4,12,skin],[56,20,4,12,skin],
-   [36,20,4,12,shirt],[4,20,4,12,pants],[12,20,4,12,pants],[0,20,4,12,pants],[16,20,4,12,pants],
+   [36,52,4,12,shirt],[4,20,4,12,pants],[12,20,4,12,pants],[0,20,4,12,pants],[16,20,4,12,pants],
    [20,52,4,12,pants],[28,52,4,12,pants],[4,16,4,4,pants],[12,16,4,4,pants],[20,48,4,4,pants],[28,48,4,4,pants],
    [8,0,8,8,hair],[16,0,8,8,hair],[0,0,8,8,hair],[24,0,8,8,hair],
    [40,0,8,8,hair],[48,0,8,8,hair],[32,0,8,8,hair],[56,0,8,8,hair],
    [40,8,8,8,hair],[56,8,8,8,hair],[32,8,8,8,hair],[48,8,8,8,hair],
-   [20,32,8,12,shirt],[32,36,8,12,shirt],[44,36,4,12,shirt],[52,36,4,12,shirt],
+   [20,32,8,12,shirt],[32,36,8,12,shirt],[44,36,4,12,shirt],[52,36,4,12,shirt],[52,52,4,12,shirt],[60,52,4,12,shirt],
    [4,52,4,12,shoe],[12,52,4,12,shoe],[20,52,4,12,shoe],[28,52,4,12,shoe]
   ].forEach(v=>f(...v));
   f(9,12,1,1,eye);f(12,12,1,1,eye);
@@ -807,8 +810,7 @@ const PRESET_SKINS=[
 /* ---------- persistent state ---------- */
 const KEY='lunacher.state.v1';
 function defaultState(){
-  const a1={id:'acc1',username:'Player',type:'offline',uuid:'offline-player',skins:PRESET_SKINS.slice(0,1).map(s=>({...s,id:uid('s')})),activeSkin:'',cape:'none',model:'classic',token:'n/a'};
-  a1.activeSkin=a1.skins[0].id;
+  const a1={id:'acc1',username:'Player',type:'offline',uuid:'offline-player',skins:[],activeSkin:'',cape:'none',model:'classic',token:'n/a'};
   return {
     v:1,
     theme:{preset:'orchid',custom:false,accent:'#c864ff',accent2:'#7b5cff',wallpaper:'aurora',blur:24,dim:.42,glass:.58,radius:18,speed:1,reduce:false,navIcon:52,navIconSize:28,particles:42,particleStyle:'aurora',glow:1,tooltips:true},
@@ -864,15 +866,17 @@ function startParticles(){
   const cv=$('#particles');if(!cv)return;
   const n=state.theme.particles,mode=state.theme.particleStyle||'aurora';
   if(mode==='plain'||!n||state.theme.reduce){cv.width=cv.height=0;if(particleRAF)cancelAnimationFrame(particleRAF);particleRAF=null;return}
-  const dpr=Math.min(devicePixelRatio||1,2),w=innerWidth,h=innerHeight;
+  const dpr=Math.min(devicePixelRatio||1,1),w=innerWidth,h=innerHeight;
   cv.width=w*dpr;cv.height=h*dpr;
   const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
   const rgb=getComputedStyle(document.documentElement).getPropertyValue('--accent-rgb').trim()||'200,100,255';
   const glow=state.theme.glow, A=a=>Math.max(0,Math.min(1,a*glow)), col=(a,c)=>`rgba(${c||rgb},${A(a)})`;
   const pts=Array.from({length:n},()=>({x:Math.random()*w,y:Math.random()*h,r:Math.random()*1.7+.5,sp:Math.random()*.22+.05,ph:Math.random()*6.28}));
   const cols=Array.from({length:Math.max(8,Math.floor(w/18))},()=>({y:Math.random()*h,sp:.6+Math.random()*1.6,chars:Array.from({length:18},()=>String.fromCharCode(0x30A0+Math.floor(Math.random()*90)))}));
-  let tick=0;
+  let tick=0,lastFrame=0;
   const draw=ts=>{
+    if(document.hidden||ts-lastFrame<33){particleRAF=requestAnimationFrame(draw);return}
+    lastFrame=ts;
     tick++;ctx.clearRect(0,0,w,h);
     if(mode==='aurora'||mode==='particles'){
       for(const p of pts){
@@ -991,7 +995,7 @@ async function refreshBedrock(){
   try{const r=JSON.parse(native().bedrockStatus());BEDROCK.checked=true;BEDROCK.installed=!!r.installed;BEDROCK.version=r.version||''}
   catch(e){BEDROCK.checked=true}
 }
-const VIEW_LABEL={home:'Home',profiles:'Profiles',modrinth:'Modrinth Hub',packs:'Resource & Shader Packs',wardrobe:'Skins & Capes',settings:'Settings & Themes',instance:'Instance',capes:'Cape Library',lunaxmod:'Lunax Mod'};
+const VIEW_LABEL={home:'Home',profiles:'Profiles',modrinth:'Modrinth Hub',packs:'Resource & Shader Packs',wardrobe:'Skins & Capes',settings:'Settings & Themes',instance:'Instance',capes:'Cape Library',lunaxmod:'Lunax Mod',updates:'Updates'};
 function navigate(v){
   if(!VIEW_LABEL[v]||v===UI.view)return;
   const old=$('.view.active');if(old){old.classList.add('leaving');old.classList.remove('active')}
@@ -1006,6 +1010,8 @@ function navigate(v){
   if(v==='modrinth'||v==='packs')$('#globalSearch').value=state.ui.mrSearch||'';
   renderView(v);
   if(v==='modrinth')loadModrinth(true);
+  if(v==='updates')ACTIONS.checkForUpdate();
+  if(v==='capes'||v==='wardrobe')refreshMojangCapes().then(()=>{if(UI.view===v){renderView(v)}});
 }
 
 /* ---------- renderers ---------- */
@@ -1232,24 +1238,86 @@ function renderPacks(){
 }
 const LAYERS=[['hat','Hat'],['jacket','Jacket'],['rightSleeve','R. Sleeve'],['leftSleeve','L. Sleeve'],['rightPants','R. Pants'],['leftPants','L. Pants']];
 const R={yaw:0,walk:false,auto:true,drag:false,lastX:0,t:0,lastFrame:0};
-function drawSkinCard(cv,src){
+// Correct 64x64 Minecraft UV layout, used by both cards and the large preview.
+function paintCharacter(ctx,im,w,h,opt){
+  const slim=!!opt.slim,back=!!opt.back,layers=opt.layers||{},walk=opt.walk||0,cape=opt.cape;
+  const px=Math.min((h-8)/40,(w-8)/24),ox=(w-24*px)/2,oy=(h-34*px)/2+3;
+  const on=k=>layers[k]!==false;
+  const part=(u,dx,dy,dw,dh)=>ctx.drawImage(im,u[0],u[1],u[2],u[3],ox+dx*px,oy+(dy+walk)*px,dw*px,dh*px);
+  const aw=slim?3:4;
+  // Correct 64x64 UVs, derived from Minecraft's box unwrap (u,v,width,height,depth).
+  const U=slim?{
+    headF:[8,8,8,8],hatF:[40,8,8,8],headB:[24,8,8,8],hatB:[56,8,8,8],
+    bodyF:[20,20,8,12],jacketF:[20,36,8,12],bodyB:[32,20,8,12],jacketB:[32,36,8,12],
+    armRF:[44,20,3,12],armLF:[36,52,3,12],sleeveRF:[44,36,3,12],sleeveLF:[52,52,3,12],
+    armRB:[51,20,3,12],armLB:[43,52,3,12],sleeveRB:[51,36,3,12],sleeveLB:[59,52,3,12],
+    legRF:[4,20,4,12],legLF:[20,52,4,12],pantsRF:[4,36,4,12],pantsLF:[4,52,4,12],
+    legRB:[12,20,4,12],legLB:[28,52,4,12],pantsRB:[12,36,4,12],pantsLB:[12,52,4,12]
+  }:{
+    headF:[8,8,8,8],hatF:[40,8,8,8],headB:[24,8,8,8],hatB:[56,8,8,8],
+    bodyF:[20,20,8,12],jacketF:[20,36,8,12],bodyB:[32,20,8,12],jacketB:[32,36,8,12],
+    armRF:[44,20,4,12],armLF:[36,52,4,12],sleeveRF:[44,36,4,12],sleeveLF:[52,52,4,12],
+    armRB:[52,20,4,12],armLB:[44,52,4,12],sleeveRB:[52,36,4,12],sleeveLB:[60,52,4,12],
+    legRF:[4,20,4,12],legLF:[20,52,4,12],pantsRF:[4,36,4,12],pantsLF:[4,52,4,12],
+    legRB:[12,20,4,12],legLB:[28,52,4,12],pantsRB:[12,36,4,12],pantsLB:[12,52,4,12]
+  };
+  // Cape hangs behind the player and is only visible from the back.
+  if(cape&&back)ctx.drawImage(cape,ox+3*px,oy+8*px+walk,18*px,27*px);
+  if(back){
+    // From behind, left and right swap places on screen.
+    part(U.legLB,8,20,4,12);part(U.legRB,12,20,4,12);
+    if(on('leftPants'))part(U.pantsLB,8,20,4,12);if(on('rightPants'))part(U.pantsRB,12,20,4,12);
+    part(U.armLB,4,8,aw,12);part(U.armRB,16,8,aw,12);
+    if(on('leftSleeve'))part(U.sleeveLB,4,8,aw,12);if(on('rightSleeve'))part(U.sleeveRB,16,8,aw,12);
+    part(U.bodyB,8,8,8,12);if(on('jacket'))part(U.jacketB,8,8,8,12);
+    part(U.headB,8,0,8,8);if(on('hat'))part(U.hatB,8,0,8,8);
+  }else{
+    part(U.legRF,8,20,4,12);part(U.legLF,12,20,4,12);
+    if(on('rightPants'))part(U.pantsRF,8,20,4,12);if(on('leftPants'))part(U.pantsLF,12,20,4,12);
+    part(U.armRF,4,8,aw,12);part(U.armLF,16,8,aw,12);
+    if(on('rightSleeve'))part(U.sleeveRF,4,8,aw,12);if(on('leftSleeve'))part(U.sleeveLF,16,8,aw,12);
+    part(U.bodyF,8,8,8,12);if(on('jacket'))part(U.jacketF,8,8,8,12);
+    part(U.headF,8,0,8,8);if(on('hat'))part(U.hatF,8,0,8,8);
+  }
+}
+function drawSkinCard(cv,src,slim){
   if(!cv)return;
   const dpr=Math.min(devicePixelRatio||1,2),w=cv.clientWidth||160,h=cv.clientHeight||205;
   if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr)}
   const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
-  getImg(src,im=>{
-    if(!im)return;
-    ctx.imageSmoothingEnabled=false;
-    const px=Math.min((h-16)/34,(w-16)/24),ox=(w-24*px)/2,oy=(h-34*px)/2+2;
-    const part=(sx,sy,sw,sh,dx,dy,dw,dh)=>ctx.drawImage(im,sx,sy,sw,sh,ox+dx*px,oy+dy*px,dw*px,dh*px);
-    part(8,8,8,8,8,0,8,8);part(40,8,8,8,8,0,8,8);
-    part(20,20,8,12,8,8,8,12);part(20,36,8,12,8,8,8,12);
-    part(44,20,4,12,4,8,4,12);part(36,20,4,12,16,8,4,12);
-    part(4,20,4,12,8,20,4,12);part(20,52,4,12,12,20,4,12);
-  });
+  getImg(src,im=>{if(im){ctx.imageSmoothingEnabled=false;paintCharacter(ctx,im,w,h,{slim,layers:{}})}});
 }
-let CAPE_TAB='all',CAPE_SEARCH='';
+function equippedCapeImage(a,cb){
+  const id=a.cape||'none';
+  if(id==='none')return cb(null);
+  if(id.startsWith('community-')){
+    const c=(state.communityCapes||[]).find(x=>x.id===id);
+    if(c?.src)return getImg(c.src,im=>cb(im||null));
+    return cb(CAPE_DATA[id]||null);
+  }
+  if(id.startsWith('mojang:')){
+    const cid=id.slice(7);
+    if(CAPE_DATA[id])return cb(CAPE_DATA[id]);
+    if(native()?.getCapeTexture)native().getCapeTexture(a.id,cid).then(u=>{CAPE_DATA[id]=u;cb(u)}).catch(()=>cb(null));
+    else cb(null);
+    return;
+  }
+  cb(CAPE_IMG[id]||null);
+}
+let CAPE_TAB='all',CAPE_SEARCH='',MOJANG_CAPES=[];
+async function refreshMojangCapes(){
+  const a=activeAccount();
+  if(!native()?.mojangCapes||a.type!=='microsoft'){MOJANG_CAPES=[];return}
+  try{MOJANG_CAPES=JSON.parse(native().mojangCapes(a.id))||[]}catch(e){MOJANG_CAPES=[]}
+}
 function allCapes(){return CAPES.concat(state.communityCapes||[])}
+function paintCapeThumb(cv,c){
+  if(!cv||!c)return;
+  cv.width=96;cv.height=144;
+  const x=cv.getContext('2d');
+  if(c.src){getImg(c.src,im=>{if(im&&cv.isConnected)x.drawImage(im,0,0,96,144)})}
+  else{const im=CAPE_IMG[c.id];if(im)x.drawImage(im,0,0,96,144)}
+}
 function capeSrc(c){return c.src||CAPE_IMG[c.id]||CAPE_IMG.none}
 function isCapeFav(c){return !!(state.capeFavs||{})[c.id]}
 function renderCapes(){
@@ -1262,18 +1330,17 @@ function renderCapes(){
   $('#view-capes').innerHTML=`
    <div class="view-head"><div><div class="view-title">Cape <em>Library</em></div><div class="view-desc">Community capes, favourites and official designs. Upload your own 96×144 PNG.</div></div>
    <div class="view-actions"><button class="btn" data-act="capeTemplate">Template</button><button class="btn primary" data-act="uploadCape">＋ Upload</button></div></div>
+   <div class="card set-card" style="margin-bottom:16px"><h3>Your Mojang capes</h3><div class="sub">Capes owned by ${esc(activeAccount().username)}. Equipping one here changes it in Minecraft after a relog.</div>
+     ${MOJANG_CAPES.length?`<div class="skin-grid">${MOJANG_CAPES.map(c=>`<div class="card skin-card" style="padding:8px"><canvas data-mojang-cape="${esc(c.url)}" width="48" height="72"></canvas><div class="sk-name">${esc(c.name||'Cape')}</div><button class="btn sm ${c.active?'':'primary'}" style="margin-top:6px;width:100%" data-act="setMojangCape" data-id="${esc(c.id)}">${c.active?'Active':'Equip in game'}</button></div>`).join('')}</div>`:'<div class="tiny muted">No capes owned by this Microsoft account. Official capes must be claimed in Minecraft/Bedrock first.</div>'}
+     <div class="tiny muted" style="margin-top:10px">Community capes below are <b>preview-only</b> — Minecraft only accepts capes attached to your account.</div></div>
    <div class="cape-tabs">${[['all','all'],['mine','my capes'],['favorites','favorites'],['vanilla','vanilla']].map(([k,l])=>`<button class="${CAPE_TAB===k?'on':''}" data-act="capeTab" data-v="${k}">${l}</button>`).join('')}</div>
    <div class="cape-toolbar"><input id="capeSearch" placeholder="Search by player name..." value="${esc(CAPE_SEARCH)}"><span class="chip">♥ ${Object.keys(state.capeFavs||{}).length}</span><span class="chip">▤ ${list.length}</span><button class="btn sm ghost" data-act="goWardrobe">Back to wardrobe</button></div>
    <div class="cape-lib">${list.map(c=>`<div class="cape-tile ${me.cape===c.id?'active':''}" data-act="equipCape" data-id="${esc(c.id)}">
       <button class="heart ${isCapeFav(c)?'':'off'}" data-act="favCape" data-id="${esc(c.id)}" title="Favorite">${isCapeFav(c)?'♥':'♡'}</button>
       <canvas data-cape-src="${esc(c.id)}"></canvas><div class="nm">${esc(c.name)}</div>
       <div class="meta">${c.official?'★ ':''}${esc(c.author||'Lunax')} · ${fmt(c.uses||0)} uses</div></div>`).join('')||'<div class="empty">No capes found in this category.</div>'}</div>`;
-  $$('[data-cape-src]').forEach(cv=>{
-    const c=allCapes().find(x=>x.id===cv.dataset.capeSrc);if(!c)return;
-    const src=capeSrc(c);
-    const paint=im=>{if(!im)return;const x=cv.getContext('2d');cv.width=96;cv.height=144;x.drawImage(im,0,0,96,144)};
-    if(typeof src==='string')getImg(src,paint);else paint(src);
-  });
+  $$('[data-mojang-cape]').forEach(cv=>getImg(cv.dataset.mojangCape,im=>{if(im&&cv.isConnected){const x=cv.getContext('2d');x.clearRect(0,0,48,72);x.drawImage(im,0,0,48,72)}}));
+  $$('[data-cape-src]').forEach(cv=>paintCapeThumb(cv,allCapes().find(x=>x.id===cv.dataset.capeSrc)));
 }
 function uploadCape(file){
   if(!file)return;
@@ -1300,7 +1367,8 @@ function renderWardrobe(){
    <div class="wardrobe-layout">
      <div class="skin-lib">
        <div class="skin-add" data-act="pickSkin"><div class="plus">＋</div><b>Add New Skin</b><small>Upload or import a skin</small></div>
-       ${list.map(s=>`<div class="card skin-big ${s.id===a.activeSkin?'active':''}" data-act="equipSkin" data-id="${s.id}">
+       ${!list.length?'<div class="empty" style="grid-column:1/-1">No skins saved. Upload or import one to get started.</div>':''}
+        ${list.map(s=>`<div class="card skin-big ${s.id===a.activeSkin?'active':''}" data-act="equipSkin" data-id="${s.id}">
           ${s.id===a.activeSkin?'<span class="badge">EQUIPPED</span>':''}${s.fav?'<span style="position:absolute;top:9px;left:9px;color:var(--warn);font-size:13px">★</span>':''}
           <div class="tools"><button data-act="favSkin" data-id="${s.id}" title="Favorite">★</button><button data-act="renameSkin" data-id="${s.id}" title="Rename">✎</button><button data-act="dupSkin" data-id="${s.id}" title="Duplicate">⧉</button><button data-act="delSkin" data-id="${s.id}" title="Delete">✕</button></div>
           <canvas data-skin-card="${esc(s.src)}"></canvas><div class="nm">${esc(s.name)}</div><div class="sub">${s.slim?'Slim / Alex':'Classic'} · 64×64</div></div>`).join('')}
@@ -1309,13 +1377,14 @@ function renderWardrobe(){
        <div class="eyebrow" style="margin-bottom:8px">Current look</div>
        <div class="preview-stage"><canvas id="skinCanvas"></canvas><div class="view-toggle"><button data-act="viewAngle" data-v="front" class="${WARDROBE.view!=='back'?'on':''}">Front</button><button data-act="viewAngle" data-v="back" class="${WARDROBE.view==='back'?'on':''}">Back</button></div></div>
        <div class="preview-controls" style="margin-top:10px"><button class="btn sm ${WARDROBE.walk?'primary':''}" data-act="toggleWalk">${WARDROBE.walk?'Stop walk':'Walk'}</button><button class="btn sm" data-act="toggleAuto">Flip view</button></div>
-       <div class="eyebrow" style="margin:16px 0 7px">Capes <button class="btn sm ghost" style="float:right" data-act="goCapes">Browse</button></div><div class="cape-grid">${CAPES.map(c=>`<div class="card cape-card ${a.cape===c.id?'active':''}" data-act="equipCape" data-id="${c.id}"><div class="cape-swatch" style="background:linear-gradient(150deg,${c.c1},${c.c2})"></div><span>${esc(c.name)}</span></div>`).join('')}</div>
+       <div class="eyebrow" style="margin:16px 0 7px">Capes <button class="btn sm ghost" style="float:right" data-act="goCapes">Browse</button></div><div class="cape-grid">${allCapes().map(c=>`<div class="card cape-card ${a.cape===c.id?'active':''}" data-act="equipCape" data-id="${esc(c.id)}"><canvas data-cape-thumb="${esc(c.id)}"></canvas><span>${esc(c.name)}</span></div>`).join('')}</div>
        <div class="eyebrow" style="margin:16px 0 7px">Model</div><div class="seg" style="width:100%"><button class="${a.model==='classic'?'on':''}" data-act="setModel" data-v="classic">Classic</button><button class="${a.model==='slim'?'on':''}" data-act="setModel" data-v="slim">Slim</button></div>
        ${a.type==='microsoft'&&a.skinUrl?`<button class="btn block" style="margin-top:12px" data-act="fetchMojangSkin">Import my Mojang skin</button>`:''}
        <button class="btn block" style="margin-top:8px" data-act="importUsername">Import by username / URL</button>
      </div>
    </div>`;
-  $$('[data-skin-card]').forEach(cv=>drawSkinCard(cv,cv.dataset.skinCard));
+  $$('[data-skin-card]').forEach(cv=>{const sk=(a.skins||[]).find(x=>x.src===cv.dataset.skinCard);drawSkinCard(cv,cv.dataset.skinCard,!!sk?.slim)});
+  $$('[data-cape-thumb]').forEach(cv=>paintCapeThumb(cv,allCapes().find(x=>x.id===cv.dataset.capeThumb)));
   refreshHeads();drawFlatPreview();
 }
 const WARDROBE={view:'front',walk:false,tick:0};
@@ -1325,41 +1394,21 @@ function drawFlatPreview(){
   if(!w||!h)return;
   if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr)}
   const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
-  const a=activeAccount(),skin=skinOf(a),back=WARDROBE.view==='back';
-  getImg(skin?.src,im=>{
-    if(!im)return;
-    const px=Math.min((h-30)/40,(w-30)/28),ox=(w-24*px)/2,oy=(h-34*px)/2;
-    ctx.imageSmoothingEnabled=false;
-    const L=a.layers||{};const on=k=>L[k]!==false;
-    const walk=WARDROBE.walk?Math.round(Math.sin(WARDROBE.tick*.09)*2):0;
-    if(a.cape!=='none'){
-      const cape=CAPE_DATA[a.cape]||CAPE_IMG[a.cape];
-      const paint=cim=>{if(cim)ctx.drawImage(cim,ox+3*px,oy+8*px+walk,18*px,28*px)};
-      if(typeof cape==='string')getImg(cape,paint);else paint(cape);
-    }
-    const part=(sx,sy,sw,sh,dx,dy,dw,dh)=>ctx.drawImage(im,sx,sy,sw,sh,ox+dx*px,oy+(dy+walk)*px,dw*px,dh*px);
-    if(back){
-      part(32,8,8,8,8,0,8,8);if(on('hat'))part(56,8,8,8,8,0,8,8);
-      part(32,20,8,12,8,8,8,12);if(on('jacket'))part(32,36,8,12,8,8,8,12);
-      part(52,20,4,12,4,8,4,12);part(44,20,4,12,16,8,4,12);
-      if(on('leftSleeve'))part(44,52,4,12,4,8,4,12);if(on('rightSleeve'))part(52,36,4,12,16,8,4,12);
-      part(12,20,4,12,8,20,4,12);part(28,52,4,12,12,20,4,12);
-      if(on('leftPants'))part(12,52,4,12,8,20,4,12);if(on('rightPants'))part(28,36,4,12,12,20,4,12);
-    }else{
-      part(8,8,8,8,8,0,8,8);if(on('hat'))part(40,8,8,8,8,0,8,8);
-      part(20,20,8,12,8,8,8,12);if(on('jacket'))part(20,36,8,12,8,8,8,12);
-      part(44,20,4,12,4,8,4,12);part(36,20,4,12,16,8,4,12);
-      if(on('rightSleeve'))part(44,36,4,12,4,8,4,12);if(on('leftSleeve'))part(36,52,4,12,16,8,4,12);
-      part(4,20,4,12,8,20,4,12);part(20,52,4,12,12,20,4,12);
-      if(on('rightPants'))part(4,52,4,12,8,20,4,12);if(on('leftPants'))part(20,36,4,12,12,20,4,12);
-    }
+  const a=activeAccount(),skin=skinOf(a);
+  equippedCapeImage(a,cape=>{
+    getImg(skin?.src,im=>{
+      if(!im)return;
+      ctx.imageSmoothingEnabled=false;
+      paintCharacter(ctx,im,w,h,{slim:a.model==='slim'||!!skin?.slim,back:WARDROBE.view==='back',
+        layers:a.layers||{},walk:WARDROBE.walk?Math.round(Math.sin(WARDROBE.tick*.09)*2):0,cape});
+    });
   });
 }
 function animateWardrobe(){
   if(UI.view!=='wardrobe'||!WARDROBE.walk||!$('#skinCanvas'))return;
   WARDROBE.tick++;drawFlatPreview();requestAnimationFrame(animateWardrobe);
 }
-const CAPE_DATA={};
+let CAPE_DATA={};
 function viewedProfile(){return (UI.view==='instance'&&UI.instanceId)?(state.profiles.find(x=>x.id===UI.instanceId)||activeProfile()):activeProfile()}
 function openInstance(id){UI.instanceId=id;UI.instFilter='mods';UI.instSearch='';closeOverlay();navigate('instance');renderInstance()}
 let PROFILE_TAB='general',PS_DRAFT=null;
@@ -1459,6 +1508,16 @@ function renderLunaxMod(){
      <span class="chip warn" style="margin-top:16px">BETA · UNAVAILABLE</span>
    </div>`;
 }
+function renderUpdates(){
+  $('#view-updates').innerHTML=`
+  <div class="view-head"><div><div class="view-title">Software <em>Updates</em></div><div class="view-desc">Keep Lunax up to date with the latest GitHub release.</div></div></div>
+  <div class="card set-card" style="max-width:760px"><h3>Lunax updater</h3>
+    <div class="sub">Lunax checks the newest release on startup. Downloads are verified with SHA-256, then the executable is replaced on restart.</div>
+    <div class="form-field" style="max-width:620px"><label>Update manifest URL</label><input id="updateUrl" value="${esc(updateUrlPreview())}" placeholder="https://github.com/.../version.json"><div class="tiny muted" style="margin-top:4px">Leave blank to disable update checks.</div><button class="btn sm" style="margin-top:7px" data-act="saveUpdateUrl">Save URL</button></div>
+    <div class="view-actions" style="margin-top:12px"><button class="btn primary" data-act="checkForUpdate">Check for updates</button></div>
+    <div data-update-result class="tiny muted" style="margin-top:14px;line-height:1.8"></div>
+  </div>`;
+}
 function renderSettings(){
   const t=state.theme;
   $('#view-settings').innerHTML=`
@@ -1486,11 +1545,6 @@ function renderSettings(){
       <div class="field"><div><label>Glow intensity <span class="mono">${t.glow.toFixed(1)}x</span></label></div><input type="range" min="0" max="2" step="0.1" value="${t.glow}" data-act="themeRange2" data-k="glow"></div>
       <div class="field"><div><label>Hover tooltips</label><div class="hint">Show sidebar labels on hover</div></div><button class="switch ${t.tooltips?'on':''}" data-act="toggleTooltips"></button></div>
    </div>
-      <div class="card set-card" style="grid-column:1/-1"><h3>Updates</h3><div class="sub">Point Lunax at a version.json manifest to receive new releases. The same version is compiled into the public installer by build-release.ps1.</div>
-     <div class="form-field" style="max-width:620px"><label>Update manifest URL</label><input id="updateUrl" value="${esc(updateUrlPreview())}" placeholder="https://your-site.com/lunax/version.json"><div class="tiny muted" style="margin-top:4px">Leave blank to disable update checks.</div><button class="btn sm" style="margin-top:7px" data-act="saveUpdateUrl">Save URL</button></div>
-     <div class="view-actions" style="margin-top:12px"><button class="btn" data-act="checkForUpdate">Check for updates</button></div>
-     <div id="updateResult" class="tiny muted" style="margin-top:10px"></div>
-   </div>
 <div class="card set-card" style="grid-column:1/-1"><h3>Accounts &amp; session security</h3><div class="sub">Real Microsoft device-code login. Tokens are DPAPI-encrypted under %LOCALAPPDATA%\Lunax and never sent to the webview. Previously: tokens stored in the OS keychain — never in browser storage.</div>
      ${state.accounts.map(a=>`<div class="sec-card"><img class="player-head" data-head-skin="${esc(skinOf(a)?.src||'')}" alt=""><div class="acct-meta"><b style="font-size:12.5px">${esc(a.username)}</b><div class="tiny muted">${a.type==='microsoft'?'Microsoft · token '+a.token:'Offline account'} · <span class="mono">${esc(a.uuid.slice(0,8))}…</span></div></div>
        <button class="btn sm" data-act="copyUuid" data-id="${a.id}">Copy UUID</button><button class="btn sm" data-act="refreshToken" data-id="${a.id}">Refresh</button><button class="btn sm danger" data-act="removeAccount" data-id="${a.id}">Remove</button></div>`).join('')}
@@ -1508,6 +1562,7 @@ function renderView(v){
   else if(v==='packs')renderPacks();
   else if(v==='wardrobe')renderWardrobe();
   else if(v==='settings')renderSettings();
+  else if(v==='updates')renderUpdates();
   else if(v==='instance')renderInstance();
   else if(v==='capes')renderCapes();
   else if(v==='lunaxmod')renderLunaxMod();
@@ -1548,8 +1603,8 @@ function renderAcctForm(kind){
   }
 }
 function accountDefaults(acc){
-  if(!acc.skins?.length)acc.skins=PRESET_SKINS.slice(0,3).map(s=>({...s,id:uid('s')}));
-  if(!acc.activeSkin||!acc.skins.some(s=>s.id===acc.activeSkin))acc.activeSkin=acc.skins[0].id;
+  acc.skins=acc.skins||[];
+  if(acc.activeSkin&&!acc.skins.some(s=>s.id===acc.activeSkin))acc.activeSkin=acc.skins[0]?.id||'';
   acc.cape=acc.cape||'none';acc.model=acc.model||'classic';
   return acc;
 }
@@ -1563,6 +1618,14 @@ function syncNativeAccounts(){
     state.demoCleaned=true;
   }
   state.communityCapes=state.communityCapes||[];state.capeFavs=state.capeFavs||{};
+  if(!state.presetsCleaned){
+    const presetNames=PRESET_SKINS.map(s=>s.name);
+    state.accounts.forEach(a=>{
+      a.skins=(a.skins||[]).filter(s=>!presetNames.includes(s.name));
+      if(a.activeSkin&&!a.skins.some(s=>s.id===a.activeSkin))a.activeSkin=a.skins[0]?.id||'';
+    });
+    state.presetsCleaned=true;
+  }
   if(!native())return;
   let list=[];try{list=JSON.parse(native().listNativeAccounts()||'[]')}catch(e){}
   const activeId=native().activeNativeAccount?.();
@@ -2114,7 +2177,15 @@ const ACTIONS={
  },
  confirmRenameSkin:el=>{const a=activeAccount(),s=a.skins.find(x=>x.id===el.dataset.id);s.name=$('#renameVal').value.trim()||s.name;persist();closeOverlay();renderWardrobe();toast('Skin renamed',s.name,'✎','ok')},
  delSkin:el=>{const a=activeAccount();if(a.skins.length===1)return toast('Cannot delete','Keep at least one skin per account','⚠','warn');a.skins=a.skins.filter(x=>x.id!==el.dataset.id);if(a.activeSkin===el.dataset.id)a.activeSkin=a.skins[0].id;persist();renderWardrobe();renderHeaderState();toast('Skin removed','Wardrobe updated','✕')},
- equipCape:el=>{const a=activeAccount();a.cape=el.dataset.id;persist();if(UI.view==='capes')renderCapes();renderWardrobe();const cv=$('#skinCanvas');cv?.animate([{transform:'rotateY(18deg) scale(1.02)'},{transform:'none'}],{duration:500/state.theme.speed,easing:'cubic-bezier(.22,1,.36,1)'});toast('Cape equipped',CAPES.find(c=>c.id===a.cape)?.name||'None','✦','ok')},
+ setMojangCape:async el=>{
+   if(!api())return toast('Desktop launcher required','Run Lunax.exe to change capes','!','warn');
+   const a=activeAccount();try{
+     const r=JSON.parse(await api().setMojangCape(a.id,el.dataset.id));
+     const active=(r.capes||[]).find(c=>c.active);a.capes=r.capes||[];a.cape=active?'mojang:'+active.id:'none';a.capeUrl=active?.url||'';
+     persist();CAPE_DATA={};refreshMojangCapes().then(()=>renderCapes());toast('Cape equipped in Minecraft',(active?.name||'Cape')+' · relog to see it','OK','ok');
+   }catch(e){toast('Cape change failed',e.message||String(e),'!','warn')}
+ },
+ equipCape:el=>{const a=activeAccount();a.cape=el.dataset.id;persist();if(UI.view==='capes')renderCapes();renderWardrobe();const cv=$('#skinCanvas');cv?.animate([{transform:'rotateY(18deg) scale(1.02)'},{transform:'none'}],{duration:500/state.theme.speed,easing:'cubic-bezier(.22,1,.36,1)'});toast('Cape preview updated',(CAPES.find(c=>c.id===a.cape)?.name||'None')+' · preview only in launcher','✦','ok')},
  setModel:el=>{activeAccount().model=el.dataset.v;persist();renderWardrobe();toast('Model updated',el.dataset.v==='slim'?'Slim 3px arms':'Classic 4px arms','◧','ok')},
  pickSkin:()=>$('#skinFileInput').click(),
  importUsername:()=>openModal(`${modalHead('Import skin by username or URL','Prototype resolves a deterministic local stand-in skin.')}<div class="form-field"><label>Username or skin URL</label><input id="importVal" placeholder="e.g. Technoblade or https://textures.minecraft.net/…"></div><div class="modal-foot"><button class="btn" data-act="closeOverlay">Cancel</button><button class="btn primary" data-act="confirmImportSkin">Import</button></div>`),
@@ -2148,7 +2219,7 @@ const ACTIONS={
 
  saveUpdateUrl:()=>{const v=$('#updateUrl')?.value.trim();if(native()?.setUpdateUrl){native().setUpdateUrl(v);toast('Update URL saved',v||'Update checks disabled','OK','ok')}},
  checkForUpdate:async()=>{
-   const box=$('#updateResult');if(!box)return;
+   const box=$('[data-update-result]');if(!box)return;
    if(!api()){box.textContent='Update checks work in Lunax.exe.';return}
    box.textContent='Checking…';
    try{
@@ -2180,7 +2251,13 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('change',e=>{const el=e.target.closest('[data-act]');if(el&&['themeColor','themeSelect','profileField','acctTab','saveTenant'].includes(el.dataset.act))ACTIONS[el.dataset.act](el)});
 document.addEventListener('input',e=>{const el=e.target.closest('[data-act]');if(el&&['themeRange','themeRange2','profileRange'].includes(el.dataset.act))ACTIONS[el.dataset.act](el)});
-document.addEventListener('mousemove',e=>{const c=e.target.closest('.card');if(!c)return;const r=c.getBoundingClientRect();c.style.setProperty('--mx',(e.clientX-r.left)+'px');c.style.setProperty('--my',(e.clientY-r.top)+'px')});
+let hoverRAF=0,hoverCard=null,hoverX=0,hoverY=0;
+document.addEventListener('mousemove',e=>{
+  const c=e.target.closest('.card');if(!c)return;
+  hoverCard=c;hoverX=e.clientX;hoverY=e.clientY;
+  if(hoverRAF)return;
+  hoverRAF=requestAnimationFrame(()=>{hoverRAF=0;if(!hoverCard||!hoverCard.isConnected)return;const r=hoverCard.getBoundingClientRect();hoverCard.style.setProperty('--mx',(hoverX-r.left)+'px');hoverCard.style.setProperty('--my',(hoverY-r.top)+'px')});
+});
 let searchTimer=null;
 function queueSearch(value){
   state.ui.mrSearch=value;persist();
@@ -2188,9 +2265,15 @@ function queueSearch(value){
 }
 $('#globalSearch').addEventListener('input',e=>{queueSearch(e.target.value);if(UI.view==='modrinth'){const mr=$('#mrSearch');if(mr)mr.value=e.target.value}});
 $('#globalSearch').addEventListener('keydown',e=>{if(e.key==='Enter'){navigate('modrinth');loadModrinth(true)}});
-document.addEventListener('input',e=>{if(e.target.id==='mrSearch'){$('#globalSearch').value=e.target.value;queueSearch(e.target.value)}if(e.target.id==='capeSearch'){CAPE_SEARCH=e.target.value;const caret=e.target.selectionStart;renderCapes();const n=$('#capeSearch');if(n){n.focus();n.setSelectionRange(caret,caret)}}
-if(e.target.id==='skinSearch'){WARDROBE.search=e.target.value;const caret=e.target.selectionStart;renderWardrobe();const n=$('#skinSearch');if(n){n.focus();n.setSelectionRange(caret,caret)}}
-if(e.target.id==='instSearch'){UI.instSearch=e.target.value;const caret=e.target.selectionStart;renderInstance();const n=$('#instSearch');if(n){n.focus();n.setSelectionRange(caret,caret)}}});
+let rebuildTimer=null;
+function rebuildSearch(fn,id){
+  clearTimeout(rebuildTimer);
+  rebuildTimer=setTimeout(()=>{const old=$(id),caret=old?.selectionStart;fn();const el=$(id);if(el){el.focus();if(caret!=null)el.setSelectionRange(caret,caret)}},90);
+}
+document.addEventListener('input',e=>{if(e.target.id==='mrSearch'){$('#globalSearch').value=e.target.value;queueSearch(e.target.value)}
+if(e.target.id==='capeSearch'){CAPE_SEARCH=e.target.value;rebuildSearch(renderCapes,'#capeSearch')}
+if(e.target.id==='skinSearch'){WARDROBE.search=e.target.value;rebuildSearch(renderWardrobe,'#skinSearch')}
+if(e.target.id==='instSearch'){UI.instSearch=e.target.value;rebuildSearch(renderInstance,'#instSearch')}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeOverlay()});
 
 /* skin upload + conversion */
@@ -2269,7 +2352,7 @@ const first=$$('.nav-item')[cur];if(first)$('#navIndicator').style.transform=`tr
 requestAnimationFrame(drawFlatPreview);
 startParticles();
 toast('Welcome to Lunax',state.accounts.length+' accounts · '+state.profiles.length+' instances ready','✦','ok');
-if(api())api().checkUpdate().then(raw=>{try{const r=JSON.parse(raw);if(r.available)toast('Update available','Lunax '+r.latest+' — open Settings → Updates','↻','warn')}catch(e){}}).catch(()=>{});
+if(api())api().checkUpdate().then(raw=>{try{const r=JSON.parse(raw);if(r.available)toast('Update available','Lunax '+r.latest+' — open the Updates tab','↻','warn')}catch(e){}}).catch(()=>{});
 
 </script>
 </body>
