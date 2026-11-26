@@ -1,0 +1,25 @@
+name: Announce release on Discord
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  announce:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post release link to Discord
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          TAG: ${{ github.event.release.tag_name }}
+          RELEASE_URL: ${{ github.event.release.html_url }}
+          RELEASE_NAME: ${{ github.event.release.name }}
+          BODY: ${{ github.event.release.body }}
+        run: |
+          payload=$(jq -n \
+            --arg tag "$TAG" \
+            --arg url "$RELEASE_URL" \
+            --arg title "${RELEASE_NAME:-Lunax $TAG}" \
+            --arg body "$BODY" \
+            '{content: "@everyone", embeds: [{title: ("🚀 " + $title), url: $url, description: ($body[0:900]), color: 13145214, footer: {text: "New Lunax release"}}]}')
+          curl -fsS -H "Content-Type: application/json" -d "$payload" "$WEBHOOK"
