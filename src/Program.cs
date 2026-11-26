@@ -29,6 +29,7 @@ public sealed class MainForm : Form
     private readonly ModrinthService _modrinth;
     private readonly MrpackService _mrpack;
     private readonly UpdateService _updates;
+    private readonly JavaInstaller _java;
 
     public MainForm()
     {
@@ -38,6 +39,7 @@ public sealed class MainForm : Form
         _modrinth = new ModrinthService(_minecraft);
         _mrpack = new MrpackService(_minecraft);
         _updates = new UpdateService(_root);
+        _java = new JavaInstaller(_root, Post);
 
         Text = "Lunax";
         Size = new Size(1440, 900);
@@ -77,7 +79,7 @@ public sealed class MainForm : Form
             var env = await CoreWebView2Environment.CreateAsync(userDataFolder: userData);
             await _web.EnsureCoreWebView2Async(env);
             _web.CoreWebView2.SetVirtualHostNameToFolderMapping("lunax.local", appFiles, CoreWebView2HostResourceAccessKind.Allow);
-            _web.CoreWebView2.AddHostObjectToScript("bridge", new Bridge(this, _auth, _minecraft, _modrinth, _mrpack, _updates, _root));
+            _web.CoreWebView2.AddHostObjectToScript("bridge", new Bridge(this, _auth, _minecraft, _modrinth, _mrpack, _updates, _java, _root));
             await _web.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(
                 "window.__lunax = window.chrome?.webview?.hostObjects?.bridge || null;" +
                 "window.__lunaxSync = window.chrome?.webview?.hostObjects?.sync?.bridge || null;");
@@ -116,10 +118,11 @@ public sealed class Bridge
     private readonly ModrinthService _modrinth;
     private readonly MrpackService _mrpack;
     private readonly UpdateService _updates;
+    private readonly JavaInstaller _java;
     private readonly string _root;
 
-    public Bridge(MainForm form, AuthService auth, MinecraftService minecraft, ModrinthService modrinth, MrpackService mrpack, UpdateService updates, string root)
-    { _form = form; _auth = auth; _minecraft = minecraft; _modrinth = modrinth; _mrpack = mrpack; _updates = updates; _root = root; }
+    public Bridge(MainForm form, AuthService auth, MinecraftService minecraft, ModrinthService modrinth, MrpackService mrpack, UpdateService updates, JavaInstaller java, string root)
+    { _form = form; _auth = auth; _minecraft = minecraft; _modrinth = modrinth; _mrpack = mrpack; _updates = updates; _java = java; _root = root; }
 
     // ---- native window ----
     public void minimize() => _form.MinimizeWindow();
@@ -147,6 +150,22 @@ public sealed class Bridge
     public string setActiveNativeAccount(string id) { _auth.SetActive(id); return "{\"ok\":true}"; }
     public string removeNativeAccount(string id) { _auth.Remove(id); return "{\"ok\":true}"; }
     public string getMsClientId() => _auth.ClientId;
+    public string javaStatus()
+    {
+        var majors = new[] { 8, 17, 21, 25 };
+        return Util.Json(majors.ToDictionary(m => m.ToString(), m =>
+        {
+            var managed = _java.JavaExe(m);
+            return string.IsNullOrEmpty(managed) ? _minecraft.DetectJava(m) : managed;
+        }));
+    }
+    public async Task<string> installJava(int major)
+    {
+        var result = await _java.Install(major);
+        _minecraft.ClearJavaCache();
+        return result;
+    }
+
     public string getUpdateUrl() => _updates.UpdateUrl;
     public string setUpdateUrl(string url) { _updates.SetUrl(url); return "{\"ok\":true}"; }
     public Task<string> checkUpdate() => _updates.Check();
@@ -251,6 +270,8 @@ public sealed class Bridge
     public Task<string> checkModrinthUpdate(string sha512, string projectId)
         => _modrinth.CheckUpdate(sha512, projectId);
     public Task<string> getProjectIcon(string projectId) => _modrinth.GetProjectIcon(projectId);
+
+    public string restoreConfigs(string profileName) => _minecraft.RestoreConfigs(profileName);
 
     public string bedrockStatus()
     {

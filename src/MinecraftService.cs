@@ -68,6 +68,7 @@ public sealed class MinecraftService
         var natives = Path.Combine(dir, "natives");
         foreach (var sub in new[] { "mods", "resourcepacks", "shaderpacks", "config", "saves", "logs" })
             Directory.CreateDirectory(Path.Combine(dir, sub));
+        BackupInstance(dir, name);
 
         Stage("Reading Version Manifest", 16, version);
         using var manifest = await Util.GetJson("https://piston-meta.mojang.com/mc/game/version_manifest_v2.json");
@@ -352,6 +353,47 @@ public sealed class MinecraftService
         });
     }
 
+    public void BackupInstance(string dir, string name)
+    {
+        try
+        {
+            var stamp = DateTime.Now.ToString("yyyyMMdd-HHmmss");
+            var target = Path.Combine(_root, "backups", Util.Safe(name), stamp);
+            Directory.CreateDirectory(target);
+            var cfg = Path.Combine(dir, "config");
+            if (Directory.Exists(cfg))
+                foreach (var f in Directory.EnumerateFiles(cfg, "*", SearchOption.AllDirectories))
+                {
+                    var rel = Path.GetRelativePath(dir, f);
+                    var dest = Path.Combine(target, rel);
+                    Directory.CreateDirectory(Path.GetDirectoryName(dest)!);
+                    File.Copy(f, dest, true);
+                }
+            var opts = Path.Combine(dir, "options.txt");
+            if (File.Exists(opts)) File.Copy(opts, Path.Combine(target, "options.txt"), true);
+        }
+        catch { }
+    }
+
+    public string RestoreConfigs(string name)
+    {
+        var baseDir = Path.Combine(_root, "backups", Util.Safe(name));
+        if (!Directory.Exists(baseDir)) throw new Exception("No config backup found for " + name + ".");
+        var newest = Directory.GetDirectories(baseDir).OrderByDescending(x => x).FirstOrDefault();
+        if (newest == null) throw new Exception("No config backup found for " + name + ".");
+        var dir = InstanceDir(name);
+        int count = 0;
+        foreach (var f in Directory.EnumerateFiles(newest, "*", SearchOption.AllDirectories))
+        {
+            var rel = Path.GetRelativePath(newest, f);
+            var dest = Path.Combine(dir, rel);
+            Directory.CreateDirectory(Path.GetDirectoryName(dest)!);
+            File.Copy(f, dest, true);
+            count++;
+        }
+        return Util.Json(new { restored = count, from = newest });
+    }
+
     public string Stop(string profileId)
     {
         if (!_processes.TryRemove(profileId, out var proc)) return Util.Json(new { stopped = false });
@@ -431,31 +473,82 @@ public sealed class MinecraftService
         return allow;
     }
 
-    private static (string path, int major) FindJava(string version)
+    private (string path, int major) FindJava(string version)
     {
         int required = version.StartsWith("26.") ? 25
             : version.StartsWith("1.21") ? 21
             : version.StartsWith("1.20") || version.StartsWith("1.19") || version.StartsWith("1.18") || version.StartsWith("1.17") ? 17
             : 8;
         var candidates = new List<string>();
-        var home = Environment.GetEnvironmentVariable("JAVA_HOME");
-        if (!string.IsNullOrEmpty(home)) candidates.Add(Path.Combine(home, "bin", "java.exe"));
-        foreach (var root in new[] { @"C:\Program Files\Eclipse Adoptium", @"C:\Program Files\Java", @"C:\Program Files (x86)\Java" })
-            if (Directory.Exists(root))
-                foreach (var d in Directory.GetDirectories(root))
-                    candidates.Add(Path.Combine(d, "bin", "java.exe"));
-        var current = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Java", "latest", "bin", "java.exe");
-        candidates.Add(current);
-        candidates = candidates.Where(File.Exists).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
-        if (candidates.Count == 0) throw new Exception("No Java installation found. Install Java 21 or 25 (or set JAVA_HOME).");
+        void Add(string exe) { if (!string.IsNullOrEmpty(exe) && File.Exists(exe)) candidates.Add(exe); }
 
+        var home = Environment.GetEnvironmentVariable("JAVA_HOME");
+        if (!string.IsNullOrEmpty(home)) Add(Path.Combine(home, "bin", "java.exe"));
+
+        // Lunax-managed runtimes (installed by the one-click Java installer).
+        var managed = Path.Combine(_root, "runtimes");
+        if (Directory.Exists(managed))
+            foreach (var f in Directory.EnumerateFiles(managed, "java.exe", SearchOption.AllDirectories)) Add(f);
+
+        // Common vendor install locations.
+        string[] roots = {
+            @"C:\Program Files\Eclipse Adoptium", @"C:\Program Files\Java",
+            @"C:\Program Files (x86)\Java", @"C:\Program Files\Microsoft",
+            @"C:\Program Files\Amazon Corretto", @"C:\Program Files\BellSoft",
+            @"C:\Program Files\Zulu", @"C:\Program Files\OpenJDK",
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "Eclipse Adoptium"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "Microsoft")
+        };
+        foreach (var root in roots)
+        {
+            if (!Directory.Exists(root)) continue;
+            foreach (var d in Directory.GetDirectories(root))
+            {
+                Add(Path.Combine(d, "bin", "java.exe"));
+                Add(Path.Combine(d, "bin", "java"));
+            }
+        }
+        Add(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Java", "latest", "bin", "java.exe"));
+
+        // Official Minecraft launcher keeps private runtimes under .minecraft\runtime.
+        var mcRuntime = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".minecraft", "runtime");
+        if (Directory.Exists(mcRuntime))
+            foreach (var f in Directory.EnumerateFiles(mcRuntime, "java.exe", SearchOption.AllDirectories)) Add(f);
+
+        // Anything on PATH.
+        try
+        {
+            var psi = new ProcessStartInfo("cmd.exe", "/c where java") { RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true };
+            using var proc = Process.Start(psi)!;
+            var output = proc.StandardOutput.ReadToEnd();
+            proc.WaitForExit(3000);
+            foreach (var line in output.Split('\n')) Add(line.Trim());
+        }
+        catch { }
+
+        candidates = candidates.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
         var found = candidates.Select(path => (path, major: Major(path))).Where(x => x.major > 0)
             .OrderByDescending(x => x.major).ToList();
-        if (found.Count == 0) throw new Exception("Could not determine Java versions.");
+        if (found.Count == 0)
+            throw new Exception("No Java " + required + "+ runtime found. Click 'Install Java automatically' or install Java 21/25 and restart Lunax.");
         var exact = found.FirstOrDefault(x => x.major == required);
         if (exact.path != null) return exact;
         var compatible = found.FirstOrDefault(x => x.major >= required && !(required == 8 && x.major > 8));
         return compatible.path != null ? compatible : found[0];
+    }
+
+    private static readonly Dictionary<int, string> JavaCache = new();
+
+    public void ClearJavaCache() { lock (JavaCache) JavaCache.Clear(); }
+
+    public string DetectJava(int major)
+    {
+        lock (JavaCache) if (JavaCache.TryGetValue(major, out var cached)) return cached;
+        var version = major switch { 25 => "26.3", 21 => "1.21.11", 17 => "1.20.4", 8 => "1.8.9", _ => "1.21.11" };
+        string result;
+        try { result = FindJava(version).path; } catch { result = ""; }
+        lock (JavaCache) JavaCache[major] = result;
+        return result;
     }
 
     private static int Major(string java)

@@ -525,6 +525,7 @@ button:disabled{cursor:not-allowed;opacity:.45}
       <button class="nav-item" data-view="modrinth" data-tip="Modrinth Hub - mods, packs &amp; shaders"><svg viewBox="0 0 24 24"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M3 7l9 5 9-5M12 12v10"/></svg><span>Modrinth Hub</span></button>
       <button class="nav-item" data-view="packs" data-tip="Installed resource &amp; shader packs"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M4 10h16M10 5v14"/></svg><span>Resource &amp; Shaders</span></button>
       <button class="nav-item" data-view="wardrobe" data-tip="Skins &amp; capes wardrobe"><svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg><span>Skins &amp; Capes</span></button>
+      <button class="nav-item" data-view="lunaxmod" data-tip="Lunax in-game mod - optional install"><svg viewBox="0 0 24 24"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M3 7l9 5 9-5M12 12v10"/></svg><span>Lunax Mod</span></button>
       <button class="nav-item" data-view="settings" data-tip="Settings, themes &amp; accounts"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1-2 2-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21h-3v-.1A1.6 1.6 0 0 0 11 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1-2-2 .1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H6v-3h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1 2-2 .1.1a1.6 1.6 0 0 0 1.8.3H11a1.6 1.6 0 0 0 1-1.5V6h3v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1 2 2-.1.1a1.6 1.6 0 0 0-.3 1.8V11h.1a1.6 1.6 0 0 0 1.5 1H21v3h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg><span>Settings &amp; Themes</span></button>
     </nav>
     <div class="sidebar-spacer"></div>
@@ -553,6 +554,7 @@ button:disabled{cursor:not-allowed;opacity:.45}
       <section class="view" data-view="packs" id="view-packs"></section>
       <section class="view" data-view="wardrobe" id="view-wardrobe"></section>
       <section class="view" data-view="capes" id="view-capes"></section>
+      <section class="view" data-view="lunaxmod" id="view-lunaxmod"></section>
       <section class="view" data-view="settings" id="view-settings"></section>
       <section class="view" data-view="instance" id="view-instance"></section>
     </div>
@@ -982,14 +984,14 @@ function openModal(html,wide=false,sticky=false){
 function modalHead(title,sub){return `<div class="modal-head"><div><h2>${title}</h2><p>${sub}</p></div><button class="btn icon ghost" data-act="closeOverlay">✕</button></div>`}
 
 /* ---------- view routing ---------- */
-const UI={view:'home',launching:false,instanceId:'',instFilter:'mods',instSearch:'',edition:'java'};
+const UI={view:'home',launching:false,instanceId:'',instFilter:'mods',instSearch:'',edition:'java',lunaxMenuGlobal:false};
 const BEDROCK={checked:false,installed:false,version:''};
 async function refreshBedrock(){
   if(!native())return;
   try{const r=JSON.parse(native().bedrockStatus());BEDROCK.checked=true;BEDROCK.installed=!!r.installed;BEDROCK.version=r.version||''}
   catch(e){BEDROCK.checked=true}
 }
-const VIEW_LABEL={home:'Home',profiles:'Profiles',modrinth:'Modrinth Hub',packs:'Resource & Shader Packs',wardrobe:'Skins & Capes',settings:'Settings & Themes',instance:'Instance',capes:'Cape Library'};
+const VIEW_LABEL={home:'Home',profiles:'Profiles',modrinth:'Modrinth Hub',packs:'Resource & Shader Packs',wardrobe:'Skins & Capes',settings:'Settings & Themes',instance:'Instance',capes:'Cape Library',lunaxmod:'Lunax Mod'};
 function navigate(v){
   if(!VIEW_LABEL[v]||v===UI.view)return;
   const old=$('.view.active');if(old){old.classList.add('leaving');old.classList.remove('active')}
@@ -1002,8 +1004,8 @@ function navigate(v){
   items.forEach(x=>x.classList.toggle('active',x.dataset.view===v));
   if(v==='wardrobe')requestAnimationFrame(drawFlatPreview);
   if(v==='modrinth'||v==='packs')$('#globalSearch').value=state.ui.mrSearch||'';
+  renderView(v);
   if(v==='modrinth')loadModrinth(true);
-  if(v==='capes')renderCapes();
 }
 
 /* ---------- renderers ---------- */
@@ -1428,7 +1430,7 @@ function renderInstance(){
    <div class="inst-hero"><div class="inst-icon" style="background:${bannerStyle(p)}">${blockIcon(p)}</div>
      <div style="flex:1"><div class="inst-badge">INSTANCE</div><div class="inst-name">${esc(p.name)}</div>
        <div class="inst-chips"><span class="chip accent">▦ ${esc(p.version)}</span><span class="chip">◈ ${p.loader==='fabric'?'Fabric '+esc(p.loaderVersion):esc(p.loader)}</span><span class="chip">MODPACKS</span><span class="chip">${p.ram} GB RAM</span></div></div>
-     <div class="view-actions">${p.id!==state.activeProfile?`<button class="btn" data-act="setActiveProfile" data-id="${p.id}">Set active</button>`:''}<button class="btn primary" data-act="quickLaunch">▶ Play</button><button class="btn icon" data-act="profileSettings" data-id="${p.id}" title="Profile Settings">⚙</button></div></div>
+     <div class="view-actions">${p.id!==state.activeProfile?`<button class="btn" data-act="setActiveProfile" data-id="${p.id}">Set active</button>`:''}<button class="btn primary" data-act="quickLaunch">▶ Play</button><button class="btn" data-act="restoreConfigs" data-id="${p.id}">Restore configs</button><button class="btn icon" data-act="profileSettings" data-id="${p.id}" title="Profile Settings">⚙</button></div></div>
    <div class="inst-stats"><div class="stat-tile"><div class="lbl">◷ LAST PLAYED</div><div class="val">2 hours ago</div></div>
      <div class="stat-tile"><div class="lbl">◷ PLAYTIME</div><div class="val">6h 25m</div></div>
      <div class="stat-tile"><div class="lbl">▤ DISK</div><div class="val" id="instDisk">…</div></div></div>
@@ -1446,6 +1448,16 @@ function renderInstance(){
       (api()?api().getProjectIcon(m.id).then(u=>JSON.parse(u)):fetch('https://api.modrinth.com/v2/project/'+encodeURIComponent(m.id)).then(r=>r.json()).then(j=>j.icon_url||''))
         .then(u=>{m.icon=u||'';persist();if(UI.view==='instance'&&UI.instanceId===p.id)renderInstance()}).catch(()=>{})}
   });
+}
+function renderLunaxMod(){
+  $('#view-lunaxmod').innerHTML=`
+   <div class="view-head"><div><div class="view-title">Lunax <em>Mod</em></div><div class="view-desc">Status of the in-game module system.</div></div></div>
+   <div class="card" style="padding:34px;max-width:640px;text-align:center">
+     <div style="font-size:54px;line-height:1">⚠</div>
+     <h2 style="font-size:20px;font-weight:820;margin-top:14px">This feature is in beta</h2>
+     <p class="muted" style="font-size:12.5px;line-height:1.7;margin-top:10px">The in-game Lunax module menu is not available in this release. It is being rebuilt for stability — no files are installed and no settings are changed.</p>
+     <span class="chip warn" style="margin-top:16px">BETA · UNAVAILABLE</span>
+   </div>`;
 }
 function renderSettings(){
   const t=state.theme;
@@ -1487,8 +1499,20 @@ function renderSettings(){
    </div>
   </div>`;
   refreshHeads();
+  if(native()?.javaStatus){try{const j=JSON.parse(native().javaStatus());const box=$('#javaStatus');if(box)box.textContent=Object.entries(j).map(([m,p])=>`Java ${m}: ${p?'found':'not installed'}`).join('  ·  ')}catch(e){}}
 }
-function renderAll(){applyTheme();renderHeaderState();renderHome();renderProfiles();renderModrinth();renderPacks();renderWardrobe();renderSettings();refreshHeads();}
+function renderView(v){
+  if(v==='home')renderHome();
+  else if(v==='profiles')renderProfiles();
+  else if(v==='modrinth')renderModrinth();
+  else if(v==='packs')renderPacks();
+  else if(v==='wardrobe')renderWardrobe();
+  else if(v==='settings')renderSettings();
+  else if(v==='instance')renderInstance();
+  else if(v==='capes')renderCapes();
+  else if(v==='lunaxmod')renderLunaxMod();
+}
+function renderAll(){applyTheme();renderHeaderState();renderView(UI.view);refreshHeads();}
 
 /* ---------- account switcher ---------- */
 function openAccountPopover(anchor){
@@ -1862,7 +1886,12 @@ async function doLaunch(){
     setTimeout(resetLaunch,5000);
   }catch(e){
     label.textContent='LAUNCH';prog.style.width='0%';status.textContent='Launch failed';
-    const msg=e.message||String(e);const err=$('#launchError');if(err)err.textContent=msg;
+    const msg=e.message||String(e),err=$('#launchError');
+    if(err){
+      const ver=activeProfile().version;
+      const major=ver.startsWith('26.')?25:ver.startsWith('1.21')?21:ver.startsWith('1.20')?17:8;
+      err.innerHTML=esc(msg.slice(0,260))+(/java/i.test(msg)?` <button class="btn sm primary" data-act="autoInstallJava" data-major="${major}" style="margin-left:8px">Install Java ${major} automatically</button>`:'');
+    }
     toast('Launch failed',msg,'!','warn');setTimeout(resetLaunch,2200);
   }
 }
@@ -1876,6 +1905,11 @@ function onNativeMessage(e){
     if(d.instance)showDiagnostics(d.instance);
     const l=$('#launchLabel');if(l)l.textContent='CRASHED';
     setTimeout(resetLaunch,4000);return;
+  }
+  if(d.type==='java'){
+    const st=$('#launchStage');if(st)st.textContent=d.stage||'';
+    const pct=$('#launchPct');if(pct&&typeof d.progress==='number')pct.textContent=Math.round(d.progress)+'%';
+    updateLaunchOverlay(d.stage,d.progress,'');return;
   }
   if(d.type!=='launch')return;
   const l=$('#launchLabel'),s=$('#dockStatus'),p=$('#launchProgress');
@@ -1955,7 +1989,7 @@ const ACTIONS={
  psAccount:el=>{PS_DRAFT.accountId=el.dataset.id;$$('[data-act="psAccount"]').forEach(x=>x.classList.toggle('on',x===el))},
  psRam:el=>{PS_DRAFT.ram=Number(el.value);const v=$('#psRamVal');if(v)v.textContent=PS_DRAFT.ram+' GB'},
  psSymlink:el=>{PS_DRAFT.symlinks=PS_DRAFT.symlinks||[];const f=el.dataset.v;PS_DRAFT.symlinks=PS_DRAFT.symlinks.includes(f)?PS_DRAFT.symlinks.filter(x=>x!==f):PS_DRAFT.symlinks.concat(f);el.classList.toggle('on',PS_DRAFT.symlinks.includes(f))},
- psSave:el=>{capturePS();const i=state.profiles.findIndex(x=>x.id===PS_DRAFT.id);if(i>=0)state.profiles[i]={...state.profiles[i],...PS_DRAFT};persist();closeOverlay();PS_DRAFT=null;renderAll();if(UI.view==='instance')renderInstance();toast('Profile settings saved',state.profiles[i]?.name||'','OK','ok')},
+ psSave:async el=>{capturePS();const i=state.profiles.findIndex(x=>x.id===PS_DRAFT.id);if(i>=0)state.profiles[i]={...state.profiles[i],...PS_DRAFT};persist();closeOverlay();PS_DRAFT=null;renderAll();if(UI.view==='instance')renderInstance();toast('Profile settings saved',state.profiles[i]?.name||'','OK','ok')},
 
  instBack:()=>navigate('profiles'),
  diagnose:()=>showDiagnostics(viewedProfile().name),
@@ -2034,6 +2068,24 @@ const ACTIONS={
  azureHelp:azureHelp,
  openAzure:()=>{if(native()?.openUrl)native().openUrl('https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade');else window.open('https://portal.azure.com','_blank')},
  saveTenant:el=>{native()?.setMsTenant?.(el.value);toast('Audience saved',el.value,'OK','ok')},
+ restoreConfigs:async el=>{
+   if(!native())return toast('Desktop launcher required','Run Lunax.exe to restore configs','!','warn');
+   const p=state.profiles.find(x=>x.id===el.dataset.id);if(!p)return;
+   try{const r=JSON.parse(native().restoreConfigs(p.name));toast('Configs restored',`${r.restored} files from ${r.from.split(/[\\/]/).pop()}`,'OK','ok')}
+   catch(e){toast('Restore failed',e.message||String(e),'!','warn')}
+ },
+ installJavaBtn:async el=>{
+   if(!api())return toast('Desktop launcher required','Run Lunax.exe to install Java','!','warn');
+   const major=Number(el.dataset.major),box=$('#javaStatus');if(box)box.textContent='Downloading Java '+major+'...';
+   try{const r=JSON.parse(await api().installJava(major));if(r.ok){if(box)box.textContent='Java '+major+' ready: '+r.path;toast('Java installed','Java '+major+' is ready','OK','ok')}}
+   catch(e){if(box)box.textContent=e.message||String(e);toast('Install failed',e.message||String(e),'!','warn')}
+ },
+ autoInstallJava:async el=>{
+   if(!api())return toast('Desktop launcher required','Run Lunax.exe to install Java','!','warn');
+   const major=Number(el.dataset.major||21),box=$('#launchError');if(box)box.textContent='Downloading Temurin Java '+major+' (about 200 MB)...';
+   try{const r=JSON.parse(await api().installJava(major));if(r.ok){toast('Java installed','Java '+major+' ready - launch again','OK','ok');if(box)box.textContent='Java '+major+' installed. Press LAUNCH again.'}}
+   catch(e){toast('Java install failed',e.message||String(e),'!','warn');if(box)box.textContent=e.message||String(e)}
+ },
  setParticleStyle:el=>{state.theme.particleStyle=el.dataset.v;persist();applyTheme();startParticles();renderSettings();toast('Effect changed',el.dataset.v,'OK','ok')},
  saveAzureClient:()=>{const v=$('#azureClientId')?.value.trim();if(!v)return toast('Client ID required','Paste the Application (client) ID','!','warn');native()?.setMsClientId?.(v);const t=$('#azureTenant')?.value;if(t)native()?.setMsTenant?.(t);toast('Lunax app saved','Sign in again - the Microsoft page will now say Lunax','OK','ok');msLoginModal()},
  authLog:()=>{

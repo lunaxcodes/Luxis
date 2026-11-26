@@ -6,7 +6,7 @@ A next-generation, multi-themed Minecraft: Java Edition launcher for Windows. Ob
 
 ## Download
 
-Grab the latest installer from the [Releases page](https://github.com/lunaxcodes/Lunax/releases). The current release is **v1.2.0**. The installer is unsigned, so Windows SmartScreen may warn on first run.
+Grab the latest installer from the [Releases page](https://github.com/lunaxcodes/Lunax/releases). The current release is **v1.3.0**. The installer is unsigned, so Windows SmartScreen may warn on first run.
 
 ## Features
 
@@ -18,6 +18,9 @@ Grab the latest installer from the [Releases page](https://github.com/lunaxcodes
 - **Instances** — isolated profiles with mod management, drag-and-drop `.jar` installation, RAM/JVM/window settings, and launch diagnostics.
 - **Cape Library** — community-style cape gallery with tabs, search, favorites, detailed built-in designs and local PNG uploads. Capes stay local to each installation; nothing is uploaded to a server.
 - **Background effects** — 11 selectable particle presets: Aurora, Matrix Rain, Enchantment Table, Nebula Waves/Particles/Grid/Voxels/Lightning, Liquid Chrome, Retro Grid and Plain Color.
+- **Java auto-detection & installer** — finds official Minecraft launcher runtimes plus common vendor JDKs, with one-click Temurin download if none is found.
+- **Config backups** — every launch backs up `config/` and `options.txt`; each instance page has a Restore button.
+- **In-game menu** — the experimental Lunax Mod section is a beta placeholder; no mod is bundled or installed.
 - **Edition switch** — choose Java or Bedrock next to the logo. Bedrock detection and launcher hand-off for Minecraft for Windows.
 - **Theming & updates** — six presets, custom accents, particles, large icon navigation, and a SHA-256-verified self-updater.
 - **v1.1 fixes** — mod installs target the profile you're viewing, popups stay open when clicked, real `.mrpack` import, launch diagnostics, and stable popups/modals.
