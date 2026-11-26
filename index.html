@@ -418,6 +418,27 @@ button:disabled{cursor:not-allowed;opacity:.45}
 .skin-add:hover{background:rgba(var(--accent-rgb),.11);border-color:var(--accent)}
 .skin-add .plus{width:52px;height:52px;border-radius:50%;background:rgba(var(--accent-rgb),.18);display:grid;place-items:center;font-size:28px;color:var(--accent)}
 .skin-add b{font-size:12.5px}.skin-add small{font-size:10px;color:var(--muted)}
+.particle-presets{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;margin:10px 0 14px}
+.particle-preset{padding:10px 6px;border-radius:11px;border:1px solid var(--border);background:rgba(255,255,255,.03);text-align:center;cursor:pointer;transition:all var(--e2)}
+.particle-preset:hover{transform:translateY(-2px);border-color:var(--border-strong)}
+.particle-preset.on{border-color:var(--accent);background:rgba(var(--accent-rgb),.12);box-shadow:0 0 0 1px rgba(var(--accent-rgb),.3)}
+.particle-preset .pi{height:34px;display:grid;place-items:center;font-size:20px;color:var(--accent)}
+.particle-preset span{font-size:9.5px;font-weight:680;display:block;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cape-tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.cape-tabs button{padding:8px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.04);font-size:11.5px;font-weight:700;color:var(--muted);transition:all var(--e2)}
+.cape-tabs button.on{background:rgba(var(--accent-rgb),.16);border-color:var(--border-strong);color:var(--text)}
+.cape-toolbar{display:flex;align-items:center;gap:9px;margin-bottom:18px;flex-wrap:wrap}
+.cape-toolbar input{flex:1;min-width:220px;padding:10px 12px;border-radius:11px;background:rgba(255,255,255,.04);border:1px solid var(--border);outline:none;font-size:12px}
+.cape-toolbar input:focus{border-color:var(--border-strong)}
+.cape-lib{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+.cape-tile{padding:10px;border-radius:15px;border:1px solid var(--border);background:rgba(255,255,255,.03);transition:all var(--e2) var(--spring);cursor:pointer;position:relative;overflow:hidden}
+.cape-tile:hover{transform:translateY(-4px);border-color:var(--border-strong);box-shadow:0 16px 36px -18px rgba(var(--accent-rgb),.5)}
+.cape-tile.active{border-color:var(--accent);box-shadow:0 0 0 1px rgba(var(--accent-rgb),.35)}
+.cape-tile canvas{width:100%;height:190px;display:block;image-rendering:pixelated;border-radius:9px;background:rgba(0,0,0,.25)}
+.cape-tile .nm{font-size:12px;font-weight:750;margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cape-tile .meta{font-size:9.5px;color:var(--faint);margin-top:3px;display:flex;align-items:center;gap:5px}
+.cape-tile .heart{position:absolute;top:16px;right:16px;width:26px;height:26px;border-radius:8px;background:rgba(10,8,16,.7);display:grid;place-items:center;font-size:13px;color:#fff;z-index:2}
+.cape-tile .heart.off{color:#777;opacity:.6}
 .wardrobe-layout{grid-template-columns:minmax(0,1fr) 236px}
 .wardrobe-side{padding:14px;position:sticky;top:0}
 .wardrobe-side .preview-stage{height:170px}
@@ -531,6 +552,7 @@ button:disabled{cursor:not-allowed;opacity:.45}
       <section class="view" data-view="modrinth" id="view-modrinth"></section>
       <section class="view" data-view="packs" id="view-packs"></section>
       <section class="view" data-view="wardrobe" id="view-wardrobe"></section>
+      <section class="view" data-view="capes" id="view-capes"></section>
       <section class="view" data-view="settings" id="view-settings"></section>
       <section class="view" data-view="instance" id="view-instance"></section>
     </div>
@@ -551,6 +573,7 @@ button:disabled{cursor:not-allowed;opacity:.45}
 <div class="overlay-root" id="overlayRoot"></div>
 <div class="toast-stack" id="toastStack"></div>
 <input type="file" id="skinFileInput" accept="image/png" hidden>
+<input type="file" id="capeFileInput" accept="image/png" hidden>
 <input type="file" id="jarFileInput" accept=".jar" hidden>
 <input type="file" id="mrpackInput" accept=".mrpack,.zip" hidden>
 <script>
@@ -637,15 +660,26 @@ const CATALOG=[
  {id:'chocapic',title:'Chocapic13 V9',type:'shader',icon:'◒',desc:'Lightweight shader with multiple presets and stable performance.',cats:['Potato / Low'],tier:'Potato / Low',loaders:['fabric'],versions:['1.21.11','1.20.4','1.16.5'],downloads:9200000,color:'#fdba74',deps:['iris']}
 ];
 const CAPES=[
- {id:'none',name:'None',c1:'#22202a',c2:'#15131b',pattern:'none'},
- {id:'migrator',name:'Migrator',c1:'#3b82f6',c2:'#1e3a8a',pattern:'stripe'},
- {id:'pan',name:'Pan',c1:'#111827',c2:'#374151',pattern:'check'},
- {id:'anniversary',name:'15th Anniversary',c1:'#eab308',c2:'#7c2d12',pattern:'rays'},
- {id:'vanilla',name:'Vanilla',c1:'#4c1d95',c2:'#1e1b4b',pattern:'blocks'},
- {id:'cherry',name:'Cherry Blossom',c1:'#f472b6',c2:'#831843',pattern:'petal'},
- {id:'founder',name:'Founder',c1:'#059669',c2:'#064e3b',pattern:'stripe'},
- {id:'cobalt',name:'Cobalt',c1:'#38bdf8',c2:'#0c4a6e',pattern:'check'}
+ {id:'none',name:'No Cape',c1:'#22202a',c2:'#15131b',uses:0,official:true},
+ {id:'migrator',name:'Migrator',c1:'#3b82f6',c2:'#1e3a8a',uses:81369,official:true},
+ {id:'pan',name:'Pan',c1:'#111827',c2:'#374151',uses:50322,official:true},
+ {id:'anniversary',name:'15th Anniversary',c1:'#eab308',c2:'#7c2d12',uses:38444,official:true},
+ {id:'vanilla',name:'Vanilla',c1:'#4c1d95',c2:'#1e1b4b',uses:32391,official:true},
+ {id:'cherry',name:'Cherry Blossom',c1:'#f472b6',c2:'#831843',uses:30183,official:true},
+ {id:'founder',name:'Founder',c1:'#059669',c2:'#064e3b',uses:28740,official:true},
+ {id:'cobalt',name:'Cobalt',c1:'#38bdf8',c2:'#0c4a6e',uses:25102,official:true},
+ {id:'phantom',name:'Phantom Wings','c1':'#7c3aed','c2':'#0b0714',uses:74120},
+ {id:'moon',name:'Moonlit','c1':'#cbd5e1','c2':'#0f172a',uses:65201},
+ {id:'lava',name:'Lava Core','c1':'#f97316','c2':'#450a0a',uses:58914},
+ {id:'ender',name:'Ender Eyes','c1':'#a855f7','c2':'#0b0214',uses:47320},
+ {id:'galaxy',name:'Galaxy','c1':'#6366f1','c2':'#020617',uses:41098},
+ {id:'sakura2',name:'Sakura Storm','c1':'#fb7185','c2':'#3b0764',uses:38771},
+ {id:'ice',name:'Frost Crystal','c1':'#67e8f9','c2':'#0c4a6e',uses:33560},
+ {id:'gold',name:'Gold Rush','c1':'#facc15','c2':'#713f12',uses:28940},
+ {id:'blood',name:'Crimson Moon','c1':'#ef4444','c2':'#1c0606',uses:24115},
+ {id:'void',name:'Void Runes','c1':'#c864ff','c2':'#050308',uses:20013}
 ];
+
 
 /* ---------- procedural skins / capes (stand-ins for real assets) ---------- */
 function makeSkin(p,slim=false){
@@ -669,15 +703,95 @@ function makeSkin(p,slim=false){
 function makeCape(cf){
   const c=document.createElement('canvas');c.width=96;c.height=144;const x=c.getContext('2d');
   const g=x.createLinearGradient(0,0,96,144);g.addColorStop(0,cf.c1);g.addColorStop(1,cf.c2);x.fillStyle=g;x.fillRect(0,0,96,144);
-  x.globalAlpha=.26;x.fillStyle='#fff';
-  if(cf.pattern==='stripe'){for(let i=0;i<96;i+=16)x.fillRect(i,0,6,144)}
-  if(cf.pattern==='check'){for(let y=0;y<144;y+=24)for(let i=0;i<96;i+=24)x.fillRect(i,y,12,12)}
-  if(cf.pattern==='rays'){for(let i=0;i<8;i++){x.beginPath();x.moveTo(48,72);x.lineTo(i*14,0);x.lineTo(i*14+8,0);x.fill()}}
-  if(cf.pattern==='blocks'){for(let y=0;y<144;y+=18)for(let i=0;i<96;i+=18)x.fillRect(i+(y%36?9:0),y,8,8)}
-  if(cf.pattern==='petal'){for(let i=0;i<26;i++){x.beginPath();x.ellipse((i*37)%96,(i*53)%144,5,2.6,i,0,7);x.fill()}}
-  x.globalAlpha=1;x.strokeStyle='rgba(255,255,255,.16)';x.lineWidth=3;x.strokeRect(2,2,92,140);
+  const id=cf.id;
+  if(id==='none'){x.fillStyle='#15131b';x.fillRect(0,0,96,144)}
+  if(id==='migrator'){
+    x.fillStyle='#60a5fa';x.fillRect(0,0,96,144);
+    x.fillStyle='#1e3a8a';x.fillRect(0,0,96,26);x.fillRect(0,118,96,26);
+    x.fillStyle='#fff';x.font='bold 30px sans-serif';x.textAlign='center';x.fillText('M',48,88);
+    x.fillStyle='rgba(255,255,255,.35)';for(let i=0;i<7;i++){x.beginPath();x.moveTo(48,90);x.lineTo(i*16,40);x.lineTo(i*16+10,40);x.fill()}
+  }
+  if(id==='pan'){
+    x.fillStyle='#0f172a';x.fillRect(0,0,96,144);x.strokeStyle='#e5e7eb';x.lineWidth=5;
+    x.beginPath();x.arc(48,68,28,0,6.28);x.stroke();x.fillStyle='#374151';x.fillRect(72,72,18,7);
+    x.strokeStyle='rgba(255,255,255,.12)';x.lineWidth=1;for(let i=0;i<144;i+=8){x.beginPath();x.moveTo(0,i);x.lineTo(96,i);x.stroke()}
+  }
+  if(id==='anniversary'){
+    x.fillStyle='#facc15';x.fillRect(0,0,96,144);x.fillStyle='#b45309';x.font='bold 44px sans-serif';x.textAlign='center';x.fillText('15',48,74);
+    x.fillStyle='#fff';x.font='bold 11px sans-serif';x.fillText('ANNIVERSARY',48,104);
+    for(let i=0;i<12;i++){x.fillStyle='rgba(255,255,255,.5)';x.fillRect((i*29)%96,(i*47)%144,3,3)}
+  }
+  if(id==='vanilla'){
+    x.fillStyle='#4c1d95';x.fillRect(0,0,96,144);x.fillStyle='#3fbf5f';x.fillRect(28,46,40,52);
+    x.fillStyle='#111';x.fillRect(37,60,7,9);x.fillRect(53,60,7,9);x.fillRect(38,82,20,6);
+  }
+  if(id==='cherry'||id==='sakura2'){
+    x.fillStyle=id==='cherry'?'#f472b6':'#fb7185';x.fillRect(0,0,96,144);
+    x.strokeStyle='#4a044e';x.lineWidth=5;x.beginPath();x.moveTo(48,140);x.lineTo(48,60);x.lineTo(22,30);x.moveTo(48,70);x.lineTo(76,36);x.stroke();
+    for(let i=0;i<48;i++){x.fillStyle='rgba(255,228,236,'+(.4+(i%4)*.15)+')';x.beginPath();x.ellipse((i*37)%96,(i*53)%130+8,4,2.4,i,0,6.28);x.fill()}
+  }
+  if(id==='founder'){
+    x.fillStyle='#059669';x.fillRect(0,0,96,144);x.fillStyle='#064e3b';x.fillRect(0,0,96,30);x.fillRect(0,114,96,30);
+    x.fillStyle='#fff';x.font='bold 13px sans-serif';x.textAlign='center';x.fillText('FOUNDER',48,82);
+    x.beginPath();x.moveTo(48,50);x.lineTo(60,66);x.lineTo(48,62);x.lineTo(36,66);x.closePath();x.fill();
+  }
+  if(id==='cobalt'){
+    x.fillStyle='#0ea5e9';x.fillRect(0,0,96,144);
+    x.strokeStyle='#bae6fd';x.lineWidth=4;x.beginPath();x.moveTo(58,18);x.lineTo(34,70);x.lineTo(56,70);x.lineTo(32,128);x.stroke();
+    x.fillStyle='rgba(255,255,255,.25)';for(let i=0;i<20;i++)x.fillRect((i*31)%96,(i*43)%144,2,2);
+  }
+  if(id==='phantom'){
+    x.fillStyle='#0b0714';x.fillRect(0,0,96,144);
+    for(let i=0;i<9;i++){x.fillStyle='rgba(168,85,247,'+(.25+i*.07)+')';x.beginPath();x.moveTo(48,74);x.lineTo(i*12,20+i*3);x.lineTo(i*12+9,44+i*3);x.fill()}
+    x.fillStyle='#c084fc';x.font='bold 12px sans-serif';x.textAlign='center';x.fillText('PHANTOM',48,116);
+  }
+  if(id==='moon'){
+    x.fillStyle='#0f172a';x.fillRect(0,0,96,144);
+    x.fillStyle='#e2e8f0';x.beginPath();x.arc(48,64,30,0,6.28);x.fill();
+    x.fillStyle='#0f172a';x.beginPath();x.arc(62,54,26,0,6.28);x.fill();
+    x.fillStyle='rgba(226,232,240,.5)';for(let i=0;i<30;i++)x.fillRect((i*29)%96,(i*41)%144,2,2);
+  }
+  if(id==='lava'){
+    x.fillStyle='#450a0a';x.fillRect(0,0,96,144);
+    const lg=x.createLinearGradient(0,140,0,0);lg.addColorStop(0,'#facc15');lg.addColorStop(.5,'#f97316');lg.addColorStop(1,'#7f1d1d');x.fillStyle=lg;x.fillRect(0,60,96,84);
+    x.strokeStyle='#fbbf24';x.lineWidth=3;for(let i=0;i<5;i++){x.beginPath();x.moveTo(i*22,144);x.lineTo(i*22+10,90);x.lineTo(i*22+4,60);x.stroke()}
+  }
+  if(id==='ender'){
+    x.fillStyle='#0b0214';x.fillRect(0,0,96,144);
+    for(let i=0;i<7;i++){x.fillStyle='rgba(168,85,247,.3)';x.fillRect((i*17)%96,(i*29)%144,4,4)}
+    x.fillStyle='#c084fc';x.beginPath();x.ellipse(36,68,10,15,0,0,6.28);x.ellipse(60,68,10,15,0,0,6.28);x.fill();
+    x.fillStyle='#111';x.fillRect(33,64,5,9);x.fillRect(57,64,5,9);
+  }
+  if(id==='galaxy'){
+    const gg=x.createRadialGradient(48,70,4,48,70,80);gg.addColorStop(0,'#a5b4fc');gg.addColorStop(.4,'#4338ca');gg.addColorStop(1,'#020617');x.fillStyle=gg;x.fillRect(0,0,96,144);
+    for(let i=0;i<60;i++){x.fillStyle='rgba(255,255,255,'+(.3+(i%5)*.14)+')';x.fillRect((i*37)%96,(i*53)%144,(i%3)+1,(i%3)+1)}
+  }
+  if(id==='ice'){
+    x.fillStyle='#0c4a6e';x.fillRect(0,0,96,144);
+    for(let i=0;i<12;i++){x.fillStyle='rgba(103,232,249,.5)';x.beginPath();const cx=(i*29)%96,cy=(i*47)%144;x.moveTo(cx,cy-14);x.lineTo(cx+8,cy);x.lineTo(cx,cy+14);x.lineTo(cx-8,cy);x.closePath();x.fill()}
+    x.fillStyle='#e0f2fe';x.font='bold 12px sans-serif';x.textAlign='center';x.fillText('FROST',48,132);
+  }
+  if(id==='gold'){
+    x.fillStyle='#713f12';x.fillRect(0,0,96,144);
+    for(let y=0;y<144;y+=24)for(let i=0;i<96;i+=24){x.fillStyle=y%48?'#facc15':'#fbbf24';x.fillRect(i+2,y+2,20,20);x.strokeStyle='#a16207';x.strokeRect(i+2,y+2,20,20)}
+    x.fillStyle='#fff';x.font='bold 13px sans-serif';x.textAlign='center';x.fillText('RICH',48,80);
+  }
+  if(id==='blood'){
+    x.fillStyle='#1c0606';x.fillRect(0,0,96,144);
+    x.fillStyle='#dc2626';x.beginPath();x.arc(48,54,24,0,6.28);x.fill();
+    x.fillStyle='#450a0a';x.beginPath();x.arc(58,48,20,0,6.28);x.fill();
+    x.fillStyle='rgba(248,113,113,.5)';for(let i=0;i<20;i++)x.fillRect((i*31)%96,80+(i*17)%60,3,3);
+  }
+  if(id==='void'){
+    x.fillStyle='#050308';x.fillRect(0,0,96,144);
+    x.strokeStyle='rgba(200,100,255,.55)';x.lineWidth=2;
+    for(let i=0;i<6;i++){x.beginPath();x.arc(48,72,18+i*9,0,6.28);x.stroke()}
+    x.fillStyle='#c864ff';x.font='bold 11px sans-serif';x.textAlign='center';x.fillText('VOID',48,76);
+  }
+  x.strokeStyle='rgba(255,255,255,.14)';x.lineWidth=2;x.strokeRect(2,2,92,140);
   return c;
 }
+
 const CAPE_IMG={};CAPES.forEach(c=>CAPE_IMG[c.id]=makeCape(c));
 const PRESET_SKINS=[
  {name:'Classic Steve',colors:['#e0ac7e','#3b2a1c','#00a8a8','#3f3f74','#312e2b','#101010'],slim:false},
@@ -695,8 +809,8 @@ function defaultState(){
   a1.activeSkin=a1.skins[0].id;
   return {
     v:1,
-    theme:{preset:'orchid',custom:false,accent:'#c864ff',accent2:'#7b5cff',wallpaper:'aurora',blur:24,dim:.42,glass:.58,radius:18,speed:1,reduce:false,navIcon:52,navIconSize:28,particles:42,glow:1,tooltips:true},
-    accounts:[a1],activeAccount:'acc1',
+    theme:{preset:'orchid',custom:false,accent:'#c864ff',accent2:'#7b5cff',wallpaper:'aurora',blur:24,dim:.42,glass:.58,radius:18,speed:1,reduce:false,navIcon:52,navIconSize:28,particles:42,particleStyle:'aurora',glow:1,tooltips:true},
+    accounts:[a1],activeAccount:'acc1',communityCapes:[],capeFavs:{},
     profiles:[
       {id:'p1',name:'26.3 Fabric PvP',icon:'⚔',banner:'linear-gradient(135deg,#7c3aed,#c864ff)',version:'26.3',loader:'fabric',loaderVersion:'0.19.5',ram:6,jvm:'aikar',res:'1920x1080',accountId:'',mods:[{id:'sodium',on:true,v:'0.7.1'},{id:'lithium',on:true,v:'0.16.0'},{id:'iris',on:true,v:'1.9.2'},{id:'modmenu',on:true,v:'15.0.0'},{id:'fabricapi',on:true,v:'0.135.0'},{id:'immediatelyfast',on:true,v:'1.6.1'},{id:'entityculling',on:false,v:'1.8.0'}],packs:['invictus16'],shaders:[]},
       {id:'p2',name:'1.21.11 Crystal & Optimization',icon:'◆',banner:'linear-gradient(135deg,#0ea5e9,#22d3ee)',version:'1.21.11',loader:'fabric',loaderVersion:'0.19.5',ram:8,jvm:'zgc',res:'2560x1440',accountId:'',mods:[{id:'sodium',on:true,v:'0.6.13'},{id:'fabricapi',on:true,v:'0.119.2'},{id:'nochatreports',on:true,v:'3.0.0'},{id:'jade',on:true,v:'14.0.0'}],packs:[],shaders:[]},
@@ -722,6 +836,7 @@ const profileAccount=p=>state.accounts.find(a=>a.id===(p.accountId||state.active
 function applyTheme(){
   const t=THEMES[state.theme.preset]||THEMES.orchid, th=state.theme;
   th.navIcon=th.navIcon??52;th.navIconSize=th.navIconSize??28;th.particles=th.particles??42;
+  th.particleStyle=th.particleStyle||'aurora';
   if([42,46,54,62].includes(th.navIcon))th.navIcon=52;
   if([24,26].includes(th.navIconSize))th.navIconSize=28;
   th.glow=th.glow??1;th.tooltips=th.tooltips??true;
@@ -745,26 +860,74 @@ function applyTheme(){
 let particleRAF=null;
 function startParticles(){
   const cv=$('#particles');if(!cv)return;
-  const n=state.theme.particles;
-  if(!n||state.theme.reduce){cv.width=cv.height=0;if(particleRAF)cancelAnimationFrame(particleRAF);return}
+  const n=state.theme.particles,mode=state.theme.particleStyle||'aurora';
+  if(mode==='plain'||!n||state.theme.reduce){cv.width=cv.height=0;if(particleRAF)cancelAnimationFrame(particleRAF);particleRAF=null;return}
   const dpr=Math.min(devicePixelRatio||1,2),w=innerWidth,h=innerHeight;
   cv.width=w*dpr;cv.height=h*dpr;
   const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
-  const accent=getComputedStyle(document.documentElement).getPropertyValue('--accent-rgb').trim()||'200,100,255';
+  const rgb=getComputedStyle(document.documentElement).getPropertyValue('--accent-rgb').trim()||'200,100,255';
+  const glow=state.theme.glow, A=a=>Math.max(0,Math.min(1,a*glow)), col=(a,c)=>`rgba(${c||rgb},${A(a)})`;
   const pts=Array.from({length:n},()=>({x:Math.random()*w,y:Math.random()*h,r:Math.random()*1.7+.5,sp:Math.random()*.22+.05,ph:Math.random()*6.28}));
+  const cols=Array.from({length:Math.max(8,Math.floor(w/18))},()=>({y:Math.random()*h,sp:.6+Math.random()*1.6,chars:Array.from({length:18},()=>String.fromCharCode(0x30A0+Math.floor(Math.random()*90)))}));
+  let tick=0;
   const draw=ts=>{
-    ctx.clearRect(0,0,w,h);
-    for(const p of pts){
-      p.y-=p.sp;p.ph+=.01;if(p.y<-6){p.y=h+6;p.x=Math.random()*w}
-      const a=(.18+.22*Math.sin(p.ph))*state.theme.glow;
-      ctx.fillStyle=`rgba(${accent},${Math.max(0,a)})`;
-      ctx.beginPath();ctx.arc(p.x+Math.sin(p.ph)*8,p.y,p.r,0,6.28);ctx.fill();
+    tick++;ctx.clearRect(0,0,w,h);
+    if(mode==='aurora'||mode==='particles'){
+      for(const p of pts){
+        p.y-=p.sp*(mode==='particles'?1.6:1);p.ph+=.01;if(p.y<-6){p.y=h+6;p.x=Math.random()*w}
+        const a=(.18+.22*Math.sin(p.ph))*(mode==='particles'?1.1:1);
+        ctx.fillStyle=col(a);ctx.beginPath();ctx.arc(p.x+Math.sin(p.ph)*8,p.y,p.r,0,6.28);ctx.fill();
+      }
+    }else if(mode==='matrix'){
+      ctx.font='13px monospace';
+      cols.forEach((c,i)=>{c.y+=c.sp;if(c.y>h+240){c.y=-Math.random()*300;c.chars=Array.from({length:18},()=>String.fromCharCode(0x30A0+Math.floor(Math.random()*90)))}
+        c.chars.forEach((ch,j)=>{const y=c.y-j*17;if(y<0||y>h)return;ctx.fillStyle=col(j===0?.55:.22*(1-j/18),'80,255,160');ctx.fillText(ch,i*18,y)})});
+    }else if(mode==='enchantment'){
+      const cx=w/2,cy=h/2,R=Math.min(w,h)*.3;
+      pts.forEach((p,i)=>{const a=i/pts.length*6.28+tick*.006;const rr=R+Math.sin(p.ph+tick*.02)*18;
+        const x=cx+Math.cos(a)*rr,y=cy+Math.sin(a)*rr*.7;
+        ctx.fillStyle=col(.25+.3*Math.abs(Math.sin(a*3+tick*.01)));
+        ctx.font='14px serif';ctx.fillText(i%2?'ᚠ':'ᛟ',x,y)});
+    }else if(mode==='waves'){
+      for(let row=0;row<5;row++){
+        ctx.beginPath();
+        for(let x=0;x<=w;x+=12){const y=h*(row+1)/6+Math.sin(x*.008+tick*.02+row)*18;x?ctx.lineTo(x,y):ctx.moveTo(x,y)}
+        ctx.strokeStyle=col(.1+row*.03);ctx.lineWidth=1.5;ctx.stroke();
+      }
+      pts.forEach(p=>{p.y-=p.sp;if(p.y<0)p.y=h;ctx.fillStyle=col(.22);ctx.fillRect(p.x,p.y,2,2)});
+    }else if(mode==='grid'||mode==='retro'){
+      const step=mode==='retro'?34:56;
+      ctx.lineWidth=1;
+      for(let x=0;x<w;x+=step){ctx.strokeStyle=col(.07);ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke()}
+      for(let y=0;y<h;y+=step){ctx.strokeStyle=col(.07);ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}
+      if(mode==='retro')for(let i=0;i<w;i+=step){ctx.strokeStyle=col(.05);ctx.beginPath();ctx.moveTo(w/2,h/2);ctx.lineTo(i,h);ctx.stroke()}
+      pts.slice(0,30).forEach((p,i)=>{const x=Math.floor(p.x/step)*step,y=Math.floor(p.y/step)*step;ctx.fillStyle=col(.15+.25*Math.abs(Math.sin(tick*.02+i)));ctx.fillRect(x-2,y-2,4,4)});
+    }else if(mode==='voxels'){
+      const cx=w/2,cy=h/2,t=tick*.01;
+      pts.slice(0,Math.min(n,40)).forEach((p,i)=>{
+        const a=i/40*6.28+t,rr=80+(i%5)*32;
+        const x=cx+Math.cos(a)*rr,y=cy+Math.sin(a)*rr*.6,sz=8+(i%4)*4;
+        ctx.save();ctx.translate(x,y);ctx.rotate(a);ctx.strokeStyle=col(.12+(i%4)*.06);ctx.lineWidth=2;ctx.strokeRect(-sz/2,-sz/2,sz,sz);ctx.restore();
+      });
+    }else if(mode==='lightning'){
+      ctx.strokeStyle=col(.05);ctx.beginPath();ctx.moveTo(0,h);ctx.lineTo(w,h);ctx.stroke();
+      if(Math.random()<.04){let x=Math.random()*w,y=0;ctx.beginPath();ctx.moveTo(x,y);
+        while(y<h){x+=(Math.random()-.5)*40;y+=Math.random()*40+10;ctx.lineTo(x,y)}
+        ctx.strokeStyle=col(.5,'180,220,255');ctx.lineWidth=2;ctx.stroke()}
+      pts.slice(0,20).forEach(p=>{ctx.fillStyle=col(.15);ctx.fillRect(p.x,p.y,2,2)});
+    }else if(mode==='liquid'){
+      pts.slice(0,8).forEach((p,i)=>{
+        const x=p.x+Math.sin(tick*.006+i)*40,y=p.y+Math.cos(tick*.005+i)*30,r=40+20*Math.sin(p.ph+tick*.01);
+        const g=ctx.createRadialGradient(x,y,0,x,y,Math.abs(r));g.addColorStop(0,col(.12));g.addColorStop(1,col(0));
+        ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,Math.abs(r),0,6.28);ctx.fill();
+      });
     }
     particleRAF=requestAnimationFrame(draw);
   };
   if(particleRAF)cancelAnimationFrame(particleRAF);
   particleRAF=requestAnimationFrame(draw);
 }
+
 const reduceStyle=document.createElement('style');
 reduceStyle.textContent='.reduce *, .reduce *::before, .reduce *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}';
 document.head.appendChild(reduceStyle);
@@ -826,7 +989,7 @@ async function refreshBedrock(){
   try{const r=JSON.parse(native().bedrockStatus());BEDROCK.checked=true;BEDROCK.installed=!!r.installed;BEDROCK.version=r.version||''}
   catch(e){BEDROCK.checked=true}
 }
-const VIEW_LABEL={home:'Home',profiles:'Profiles',modrinth:'Modrinth Hub',packs:'Resource & Shader Packs',wardrobe:'Skins & Capes',settings:'Settings & Themes',instance:'Instance'};
+const VIEW_LABEL={home:'Home',profiles:'Profiles',modrinth:'Modrinth Hub',packs:'Resource & Shader Packs',wardrobe:'Skins & Capes',settings:'Settings & Themes',instance:'Instance',capes:'Cape Library'};
 function navigate(v){
   if(!VIEW_LABEL[v]||v===UI.view)return;
   const old=$('.view.active');if(old){old.classList.add('leaving');old.classList.remove('active')}
@@ -840,6 +1003,7 @@ function navigate(v){
   if(v==='wardrobe')requestAnimationFrame(drawFlatPreview);
   if(v==='modrinth'||v==='packs')$('#globalSearch').value=state.ui.mrSearch||'';
   if(v==='modrinth')loadModrinth(true);
+  if(v==='capes')renderCapes();
 }
 
 /* ---------- renderers ---------- */
@@ -1082,6 +1246,48 @@ function drawSkinCard(cv,src){
     part(4,20,4,12,8,20,4,12);part(20,52,4,12,12,20,4,12);
   });
 }
+let CAPE_TAB='all',CAPE_SEARCH='';
+function allCapes(){return CAPES.concat(state.communityCapes||[])}
+function capeSrc(c){return c.src||CAPE_IMG[c.id]||CAPE_IMG.none}
+function isCapeFav(c){return !!(state.capeFavs||{})[c.id]}
+function renderCapes(){
+  const q=(CAPE_SEARCH||'').toLowerCase(),me=activeAccount();
+  let list=allCapes();
+  if(CAPE_TAB==='mine')list=list.filter(c=>c.custom&&c.author===me.username);
+  else if(CAPE_TAB==='favorites')list=list.filter(c=>isCapeFav(c));
+  else if(CAPE_TAB==='vanilla')list=list.filter(c=>c.official);
+  if(q)list=list.filter(c=>((c.name||'')+' '+(c.author||'Lunax')).toLowerCase().includes(q));
+  $('#view-capes').innerHTML=`
+   <div class="view-head"><div><div class="view-title">Cape <em>Library</em></div><div class="view-desc">Community capes, favourites and official designs. Upload your own 96×144 PNG.</div></div>
+   <div class="view-actions"><button class="btn" data-act="capeTemplate">Template</button><button class="btn primary" data-act="uploadCape">＋ Upload</button></div></div>
+   <div class="cape-tabs">${[['all','all'],['mine','my capes'],['favorites','favorites'],['vanilla','vanilla']].map(([k,l])=>`<button class="${CAPE_TAB===k?'on':''}" data-act="capeTab" data-v="${k}">${l}</button>`).join('')}</div>
+   <div class="cape-toolbar"><input id="capeSearch" placeholder="Search by player name..." value="${esc(CAPE_SEARCH)}"><span class="chip">♥ ${Object.keys(state.capeFavs||{}).length}</span><span class="chip">▤ ${list.length}</span><button class="btn sm ghost" data-act="goWardrobe">Back to wardrobe</button></div>
+   <div class="cape-lib">${list.map(c=>`<div class="cape-tile ${me.cape===c.id?'active':''}" data-act="equipCape" data-id="${esc(c.id)}">
+      <button class="heart ${isCapeFav(c)?'':'off'}" data-act="favCape" data-id="${esc(c.id)}" title="Favorite">${isCapeFav(c)?'♥':'♡'}</button>
+      <canvas data-cape-src="${esc(c.id)}"></canvas><div class="nm">${esc(c.name)}</div>
+      <div class="meta">${c.official?'★ ':''}${esc(c.author||'Lunax')} · ${fmt(c.uses||0)} uses</div></div>`).join('')||'<div class="empty">No capes found in this category.</div>'}</div>`;
+  $$('[data-cape-src]').forEach(cv=>{
+    const c=allCapes().find(x=>x.id===cv.dataset.capeSrc);if(!c)return;
+    const src=capeSrc(c);
+    const paint=im=>{if(!im)return;const x=cv.getContext('2d');cv.width=96;cv.height=144;x.drawImage(im,0,0,96,144)};
+    if(typeof src==='string')getImg(src,paint);else paint(src);
+  });
+}
+function uploadCape(file){
+  if(!file)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    const im=new Image();
+    im.onload=()=>{
+      if(im.width!==96||im.height!==144)return toast('Wrong size','Capes must be 96×144 pixels','!','warn');
+      const id='community-'+uid('cape');
+      state.communityCapes.push({id,name:file.name.replace(/\.png$/i,'').slice(0,28)||'Community cape',src:r.result,author:activeAccount().username,uses:0,custom:true});
+      persist();renderCapes();toast('Cape uploaded','Added to your cape library','OK','ok');
+    };
+    im.src=r.result;
+  };
+  r.readAsDataURL(file);
+}
 function renderWardrobe(){
   const a=activeAccount(),skin=skinOf(a),q=(WARDROBE.search||'').toLowerCase();
   const list=(a.skins||[]).filter(x=>!q||(x.name||'').toLowerCase().includes(q));
@@ -1101,7 +1307,7 @@ function renderWardrobe(){
        <div class="eyebrow" style="margin-bottom:8px">Current look</div>
        <div class="preview-stage"><canvas id="skinCanvas"></canvas><div class="view-toggle"><button data-act="viewAngle" data-v="front" class="${WARDROBE.view!=='back'?'on':''}">Front</button><button data-act="viewAngle" data-v="back" class="${WARDROBE.view==='back'?'on':''}">Back</button></div></div>
        <div class="preview-controls" style="margin-top:10px"><button class="btn sm ${WARDROBE.walk?'primary':''}" data-act="toggleWalk">${WARDROBE.walk?'Stop walk':'Walk'}</button><button class="btn sm" data-act="toggleAuto">Flip view</button></div>
-       <div class="eyebrow" style="margin:16px 0 7px">Capes</div><div class="cape-grid">${CAPES.map(c=>`<div class="card cape-card ${a.cape===c.id?'active':''}" data-act="equipCape" data-id="${c.id}"><div class="cape-swatch" style="background:linear-gradient(150deg,${c.c1},${c.c2})"></div><span>${esc(c.name)}</span></div>`).join('')}</div>
+       <div class="eyebrow" style="margin:16px 0 7px">Capes <button class="btn sm ghost" style="float:right" data-act="goCapes">Browse</button></div><div class="cape-grid">${CAPES.map(c=>`<div class="card cape-card ${a.cape===c.id?'active':''}" data-act="equipCape" data-id="${c.id}"><div class="cape-swatch" style="background:linear-gradient(150deg,${c.c1},${c.c2})"></div><span>${esc(c.name)}</span></div>`).join('')}</div>
        <div class="eyebrow" style="margin:16px 0 7px">Model</div><div class="seg" style="width:100%"><button class="${a.model==='classic'?'on':''}" data-act="setModel" data-v="classic">Classic</button><button class="${a.model==='slim'?'on':''}" data-act="setModel" data-v="slim">Slim</button></div>
        ${a.type==='microsoft'&&a.skinUrl?`<button class="btn block" style="margin-top:12px" data-act="fetchMojangSkin">Import my Mojang skin</button>`:''}
        <button class="btn block" style="margin-top:8px" data-act="importUsername">Import by username / URL</button>
@@ -1263,6 +1469,8 @@ function renderSettings(){
       <div class="field"><div><label>Sidebar icon size <span class="mono">${t.navIconSize}px</span></label><div class="hint">Big icon navigation with hover labels</div></div><input type="range" min="18" max="34" value="${t.navIconSize}" data-act="themeRange2" data-k="navIconSize"></div>
       <div class="field"><div><label>Sidebar button height <span class="mono">${t.navIcon}px</span></label></div><input type="range" min="42" max="72" value="${t.navIcon}" data-act="themeRange2" data-k="navIcon"></div>
       <div class="field"><div><label>Ambient particles <span class="mono">${t.particles}</span></label><div class="hint">Floating motes in the background</div></div><input type="range" min="0" max="140" value="${t.particles}" data-act="themeRange2" data-k="particles"></div>
+      <div class="eyebrow" style="margin-top:14px">Background effect</div>
+      <div class="particle-presets">${[['aurora','✦','Aurora'],['matrix','⌘','Matrix Rain'],['enchantment','✧','Enchantment'],['waves','≈','Nebula Waves'],['particles','✷','Nebula Particles'],['grid','▦','Nebula Grid'],['voxels','◈','Nebula Voxels'],['lightning','⚡','Nebula Lightning'],['liquid','◐','Liquid Chrome'],['retro','▤','Retro Grid'],['plain','□','Plain Color']].map(([k,ic,n])=>`<div class="particle-preset ${(t.particleStyle||'aurora')===k?'on':''}" data-act="setParticleStyle" data-v="${k}"><div class="pi">${ic}</div><span>${n}</span></div>`).join('')}</div>
       <div class="field"><div><label>Glow intensity <span class="mono">${t.glow.toFixed(1)}x</span></label></div><input type="range" min="0" max="2" step="0.1" value="${t.glow}" data-act="themeRange2" data-k="glow"></div>
       <div class="field"><div><label>Hover tooltips</label><div class="hint">Show sidebar labels on hover</div></div><button class="switch ${t.tooltips?'on':''}" data-act="toggleTooltips"></button></div>
    </div>
@@ -1330,6 +1538,7 @@ function syncNativeAccounts(){
     if(!state.accounts.some(a=>a.id===state.activeAccount))state.activeAccount=state.accounts[0]?.id||'';
     state.demoCleaned=true;
   }
+  state.communityCapes=state.communityCapes||[];state.capeFavs=state.capeFavs||{};
   if(!native())return;
   let list=[];try{list=JSON.parse(native().listNativeAccounts()||'[]')}catch(e){}
   const activeId=native().activeNativeAccount?.();
@@ -1815,11 +2024,17 @@ const ACTIONS={
  addAccount:addAccountModal,
  acctTab:el=>{$$('[data-act="acctTab"]').forEach(x=>x.classList.toggle('active',x===el));renderAcctForm(el.dataset.v)},
  msLogin:msLoginModal,
+ uploadCape:()=>$('#capeFileInput').click(),
+ capeTab:el=>{CAPE_TAB=el.dataset.v;renderCapes()},
+ favCape:el=>{const id=el.dataset.id;state.capeFavs[id]=!state.capeFavs[id];persist();renderCapes()},
+ capeTemplate:()=>{toast('Template','Upload a 96×144 PNG to add your own cape','v')},
+ goCapes:()=>navigate('capes'),
  codeLogin:startCodeLogin,
  finishCodeLogin:finishCodeLogin,
  azureHelp:azureHelp,
  openAzure:()=>{if(native()?.openUrl)native().openUrl('https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade');else window.open('https://portal.azure.com','_blank')},
  saveTenant:el=>{native()?.setMsTenant?.(el.value);toast('Audience saved',el.value,'OK','ok')},
+ setParticleStyle:el=>{state.theme.particleStyle=el.dataset.v;persist();applyTheme();startParticles();renderSettings();toast('Effect changed',el.dataset.v,'OK','ok')},
  saveAzureClient:()=>{const v=$('#azureClientId')?.value.trim();if(!v)return toast('Client ID required','Paste the Application (client) ID','!','warn');native()?.setMsClientId?.(v);const t=$('#azureTenant')?.value;if(t)native()?.setMsTenant?.(t);toast('Lunax app saved','Sign in again - the Microsoft page will now say Lunax','OK','ok');msLoginModal()},
  authLog:()=>{
    if(!native())return toast('Desktop launcher required','Run Lunax.exe to view the sign-in log','!','warn');
@@ -1847,7 +2062,7 @@ const ACTIONS={
  },
  confirmRenameSkin:el=>{const a=activeAccount(),s=a.skins.find(x=>x.id===el.dataset.id);s.name=$('#renameVal').value.trim()||s.name;persist();closeOverlay();renderWardrobe();toast('Skin renamed',s.name,'✎','ok')},
  delSkin:el=>{const a=activeAccount();if(a.skins.length===1)return toast('Cannot delete','Keep at least one skin per account','⚠','warn');a.skins=a.skins.filter(x=>x.id!==el.dataset.id);if(a.activeSkin===el.dataset.id)a.activeSkin=a.skins[0].id;persist();renderWardrobe();renderHeaderState();toast('Skin removed','Wardrobe updated','✕')},
- equipCape:el=>{const a=activeAccount();a.cape=el.dataset.id;persist();renderWardrobe();const cv=$('#skinCanvas');cv?.animate([{transform:'rotateY(18deg) scale(1.02)'},{transform:'none'}],{duration:500/state.theme.speed,easing:'cubic-bezier(.22,1,.36,1)'});toast('Cape equipped',CAPES.find(c=>c.id===a.cape)?.name||'None','✦','ok')},
+ equipCape:el=>{const a=activeAccount();a.cape=el.dataset.id;persist();if(UI.view==='capes')renderCapes();renderWardrobe();const cv=$('#skinCanvas');cv?.animate([{transform:'rotateY(18deg) scale(1.02)'},{transform:'none'}],{duration:500/state.theme.speed,easing:'cubic-bezier(.22,1,.36,1)'});toast('Cape equipped',CAPES.find(c=>c.id===a.cape)?.name||'None','✦','ok')},
  setModel:el=>{activeAccount().model=el.dataset.v;persist();renderWardrobe();toast('Model updated',el.dataset.v==='slim'?'Slim 3px arms':'Classic 4px arms','◧','ok')},
  pickSkin:()=>$('#skinFileInput').click(),
  importUsername:()=>openModal(`${modalHead('Import skin by username or URL','Prototype resolves a deterministic local stand-in skin.')}<div class="form-field"><label>Username or skin URL</label><input id="importVal" placeholder="e.g. Technoblade or https://textures.minecraft.net/…"></div><div class="modal-foot"><button class="btn" data-act="closeOverlay">Cancel</button><button class="btn primary" data-act="confirmImportSkin">Import</button></div>`),
@@ -1921,7 +2136,8 @@ function queueSearch(value){
 }
 $('#globalSearch').addEventListener('input',e=>{queueSearch(e.target.value);if(UI.view==='modrinth'){const mr=$('#mrSearch');if(mr)mr.value=e.target.value}});
 $('#globalSearch').addEventListener('keydown',e=>{if(e.key==='Enter'){navigate('modrinth');loadModrinth(true)}});
-document.addEventListener('input',e=>{if(e.target.id==='mrSearch'){$('#globalSearch').value=e.target.value;queueSearch(e.target.value)}if(e.target.id==='skinSearch'){WARDROBE.search=e.target.value;const caret=e.target.selectionStart;renderWardrobe();const n=$('#skinSearch');if(n){n.focus();n.setSelectionRange(caret,caret)}}
+document.addEventListener('input',e=>{if(e.target.id==='mrSearch'){$('#globalSearch').value=e.target.value;queueSearch(e.target.value)}if(e.target.id==='capeSearch'){CAPE_SEARCH=e.target.value;const caret=e.target.selectionStart;renderCapes();const n=$('#capeSearch');if(n){n.focus();n.setSelectionRange(caret,caret)}}
+if(e.target.id==='skinSearch'){WARDROBE.search=e.target.value;const caret=e.target.selectionStart;renderWardrobe();const n=$('#skinSearch');if(n){n.focus();n.setSelectionRange(caret,caret)}}
 if(e.target.id==='instSearch'){UI.instSearch=e.target.value;const caret=e.target.selectionStart;renderInstance();const n=$('#instSearch');if(n){n.focus();n.setSelectionRange(caret,caret)}}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeOverlay()});
 
@@ -1950,6 +2166,7 @@ function importSkinFile(file){
   r.readAsDataURL(file);
 }
 $('#skinFileInput').addEventListener('change',e=>{importSkinFile(e.target.files[0]);e.target.value=''});
+$('#capeFileInput').addEventListener('change',e=>{uploadCape(e.target.files[0]);e.target.value=''});
 document.addEventListener('dragover',e=>{const d=e.target.closest('.dropzone');if(d){e.preventDefault();d.classList.add('drag')}});
 document.addEventListener('dragleave',e=>{const d=e.target.closest('.dropzone');if(d)d.classList.remove('drag')});
 document.addEventListener('dragover',e=>{
