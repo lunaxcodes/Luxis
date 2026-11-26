@@ -1,5 +1,7 @@
 #define MyAppName "Lunax"
+#ifndef MyAppVersion
 #define MyAppVersion "1.0.0"
+#endif
 #define MyAppExeName "Lunax.exe"
 
 [Setup]

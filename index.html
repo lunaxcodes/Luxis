@@ -683,16 +683,15 @@ const PRESET_SKINS=[
 /* ---------- persistent state ---------- */
 const KEY='lunacher.state.v1';
 function defaultState(){
-  const a1={id:'acc1',username:'LunarFox',type:'microsoft',uuid:'6e7a4c92-1b3d-4f88-9a2e-71c5d0f4b8e6',skins:PRESET_SKINS.slice(0,4).map(s=>({...s})),activeSkin:'skin0',cape:'migrator',model:'classic',token:'valid'},
-        a2={id:'acc2',username:'NovaByte',type:'microsoft',uuid:'b13f9d27-0c81-4a16-8e5f-3d92a7c4e1b0',skins:[{...PRESET_SKINS[2]},{...PRESET_SKINS[5]}],activeSkin:'skin2',cape:'pan',model:'slim',token:'valid'},
-        a3={id:'acc3',username:'Dev_Steve',type:'offline',uuid:'offline-dev-steve',skins:[{...PRESET_SKINS[0]}],activeSkin:'skin0',cape:'none',model:'classic',token:'n/a'};
+  const a1={id:'acc1',username:'Player',type:'offline',uuid:'offline-player',skins:PRESET_SKINS.slice(0,1).map(s=>({...s,id:uid('s')})),activeSkin:'',cape:'none',model:'classic',token:'n/a'};
+  a1.activeSkin=a1.skins[0].id;
   return {
     v:1,
     theme:{preset:'orchid',custom:false,accent:'#c864ff',accent2:'#7b5cff',wallpaper:'aurora',blur:24,dim:.42,glass:.58,radius:18,speed:1,reduce:false,navIcon:52,navIconSize:28,particles:42,glow:1,tooltips:true},
-    accounts:[a1,a2,a3],activeAccount:'acc1',
+    accounts:[a1],activeAccount:'acc1',
     profiles:[
       {id:'p1',name:'26.3 Fabric PvP',icon:'⚔',banner:'linear-gradient(135deg,#7c3aed,#c864ff)',version:'26.3',loader:'fabric',loaderVersion:'0.19.5',ram:6,jvm:'aikar',res:'1920x1080',accountId:'',mods:[{id:'sodium',on:true,v:'0.7.1'},{id:'lithium',on:true,v:'0.16.0'},{id:'iris',on:true,v:'1.9.2'},{id:'modmenu',on:true,v:'15.0.0'},{id:'fabricapi',on:true,v:'0.135.0'},{id:'immediatelyfast',on:true,v:'1.6.1'},{id:'entityculling',on:false,v:'1.8.0'}],packs:['invictus16'],shaders:[]},
-      {id:'p2',name:'1.21.11 Crystal & Optimization',icon:'◆',banner:'linear-gradient(135deg,#0ea5e9,#22d3ee)',version:'1.21.11',loader:'fabric',loaderVersion:'0.19.5',ram:8,jvm:'zgc',res:'2560x1440',accountId:'acc2',mods:[{id:'sodium',on:true,v:'0.6.13'},{id:'fabricapi',on:true,v:'0.119.2'},{id:'nochatreports',on:true,v:'3.0.0'},{id:'jade',on:true,v:'14.0.0'}],packs:[],shaders:[]},
+      {id:'p2',name:'1.21.11 Crystal & Optimization',icon:'◆',banner:'linear-gradient(135deg,#0ea5e9,#22d3ee)',version:'1.21.11',loader:'fabric',loaderVersion:'0.19.5',ram:8,jvm:'zgc',res:'2560x1440',accountId:'',mods:[{id:'sodium',on:true,v:'0.6.13'},{id:'fabricapi',on:true,v:'0.119.2'},{id:'nochatreports',on:true,v:'3.0.0'},{id:'jade',on:true,v:'14.0.0'}],packs:[],shaders:[]},
       {id:'p3',name:'26.3 Ultra Shaders Survival',icon:'✦',banner:'linear-gradient(135deg,#e11d48,#f59e0b)',version:'26.3',loader:'fabric',loaderVersion:'0.19.5',ram:12,jvm:'default',res:'3840x2160',accountId:'',mods:[{id:'sodium',on:true,v:'0.7.1'},{id:'iris',on:true,v:'1.9.2'},{id:'fabricapi',on:true,v:'0.135.0'}],packs:['faithful32'],shaders:['complementary']},
       {id:'p4',name:'1.8.9 Classic',icon:'⬡',banner:'linear-gradient(135deg,#52525b,#a1a1aa)',version:'1.8.9',loader:'vanilla',loaderVersion:'—',ram:2,jvm:'default',res:'1280x720',accountId:'',mods:[],packs:[],shaders:[]}
     ],
@@ -1295,7 +1294,7 @@ function accountDefaults(acc){
 }
 function syncNativeAccounts(){
   if(!state.demoCleaned){
-    const gone=state.accounts.filter(a=>['NovaByte','Dev_Steve'].includes(a.username)||['acc2','acc3'].includes(a.id));
+    const gone=[];
     gone.forEach(a=>{try{native()?.removeNativeAccount?.(a.id)}catch(e){}});
     state.accounts=state.accounts.filter(a=>!gone.includes(a));
     state.profiles.forEach(p=>{if(p.accountId&&!state.accounts.some(a=>a.id===p.accountId))p.accountId=''});
