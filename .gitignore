@@ -1,5 +1,5 @@
 # Build output
-/Lunax.exe
+/Luxis.exe
 bin/
 obj/
 publish/
@@ -26,5 +26,5 @@ textures/
 Thumbs.db
 desktop.ini
 
-dist/Lunax.exe
+dist/Luxis.exe
 

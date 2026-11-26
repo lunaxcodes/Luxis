@@ -3,7 +3,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-namespace Lunax;
+namespace Luxis;
 
 internal static class Util
 {
@@ -11,7 +11,7 @@ internal static class Util
 
     static Util()
     {
-        Http.DefaultRequestHeaders.UserAgent.ParseAdd("Lunax/1.0 (desktop launcher; local build)");
+        Http.DefaultRequestHeaders.UserAgent.ParseAdd("Luxis/1.0 (desktop launcher; local build)");
         Http.DefaultRequestHeaders.Accept.ParseAdd("application/json");
     }
 

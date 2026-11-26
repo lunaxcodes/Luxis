@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.IO.Compression;
 
-namespace Lunax;
+namespace Luxis;
 
 /// <summary>Finds and, if needed, downloads a Temurin JDK for the required Java major version.</summary>
 public sealed class JavaInstaller
@@ -28,7 +28,7 @@ public sealed class JavaInstaller
 
         var dir = RuntimePath(major);
         Directory.CreateDirectory(dir);
-        var zip = Path.Combine(Path.GetTempPath(), "lunax-jdk-" + major + ".zip");
+        var zip = Path.Combine(Path.GetTempPath(), "luxis-jdk-" + major + ".zip");
         var url = $"https://api.adoptium.net/v3/binary/latest/{major}/ga/windows/x64/jdk/hotspot/normal/eclipse";
         _emit(Util.Json(new { type = "java", stage = "Downloading Java " + major, progress = 5 }));
         // Adoptium returns 406 if a JSON Accept header is sent — use a clean client.

@@ -1,6 +1,6 @@
 using System.IO.Compression;
 
-namespace Lunax;
+namespace Luxis;
 
 /// <summary>
 /// Exports genuine Minecraft block textures from the cached client JAR into the

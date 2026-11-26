@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace Lunax;
+namespace Luxis;
 
 public sealed class ModrinthService
 {

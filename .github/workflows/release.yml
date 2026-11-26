@@ -30,7 +30,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Lunax-${{ github.ref_name }}
+          name: Luxis-${{ github.ref_name }}
           path: |
             installer\*.exe
             release\*
@@ -41,7 +41,7 @@ jobs:
         run: |
           $v = (Get-Content version.txt -Raw).Trim()
           gh release create "v$v" `
-            "installer/Lunax-Setup-$v.exe" `
-            "release/Lunax.exe" `
+            "installer/Luxis-Setup-$v.exe" `
+            "release/Luxis.exe" `
             "release/version.json" `
-            --title "Lunax v$v" --generate-notes
+            --title "Luxis v$v" --generate-notes

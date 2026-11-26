@@ -4,7 +4,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-namespace Lunax;
+namespace Luxis;
 
 public sealed class CapeInfo
 {
@@ -480,7 +480,7 @@ public sealed class AuthService
     public async Task<McSession> GetSession(string id)
     {
         var a = Find(id);
-        if (a == null) throw new Exception("Account not found in Lunax — sign in again.");
+        if (a == null) throw new Exception("Account not found in Luxis — sign in again.");
         if (a.type == "offline") return new McSession { Username = a.username, Uuid = a.uuid, Token = "offline", Expires = DateTime.MaxValue, Online = false };
         if (_sessions.TryGetValue(id, out var s) && s.Expires > DateTime.UtcNow.AddMinutes(2)) return s;
         var r = await Refresh(id);

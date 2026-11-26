@@ -1,20 +1,20 @@
 <#
-  Lunax Microsoft sign-in setup (browser version)
+  Luxis Microsoft sign-in setup (browser version)
   Azure PowerShell refuses personal Microsoft accounts, so this script uses
   the Azure portal in your browser instead. It then writes the client ID and
-  audience into Lunax's settings for you.
+  audience into Luxis's settings for you.
 #>
 $ErrorActionPreference = 'Stop'
-$SettingsPath = Join-Path $env:LOCALAPPDATA 'Lunax\settings.json'
+$SettingsPath = Join-Path $env:LOCALAPPDATA 'Luxis\settings.json'
 $PortalUrl = 'https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade'
 
-Write-Host '== Lunax Azure sign-in setup ==' -ForegroundColor Cyan
+Write-Host '== Luxis Azure sign-in setup ==' -ForegroundColor Cyan
 Write-Host ''
 Write-Host 'A browser will open the Azure portal. Sign in with your PERSONAL Microsoft account.' -ForegroundColor Yellow
 Write-Host ''
 Write-Host 'In the portal:' -ForegroundColor Cyan
 Write-Host ' 1. Click "New registration".'
-Write-Host ' 2. Name: Lunax'
+Write-Host ' 2. Name: Luxis'
 Write-Host ' 3. Supported account types: choose "Personal Microsoft accounts only"'
 Write-Host '    (or "Accounts in any organizational directory and personal Microsoft accounts").'
 Write-Host '    Do NOT leave it on "Accounts in this organizational directory only" - that is'
@@ -48,4 +48,4 @@ Write-Host "Client ID saved: $clientId"
 Write-Host "Audience saved:  $tenant"
 Write-Host "Settings:        $SettingsPath"
 Write-Host ''
-Write-Host 'Restart Lunax.exe and click "Sign in with Microsoft". The page will say Lunax.' -ForegroundColor Cyan
+Write-Host 'Restart Luxis.exe and click "Sign in with Microsoft". The page will say Luxis.' -ForegroundColor Cyan

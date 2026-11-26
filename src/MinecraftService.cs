@@ -4,7 +4,7 @@ using System.IO.Compression;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-namespace Lunax;
+namespace Luxis;
 
 public sealed class MinecraftService
 {
@@ -206,7 +206,7 @@ public sealed class MinecraftService
             ["resolution_height"] = height,
             ["game_assets"] = Path.Combine(_game, "assets", "virtual", assetsIndexName),
             ["natives_directory"] = natives,
-            ["launcher_name"] = "Lunax",
+            ["launcher_name"] = "Luxis",
             ["launcher_version"] = "1.0",
             ["classpath"] = string.Join(Path.PathSeparator, cp.Distinct()),
             ["clientid"] = AuthService.DefaultClientId,
@@ -272,7 +272,7 @@ public sealed class MinecraftService
         };
         _ = Task.Run(() => Tail(proc.StandardOutput));
         _ = Task.Run(() => Tail(proc.StandardError));
-        Log($"[Lunax] {session.Username} launched {version} · Java {major} · {libCount} libraries");
+        Log($"[Luxis] {session.Username} launched {version} · Java {major} · {libCount} libraries");
         Stage("Running", 100, "PID " + proc.Id);
         return Util.Json(new { ok = true, pid = proc.Id, java, javaMajor = major, version, loader, mainClass });
     }
@@ -294,7 +294,7 @@ public sealed class MinecraftService
         if (all.Contains("Only one quick play option"))
         {
             cause = "Conflicting Quick Play flags were passed to Minecraft.";
-            fix = "This is fixed in the current Lunax build. Delete the crash report and launch again.";
+            fix = "This is fixed in the current Luxis build. Delete the crash report and launch again.";
         }
         else if (all.Contains("UnsupportedClassVersionError") || all.Contains("class file has wrong version"))
         {
@@ -309,7 +309,7 @@ public sealed class MinecraftService
         else if (all.Contains("Could not find or load main class") || all.Contains("ClassNotFoundException"))
         {
             cause = "A Minecraft library or the version JAR is missing or damaged.";
-            fix = "Delete game/versions/<version> in %LOCALAPPDATA%\\Lunax and launch again to re-download.";
+            fix = "Delete game/versions/<version> in %LOCALAPPDATA%\\Luxis and launch again to re-download.";
         }
         else if (all.Contains("Invalid token") || all.Contains("authentication") || all.Contains("Not authenticated"))
         {
@@ -319,12 +319,12 @@ public sealed class MinecraftService
         else if (all.Contains("Download failed") || all.Contains("verification failed") || all.Contains("SHA"))
         {
             cause = "A downloaded file failed its checksum verification.";
-            fix = "Delete the affected cache file under game/ and launch again; Lunax will re-download it.";
+            fix = "Delete the affected cache file under game/ and launch again; Luxis will re-download it.";
         }
         else if (all.Contains("zip END header not found") || all.Contains("ZipException") || all.Contains("not a valid zip"))
         {
             cause = "A .jar file in the instance mods folder is corrupt or not a real mod jar.";
-            fix = "Delete the named file from mods/ and reinstall the mod from Modrinth. Lunax now rejects invalid jars on import.";
+            fix = "Delete the named file from mods/ and reinstall the mod from Modrinth. Luxis now rejects invalid jars on import.";
         }
         else if (all.Contains("No Java installation") || all.Contains("java.exe"))
         {
@@ -475,7 +475,7 @@ public sealed class MinecraftService
         {
             bool match = true;
             if (r.TryGetProperty("os", out var os) && os.TryGetProperty("name", out var n) && n.GetString() != "windows") match = false;
-            // Optional features (demo, quick play, custom resolution) are not enabled by Lunax.
+            // Optional features (demo, quick play, custom resolution) are not enabled by Luxis.
             // Without this check every quick-play flag would be passed, and modern Minecraft
             // crashes with "Only one quick play option can be specified".
             if (r.TryGetProperty("features", out var features) && features.ValueKind == JsonValueKind.Object)
@@ -498,7 +498,7 @@ public sealed class MinecraftService
         var home = Environment.GetEnvironmentVariable("JAVA_HOME");
         if (!string.IsNullOrEmpty(home)) Add(Path.Combine(home, "bin", "java.exe"));
 
-        // Lunax-managed runtimes (installed by the one-click Java installer).
+        // Luxis-managed runtimes (installed by the one-click Java installer).
         var managed = Path.Combine(_root, "runtimes");
         if (Directory.Exists(managed))
             foreach (var f in Directory.EnumerateFiles(managed, "java.exe", SearchOption.AllDirectories)) Add(f);
@@ -543,7 +543,7 @@ public sealed class MinecraftService
         var found = candidates.Select(path => (path, major: Major(path))).Where(x => x.major > 0)
             .OrderByDescending(x => x.major).ToList();
         if (found.Count == 0)
-            throw new Exception("No Java " + required + "+ runtime found. Click 'Install Java automatically' or install Java 21/25 and restart Lunax.");
+            throw new Exception("No Java " + required + "+ runtime found. Click 'Install Java automatically' or install Java 21/25 and restart Luxis.");
         var exact = found.FirstOrDefault(x => x.major == required);
         if (exact.path != null) return exact;
         var compatible = found.FirstOrDefault(x => x.major >= required && !(required == 8 && x.major > 8));

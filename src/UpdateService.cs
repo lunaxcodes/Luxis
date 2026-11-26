@@ -2,12 +2,12 @@ using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text.Json;
 
-namespace Lunax;
+namespace Luxis;
 
 public sealed class UpdateService
 {
     private readonly string _root;
-    public const string DefaultManifest = "https://github.com/lunaxcodes/Lunax/releases/latest/download/version.json";
+    public const string DefaultManifest = "https://github.com/lunaxcodes/Luxis/releases/latest/download/version.json";
     public string UpdateUrl { get; private set; } = DefaultManifest;
 
     public UpdateService(string root)
@@ -52,7 +52,7 @@ public sealed class UpdateService
             var latest = r.Str("version", "0.0.0");
             var current = CurrentVersion();
             var available = Version.TryParse(latest, out var lv) && Version.TryParse(current, out var cv) && lv > cv;
-            var exe = r.Str("executable", "Lunax.exe");
+            var exe = r.Str("executable", "Luxis.exe");
             var url = r.Str("url");
             if (string.IsNullOrEmpty(url))
             {
@@ -71,8 +71,8 @@ public sealed class UpdateService
         var url = r.Str("url");
         var sha = r.Str("sha256");
         if (string.IsNullOrEmpty(url)) throw new Exception("Update URL missing.");
-        var target = Process.GetCurrentProcess().MainModule?.FileName ?? Path.Combine(AppContext.BaseDirectory, "Lunax.exe");
-        var tmp = Path.Combine(Path.GetTempPath(), "lunax-update-" + Guid.NewGuid().ToString("N") + ".exe");
+        var target = Process.GetCurrentProcess().MainModule?.FileName ?? Path.Combine(AppContext.BaseDirectory, "Luxis.exe");
+        var tmp = Path.Combine(Path.GetTempPath(), "luxis-update-" + Guid.NewGuid().ToString("N") + ".exe");
         // The manifest hash is SHA-256; Util.Download's 4th argument is SHA-512.
         // Download unchecked here and verify with SHA-256 below.
         await Util.Download(url, tmp);
@@ -81,7 +81,7 @@ public sealed class UpdateService
         if (!string.IsNullOrEmpty(sha) && actual != sha.ToLowerInvariant())
             throw new Exception("Update failed SHA-256 verification.");
 
-        var bat = Path.Combine(Path.GetTempPath(), "lunax-update-" + Guid.NewGuid().ToString("N") + ".bat");
+        var bat = Path.Combine(Path.GetTempPath(), "luxis-update-" + Guid.NewGuid().ToString("N") + ".bat");
         File.WriteAllText(bat,
             "@echo off\r\n" +
             "timeout /t 3 /nobreak >nul\r\n" +

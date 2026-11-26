@@ -1,7 +1,7 @@
 using System.IO.Compression;
 using System.Text.Json;
 
-namespace Lunax;
+namespace Luxis;
 
 /// <summary>Imports real Modrinth .mrpack archives (ZIP + modrinth.index.json).</summary>
 public sealed class MrpackService
@@ -11,7 +11,7 @@ public sealed class MrpackService
 
     private static void D(string message)
     {
-        try { File.AppendAllText(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Lunax", "mrpack-debug.log"), $"[{DateTime.UtcNow:O}] {message}\n"); }
+        try { File.AppendAllText(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Luxis", "mrpack-debug.log"), $"[{DateTime.UtcNow:O}] {message}\n"); }
         catch { }
     }
 

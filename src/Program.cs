@@ -8,7 +8,7 @@ using System.Windows.Forms;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
 
-namespace Lunax;
+namespace Luxis;
 
 internal static class Program
 {
@@ -33,7 +33,8 @@ public sealed class MainForm : Form
 
     public MainForm()
     {
-        _root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Lunax");
+        _root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Luxis");
+        MigrateLegacyData(_root);
         _auth = new AuthService(_root);
         _minecraft = new MinecraftService(_root, _auth, Post);
         _modrinth = new ModrinthService(_minecraft);
@@ -41,7 +42,7 @@ public sealed class MainForm : Form
         _updates = new UpdateService(_root);
         _java = new JavaInstaller(_root, Post);
 
-        Text = "Lunax";
+        Text = "Luxis";
         Size = new Size(1440, 900);
         MinimumSize = new Size(1024, 680);
         StartPosition = FormStartPosition.CenterScreen;
@@ -51,6 +52,28 @@ public sealed class MainForm : Form
         _web.Dock = DockStyle.Fill;
         _web.DefaultBackgroundColor = Color.FromArgb(15, 12, 22);
         Load += async (_, _) => await InitializeAsync();
+    }
+
+    private static void MigrateLegacyData(string root)
+    {
+        var legacy = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Lunax");
+        if (string.Equals(legacy, root, StringComparison.OrdinalIgnoreCase)) return;
+        if (!Directory.Exists(legacy) || Directory.Exists(root)) return;
+        try { Directory.Move(legacy, root); return; }
+        catch { }
+        try
+        {
+            Directory.CreateDirectory(root);
+            foreach (var dir in Directory.GetDirectories(legacy, "*", SearchOption.AllDirectories))
+                Directory.CreateDirectory(dir.Replace(legacy, root));
+            foreach (var file in Directory.GetFiles(legacy, "*", SearchOption.AllDirectories))
+            {
+                var dest = file.Replace(legacy, root);
+                Directory.CreateDirectory(Path.GetDirectoryName(dest)!);
+                File.Copy(file, dest, true);
+            }
+        }
+        catch { }
     }
 
     private void Post(string json)
@@ -69,7 +92,7 @@ public sealed class MainForm : Form
             Directory.CreateDirectory(appFiles);
             Directory.CreateDirectory(Path.Combine(_root, "instances"));
 
-            using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Lunax.index.html")
+            using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Luxis.index.html")
                 ?? throw new InvalidOperationException("Embedded UI resource is missing.");
             using var buffer = new MemoryStream();
             await stream.CopyToAsync(buffer);
@@ -79,20 +102,20 @@ public sealed class MainForm : Form
 
             var env = await CoreWebView2Environment.CreateAsync(userDataFolder: userData);
             await _web.EnsureCoreWebView2Async(env);
-            _web.CoreWebView2.SetVirtualHostNameToFolderMapping("lunax.local", appFiles, CoreWebView2HostResourceAccessKind.Allow);
+            _web.CoreWebView2.SetVirtualHostNameToFolderMapping("luxis.local", appFiles, CoreWebView2HostResourceAccessKind.Allow);
             _web.CoreWebView2.AddHostObjectToScript("bridge", new Bridge(this, _auth, _minecraft, _modrinth, _mrpack, _updates, _java, _root));
             await _web.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(
-                "window.__lunax = window.chrome?.webview?.hostObjects?.bridge || null;" +
-                "window.__lunaxSync = window.chrome?.webview?.hostObjects?.sync?.bridge || null;");
+                "window.__luxis = window.chrome?.webview?.hostObjects?.bridge || null;" +
+                "window.__luxisSync = window.chrome?.webview?.hostObjects?.sync?.bridge || null;");
             _web.NavigationCompleted += (_, args) =>
             {
                 if (args.IsSuccess) File.WriteAllText(Path.Combine(appFiles, "ready.txt"), DateTimeOffset.UtcNow.ToString("O"));
             };
-            _web.CoreWebView2.Navigate("https://lunax.local/index.html");
+            _web.CoreWebView2.Navigate("https://luxis.local/index.html");
         }
         catch (Exception ex)
         {
-            MessageBox.Show(this, "Lunax could not start:\n\n" + ex.Message, "Lunax", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(this, "Luxis could not start:\n\n" + ex.Message, "Luxis", MessageBoxButtons.OK, MessageBoxIcon.Error);
             Close();
         }
     }

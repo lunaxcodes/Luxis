@@ -5,8 +5,8 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>disable</Nullable>
-    <AssemblyName>Lunax</AssemblyName>
-    <RootNamespace>Lunax</RootNamespace>
+    <AssemblyName>Luxis</AssemblyName>
+    <RootNamespace>Luxis</RootNamespace>
     <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <ApplicationIcon>..\app.ico</ApplicationIcon>
@@ -15,7 +15,7 @@
     <PackageReference Include="Microsoft.Web.WebView2" Version="*" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="..\index.html" LogicalName="Lunax.index.html" />
+    <EmbeddedResource Include="..\index.html" LogicalName="Luxis.index.html" />
     <EmbeddedResource Include="..\textures\*.png" LogicalName="tex_%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>
