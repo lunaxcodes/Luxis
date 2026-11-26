@@ -31,7 +31,9 @@ public sealed class JavaInstaller
         var zip = Path.Combine(Path.GetTempPath(), "lunax-jdk-" + major + ".zip");
         var url = $"https://api.adoptium.net/v3/binary/latest/{major}/ga/windows/x64/jdk/hotspot/normal/eclipse";
         _emit(Util.Json(new { type = "java", stage = "Downloading Java " + major, progress = 5 }));
-        using (var res = await Util.Http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead))
+        // Adoptium returns 406 if a JSON Accept header is sent — use a clean client.
+        using var client = new HttpClient { Timeout = TimeSpan.FromMinutes(10) };
+        using (var res = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead))
         {
             res.EnsureSuccessStatusCode();
             var total = res.Content.Headers.ContentLength ?? 0;

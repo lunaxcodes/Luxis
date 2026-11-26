@@ -26,11 +26,12 @@ Copy-Item 'version.txt' 'release\version.txt' -Force
 $hash = (Get-FileHash 'release\Lunax.exe' -Algorithm SHA256).Hash.ToLowerInvariant()
 $size = (Get-Item 'release\Lunax.exe').Length
 $manifest = [ordered]@{
-  version   = $version
+  version    = $version
   executable = 'Lunax.exe'
-  sha256    = $hash
-  size      = $size
-  released  = (Get-Date).ToUniversalTime().ToString('o')
+  url        = 'https://github.com/lunaxcodes/Lunax/releases/latest/download/Lunax.exe'
+  sha256     = $hash
+  size       = $size
+  released   = (Get-Date).ToUniversalTime().ToString('o')
 } | ConvertTo-Json -Depth 3
 [System.IO.File]::WriteAllText((Join-Path (Resolve-Path 'release').Path 'version.json'), $manifest)
 

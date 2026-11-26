@@ -2269,6 +2269,7 @@ const first=$$('.nav-item')[cur];if(first)$('#navIndicator').style.transform=`tr
 requestAnimationFrame(drawFlatPreview);
 startParticles();
 toast('Welcome to Lunax',state.accounts.length+' accounts · '+state.profiles.length+' instances ready','✦','ok');
+if(api())api().checkUpdate().then(raw=>{try{const r=JSON.parse(raw);if(r.available)toast('Update available','Lunax '+r.latest+' — open Settings → Updates','↻','warn')}catch(e){}}).catch(()=>{});
 
 </script>
 </body>
