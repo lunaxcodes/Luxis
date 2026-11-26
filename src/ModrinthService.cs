@@ -60,15 +60,34 @@ public sealed class ModrinthService
         return $"{Base}/project/{Uri.EscapeDataString(projectId)}/version" + (q.Count > 0 ? "?" + string.Join("&", q) : "");
     }
 
-    private static async Task<JsonElement[]> FetchVersions(string projectId, string gameVersion, string loader)
+    private static string MajorVersion(string version)
     {
-        using var doc = JsonDocument.Parse(await Util.Get(VersionsUrl(projectId, gameVersion, loader)));
-        var items = doc.RootElement.EnumerateArray().Select(x => x.Clone()).ToArray();
+        if (string.IsNullOrEmpty(version)) return "";
+        var parts = version.Split('.');
+        return parts.Length >= 2 ? string.Join('.', parts.Take(2)) : version;
+    }
+
+    private static async Task<JsonElement[]> Fetch(string url)
+    {
+        using var doc = JsonDocument.Parse(await Util.Get(url));
+        return doc.RootElement.EnumerateArray().Select(x => x.Clone()).ToArray();
+    }
+
+    // Shaders and resource packs rarely list a loader, and often only a major game
+    // version. Fall back from exact -> major -> any version, and for non-mods also
+    // drop the loader filter as a last resort. Mods never ignore the loader.
+    private static async Task<JsonElement[]> FetchVersions(string projectId, string gameVersion, string loader, bool relaxed = false)
+    {
+        var items = await Fetch(VersionsUrl(projectId, gameVersion, loader));
         if (items.Length == 0 && gameVersion != "All")
         {
-            using var fallback = JsonDocument.Parse(await Util.Get(VersionsUrl(projectId, "All", loader)));
-            items = fallback.RootElement.EnumerateArray().Select(x => x.Clone()).ToArray();
+            var major = MajorVersion(gameVersion);
+            if (!string.IsNullOrEmpty(major) && major != gameVersion)
+                items = await Fetch(VersionsUrl(projectId, major, loader));
+            if (items.Length == 0) items = await Fetch(VersionsUrl(projectId, "All", loader));
         }
+        if (items.Length == 0 && relaxed && !string.IsNullOrEmpty(loader))
+            items = await Fetch(VersionsUrl(projectId, "All", ""));
         return items;
     }
 
@@ -78,9 +97,9 @@ public sealed class ModrinthService
         return doc.RootElement.Str("icon_url");
     }
 
-    public async Task<string> Versions(string projectId, string gameVersion, string loader)
+    public async Task<string> Versions(string projectId, string gameVersion, string loader, bool relaxed = false)
     {
-        var items = await FetchVersions(projectId, gameVersion, loader);
+        var items = await FetchVersions(projectId, gameVersion, loader, relaxed);
         return Util.Json(items.Select(v => new
         {
             id = v.Str("id"), versionNumber = v.Str("version_number"), changelog = v.Str("changelog", ""),
@@ -116,7 +135,7 @@ public sealed class ModrinthService
         using var meta = JsonDocument.Parse(await Util.Get($"{Base}/project/{Uri.EscapeDataString(id)}"));
         var projectTitle = meta.RootElement.Str("title", p.Str("title", id));
         type = meta.RootElement.Str("project_type", type);
-        var versions = await FetchVersions(id, gameVersion, loader);
+        var versions = await FetchVersions(id, gameVersion, type == "mod" ? loader : "", type != "mod");
         if (versions.Length == 0) throw new Exception($"No version of {projectTitle} is compatible with {gameVersion} / {loader}.");
 
         var installed = new List<object>();
@@ -159,7 +178,7 @@ public sealed class ModrinthService
             try
             {
                 using var depMeta = JsonDocument.Parse(await Util.Get($"{Base}/project/{Uri.EscapeDataString(depId)}"));
-                var depVersions = await FetchVersions(dep.Str("project_id"), gameVersion, loader);
+                var depVersions = await FetchVersions(dep.Str("project_id"), gameVersion, type == "mod" ? loader : "", type != "mod");
                 if (depVersions.Length == 0) { warnings.Add("No compatible version for dependency " + depId); continue; }
                 await InstallVersion(depVersions[0], depMeta.RootElement, "mod", gameVersion, loader, profile,
                     installed, warnings, visited, depth + 1);

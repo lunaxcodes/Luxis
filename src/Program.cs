@@ -74,6 +74,7 @@ public sealed class MainForm : Form
             using var buffer = new MemoryStream();
             await stream.CopyToAsync(buffer);
             await File.WriteAllBytesAsync(Path.Combine(appFiles, "index.html"), buffer.ToArray());
+            Textures.EnsureBundled(appFiles);
             Textures.Export(appFiles, Path.Combine(_root, "game"));
 
             var env = await CoreWebView2Environment.CreateAsync(userDataFolder: userData);
@@ -267,8 +268,8 @@ public sealed class Bridge
     // ---- modrinth ----
     public Task<string> searchModrinth(string query, string type, string loader, string version, string category, int offset)
         => _modrinth.Search(query, type, loader, version, category, offset);
-    public Task<string> modrinthVersions(string projectId, string version, string loader)
-        => _modrinth.Versions(projectId, version, loader);
+    public Task<string> modrinthVersions(string projectId, string version, string loader, bool relaxed = false)
+        => _modrinth.Versions(projectId, version, loader, relaxed);
     public Task<string> installModrinth(string projectJson, string profileJson)
         => _modrinth.Install(projectJson, profileJson);
     public Task<string> checkModrinthUpdate(string sha512, string projectId)

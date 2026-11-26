@@ -273,6 +273,13 @@ button:disabled{cursor:not-allowed;opacity:.45}
 .cape-swatch{height:66px;border-radius:7px;position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.08)}
 .cape-swatch::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,rgba(255,255,255,.16),transparent 40%)}
 .cape-card canvas{width:100%;height:66px;display:block;image-rendering:pixelated;border-radius:7px;border:1px solid rgba(255,255,255,.08);background:rgba(0,0,0,.25)}
+.block-picker{display:grid;grid-template-columns:repeat(12,1fr);gap:5px;margin-top:8px;max-height:190px;overflow:auto;padding:3px}
+.block-opt{padding:3px;border-radius:7px;border:1px solid var(--border);background:rgba(255,255,255,.035);cursor:pointer;transition:all var(--e2)}
+.block-opt:hover{border-color:var(--border-strong);transform:translateY(-2px)}
+.block-opt.on{border-color:var(--accent);box-shadow:0 0 0 1px rgba(var(--accent-rgb),.4);background:rgba(var(--accent-rgb),.12)}
+.block-opt img{width:100%;aspect-ratio:1;image-rendering:pixelated;display:block;border-radius:4px}
+.block-picker-head{display:flex;align-items:center;gap:10px}
+.block-picker-head img{width:30px;height:30px;image-rendering:pixelated;border-radius:6px;border:1px solid var(--border)}
 .cape-card span{display:block;font-size:9.5px;margin-top:5px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* ---------- settings ---------- */
@@ -321,6 +328,7 @@ button:disabled{cursor:not-allowed;opacity:.45}
 .launch-btn:hover:not(:disabled){transform:translateY(-2px) scale(1.015)}
 .launch-btn:active:not(:disabled){transform:scale(.97)}
 .launch-btn:disabled{filter:saturate(.55) brightness(.85)}
+.launch-btn.stop{background:linear-gradient(135deg,#ef4444,#b91c1c);box-shadow:0 10px 34px -10px rgba(239,68,68,.8)}
 .launch-progress{position:absolute;left:0;bottom:0;height:4px;background:rgba(255,255,255,.9);width:0;transition:width .3s linear;box-shadow:0 0 12px #fff}
 .launch-label{position:relative;z-index:1}
 .dock-status{position:absolute;left:17px;bottom:6px;font-size:9.5px;color:var(--faint);width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity var(--e2)}
@@ -813,7 +821,7 @@ function defaultState(){
   const a1={id:'acc1',username:'Player',type:'offline',uuid:'offline-player',skins:[],activeSkin:'',cape:'none',model:'classic',token:'n/a'};
   return {
     v:1,
-    theme:{preset:'orchid',custom:false,accent:'#c864ff',accent2:'#7b5cff',wallpaper:'aurora',blur:24,dim:.42,glass:.58,radius:18,speed:1,reduce:false,navIcon:52,navIconSize:28,particles:42,particleStyle:'aurora',glow:1,tooltips:true},
+    theme:{preset:'orchid',custom:false,accent:'#c864ff',accent2:'#7b5cff',wallpaper:'aurora',blur:24,dim:.42,glass:.58,radius:18,speed:1,reduce:false,navIcon:52,navIconSize:28,particles:30,particleStyle:'aurora',glow:1,tooltips:true},
     accounts:[a1],activeAccount:'acc1',communityCapes:[],capeFavs:{},
     profiles:[
       {id:'p1',name:'26.3 Fabric PvP',icon:'⚔',banner:'linear-gradient(135deg,#7c3aed,#c864ff)',version:'26.3',loader:'fabric',loaderVersion:'0.19.5',ram:6,jvm:'aikar',res:'1920x1080',accountId:'',mods:[{id:'sodium',on:true,v:'0.7.1'},{id:'lithium',on:true,v:'0.16.0'},{id:'iris',on:true,v:'1.9.2'},{id:'modmenu',on:true,v:'15.0.0'},{id:'fabricapi',on:true,v:'0.135.0'},{id:'immediatelyfast',on:true,v:'1.6.1'},{id:'entityculling',on:false,v:'1.8.0'}],packs:['invictus16'],shaders:[]},
@@ -837,6 +845,7 @@ const catalog=id=>CATALOG.find(c=>c.id===id);
 const profileAccount=p=>state.accounts.find(a=>a.id===(p.accountId||state.activeAccount))||activeAccount();
 
 /* ---------- theming ---------- */
+let themeSignature='';
 function applyTheme(){
   const t=THEMES[state.theme.preset]||THEMES.orchid, th=state.theme;
   th.navIcon=th.navIcon??52;th.navIconSize=th.navIconSize??28;th.particles=th.particles??42;
@@ -845,6 +854,8 @@ function applyTheme(){
   if([24,26].includes(th.navIconSize))th.navIconSize=28;
   th.glow=th.glow??1;th.tooltips=th.tooltips??true;
   const accent=th.custom?th.accent:t.accent, accent2=th.custom?th.accent2:t.accent2;
+  const sig=JSON.stringify([th.preset,t.bg,t.bg2,t.text,t.muted,t.accent,t.accent2,th.custom,accent,accent2,th.radius,th.speed,th.blur,th.dim,th.navIcon,th.navIconSize,th.tooltips,th.glass,th.wallpaper,th.reduce,th.glow]);
+  if(sig===themeSignature)return;themeSignature=sig;
   const root=document.documentElement.style;
   root.setProperty('--bg',t.bg);root.setProperty('--bg-2',t.bg2);root.setProperty('--bg-3',t.bg);
   root.setProperty('--accent',accent);root.setProperty('--accent-2',accent2);root.setProperty('--accent-rgb',hexRgb(accent));
@@ -864,7 +875,7 @@ function applyTheme(){
 let particleRAF=null;
 function startParticles(){
   const cv=$('#particles');if(!cv)return;
-  const n=state.theme.particles,mode=state.theme.particleStyle||'aurora';
+  const n=Math.min(state.theme.particles||0,30),mode=state.theme.particleStyle||'aurora';
   if(mode==='plain'||!n||state.theme.reduce){cv.width=cv.height=0;if(particleRAF)cancelAnimationFrame(particleRAF);particleRAF=null;return}
   const dpr=Math.min(devicePixelRatio||1,1),w=innerWidth,h=innerHeight;
   cv.width=w*dpr;cv.height=h*dpr;
@@ -875,7 +886,7 @@ function startParticles(){
   const cols=Array.from({length:Math.max(8,Math.floor(w/18))},()=>({y:Math.random()*h,sp:.6+Math.random()*1.6,chars:Array.from({length:18},()=>String.fromCharCode(0x30A0+Math.floor(Math.random()*90)))}));
   let tick=0,lastFrame=0;
   const draw=ts=>{
-    if(document.hidden||ts-lastFrame<33){particleRAF=requestAnimationFrame(draw);return}
+    if(document.hidden||ts-lastFrame<50){particleRAF=requestAnimationFrame(draw);return}
     lastFrame=ts;
     tick++;ctx.clearRect(0,0,w,h);
     if(mode==='aurora'||mode==='particles'){
@@ -988,7 +999,7 @@ function openModal(html,wide=false,sticky=false){
 function modalHead(title,sub){return `<div class="modal-head"><div><h2>${title}</h2><p>${sub}</p></div><button class="btn icon ghost" data-act="closeOverlay">✕</button></div>`}
 
 /* ---------- view routing ---------- */
-const UI={view:'home',launching:false,instanceId:'',instFilter:'mods',instSearch:'',edition:'java',lunaxMenuGlobal:false};
+const UI={view:'home',launching:false,running:false,runningProfile:'',instanceId:'',instFilter:'mods',instSearch:'',edition:'java',lunaxMenuGlobal:false};
 const BEDROCK={checked:false,installed:false,version:''};
 async function refreshBedrock(){
   if(!native())return;
@@ -1109,7 +1120,7 @@ function contentCard(c,i){
       <button class="btn sm ghost" data-act="versionHistory" data-id="${c.id}">Versions</button></div>
     </div></div>`;
 }
-const BLOCKS=['diamond_block','netherite_block','emerald_block','amethyst_block','stone','cobblestone','deepslate_bricks','grass_block_top','obsidian','gold_block'];
+const BLOCKS=['diamond_block','netherite_block','emerald_block','amethyst_block','gold_block','redstone_block','lapis_block','iron_block','coal_block','copper_block','stone','cobblestone','mossy_cobblestone','stone_bricks','cracked_stone_bricks','deepslate','deepslate_bricks','deepslate_tiles','polished_deepslate','blackstone','polished_blackstone','andesite','diorite','granite','tuff','calcite','dripstone_block','bedrock','obsidian','netherrack','crimson_nylium','warped_nylium','soul_sand','soul_soil','glowstone','sandstone','red_sandstone','bricks','grass_block_top','dirt','coarse_dirt','gravel','sand','red_sand','clay','ice','blue_ice','packed_ice','oak_planks','spruce_planks','birch_planks','jungle_planks','acacia_planks','dark_oak_planks','mangrove_planks','cherry_planks','bamboo_planks','crimson_planks','warped_planks','oak_log','spruce_log','birch_log','jungle_log','acacia_log','dark_oak_log','mangrove_log','cherry_log','stripped_oak_log','black_wool','blue_wool','brown_wool','cyan_wool','gray_wool','green_wool','light_blue_wool','lime_wool','magenta_wool','orange_wool','pink_wool','purple_wool','red_wool','white_wool','yellow_wool','black_terracotta','blue_terracotta','cyan_terracotta','gray_terracotta','green_terracotta','orange_terracotta','purple_terracotta','red_terracotta','white_terracotta','yellow_terracotta','black_concrete','blue_concrete','cyan_concrete','gray_concrete','green_concrete','orange_concrete','purple_concrete','red_concrete','white_concrete','yellow_concrete','sea_lantern','shroomlight','sponge','carved_pumpkin','jack_o_lantern','prismarine','dark_prismarine','resin_block','azalea_leaves','cherry_leaves','bamboo_block','brain_coral_block'];
 const BANNERS=['netherite_block','deepslate_bricks','amethyst_block','cobblestone','grass_block_top'];
 const blockFor=p=>p.block||BLOCKS[Math.max(0,state.profiles.indexOf(p))%BLOCKS.length];
 const bannerFor=p=>p.bannerBlock||BANNERS[Math.max(0,state.profiles.indexOf(p))%BANNERS.length];
@@ -1199,7 +1210,8 @@ async function showLiveVersions(id,title){
   openModal(`${modalHead(title+' — versions',`Compatible releases for ${p.version} / ${p.loader}`)}<div id="versionList"><div class="empty"><span class="spin">◌</span> Fetching versions…</div></div>`);
   try{
     let vs;
-    if(api())vs=JSON.parse(await api().modrinthVersions(id,p.version,p.loader));
+    const type=MR_TYPE[state.ui.mrTab];
+    if(api())vs=JSON.parse(await api().modrinthVersions(id,p.version,type==='mod'?p.loader:'',type!=='mod'));
     else{
       const loaders=encodeURIComponent(JSON.stringify(p.loader==='fabric'?['fabric']:[]));
       const res=await fetch(`https://api.modrinth.com/v2/project/${encodeURIComponent(id)}/version?loaders=${loaders}&game_versions=${encodeURIComponent(JSON.stringify([p.version]))}`);
@@ -1298,9 +1310,10 @@ function equippedCapeImage(a,cb){
   if(id.startsWith('mojang:')){
     const cid=id.slice(7);
     if(CAPE_DATA[id])return cb(CAPE_DATA[id]);
-    if(native()?.getCapeTexture)native().getCapeTexture(a.id,cid).then(u=>{CAPE_DATA[id]=u;cb(u)}).catch(()=>cb(null));
-    else cb(null);
-    return;
+    const cape=(a.capes||[]).find(c=>c.id===cid);
+    const url=cape?.url||a.capeUrl||'';
+    if(url)return getImg(url,im=>{CAPE_DATA[id]=im;cb(im||null)});
+    return cb(null);
   }
   cb(CAPE_IMG[id]||null);
 }
@@ -1434,7 +1447,10 @@ function profileSettings(id){
     <div class="form-field" style="margin-top:12px"><label>Group</label><input id="psGroup" value="${esc(p.group||'MODPACKS')}" placeholder="e.g. MODPACKS" maxlength="24"></div>
     <div class="field" style="margin-top:12px"><div><label>Use shared folder</label><div class="hint">Share game files between profiles in the same group. Can be changed anytime.</div></div><button class="switch ${p.sharedFolder?'on':''}" data-act="psToggle" data-k="sharedFolder"></button></div>
     <div class="form-field" style="margin-top:14px"><label>Quick Play Path</label><input id="psQuick" value="${esc(p.quickPlayPath||'')}" placeholder="Enter quick play path..."><div class="hint">World or server folder used by Minecraft's Quick Play feature.</div></div>
-    <div style="margin-top:16px"><label style="font-size:11px;font-weight:700;color:var(--muted)">Preferred Account</label><div class="acct-choice">${state.accounts.map(a=>`<button class="${p.accountId===a.id||(!p.accountId&&a.id===state.activeAccount)?'on':''}" data-act="psAccount" data-id="${a.id}">${esc(a.username)} <span class="chip" style="margin-left:5px;font-size:8px">${a.type==='offline'?'OFFLINE':'MS'}</span></button>`).join('')}<button class="${!p.accountId?'on':''}" data-act="psAccount" data-id="">Global</button></div></div>`;
+    <div style="margin-top:16px"><label style="font-size:11px;font-weight:700;color:var(--muted)">Preferred Account</label><div class="acct-choice">${state.accounts.map(a=>`<button class="${p.accountId===a.id||(!p.accountId&&a.id===state.activeAccount)?'on':''}" data-act="psAccount" data-id="${a.id}">${esc(a.username)} <span class="chip" style="margin-left:5px;font-size:8px">${a.type==='offline'?'OFFLINE':'MS'}</span></button>`).join('')}<button class="${!p.accountId?'on':''}" data-act="psAccount" data-id="">Global</button></div></div>
+    <div style="margin-top:16px"><div class="block-picker-head"><label style="font-size:11px;font-weight:700;color:var(--muted)">Profile icon</label><img id="psIconPreview" src="textures/${blockFor(p)}.png" alt=""><span class="tiny muted">${BLOCKS.length} Minecraft blocks</span></div>
+      <div class="block-picker">${BLOCKS.map(b=>`<button class="block-opt ${blockFor(p)===b?'on':''}" data-act="psBlock" data-v="${b}" title="${b.replace(/_/g,' ')}"><img src="textures/${b}.png" alt=""></button>`).join('')}</div></div>
+    <button class="btn danger" style="margin-top:14px" data-act="psDelete" data-id="${p.id}">Delete profile</button>`;
   else if(tab==='installation')body=`
     <div class="form-field"><label>Minecraft version</label><select id="psVersion">${VERSIONS.map(v=>`<option value="${v.id}" ${v.id===p.version?'selected':''}>${esc(v.label)}</option>`).join('')}</select></div>
     <div class="form-field" style="margin-top:12px"><label>Mod loader</label><select id="psLoader">${Object.entries(LOADERS).map(([k,v])=>`<option value="${k}" ${k===p.loader?'selected':''}>${v.name}</option>`).join('')}</select></div>
@@ -1870,7 +1886,7 @@ const LAUNCH_STAGES=['Authenticating Session','Reading Version Manifest','Resolv
 function showLaunchOverlay(p,acc){
   $('#launchOverlay')?.remove();
   const el=document.createElement('div');el.className='launch-overlay';el.id='launchOverlay';
-  el.innerHTML=`<div class="launch-panel"><div class="eyebrow">Preparing instance</div><h2>${esc(p.name)}</h2>
+  el.innerHTML=`<div class="launch-panel"><div class="eyebrow" id="launchEyebrow">Preparing instance</div><h2>${esc(p.name)}</h2>
     <div class="sub">${esc(p.version)} · ${p.loader==='fabric'?'Fabric '+esc(p.loaderVersion):esc(p.loader)} · ${esc(acc.username)}</div>
     <svg class="ring" viewBox="0 0 100 100"><circle class="ring-bg" cx="50" cy="50" r="42"/><circle class="ring-fg" id="launchRing" cx="50" cy="50" r="42" stroke-dasharray="264" stroke-dashoffset="264"/><text class="ring-label" id="launchPct" x="50" y="56" text-anchor="middle">0%</text></svg>
     <div id="launchStage" class="tiny muted">Starting…</div>
@@ -1879,6 +1895,7 @@ function showLaunchOverlay(p,acc){
   document.body.appendChild(el);
 }
 function updateLaunchOverlay(stage,progress,detail){
+  const eb=$('#launchEyebrow');if(eb)eb.textContent=stage&&(progress||0)>0?String(stage).toUpperCase():'Preparing instance';
   const ring=$('#launchRing');if(ring)ring.style.strokeDashoffset=String(264*(1-clamp(progress||0,0,100)/100));
   const pct=$('#launchPct');if(pct)pct.textContent=Math.round(progress||0)+'%';
   const st=$('#launchStage');if(st)st.textContent=(stage||'')+(detail?' · '+detail:'');
@@ -1887,6 +1904,7 @@ function updateLaunchOverlay(stage,progress,detail){
     r.classList.toggle('done',cur>idx);r.classList.toggle('active',cur===idx);
     const dot=r.querySelector('.dot');if(dot)dot.style.opacity=cur>idx?'1':cur===idx?'1':'.25';
   });
+  if((progress||0)>=100)hideLaunchOverlay();
 }
 function hideLaunchOverlay(){setTimeout(()=>$('#launchOverlay')?.remove(),900)}
 async function importDroppedJars(files,profile){
@@ -1942,11 +1960,11 @@ async function doLaunch(){
     const raw=await api().launchProfile(JSON.stringify(p),state.activeAccount);
     const r=JSON.parse(raw);
     if(!r.ok)throw new Error(r.message||'Launch failed');
-    label.textContent='RUNNING';prog.style.width='100%';status.textContent=`${p.version} · Java ${r.javaMajor} · PID ${r.pid}`;
+    label.textContent='STOP';prog.style.width='100%';status.textContent=`${p.version} · Java ${r.javaMajor} · PID ${r.pid}`;
     updateLaunchOverlay('Running',100,'PID '+r.pid);
+    UI.running=true;UI.runningProfile=p.id;btn.disabled=false;btn.classList.add('stop');
     state.launched++;persist();renderAll();
     toast('Minecraft launched',`${p.name} · ${p.version} · ${acc.username}`,'PLAY','ok');
-    setTimeout(resetLaunch,5000);
   }catch(e){
     label.textContent='LAUNCH';prog.style.width='0%';status.textContent='Launch failed';
     const msg=e.message||String(e),err=$('#launchError');
@@ -1958,10 +1976,26 @@ async function doLaunch(){
     toast('Launch failed',msg,'!','warn');setTimeout(resetLaunch,2200);
   }
 }
-function resetLaunch(){UI.launching=false;const b=$('#launchBtn');if(b)b.disabled=false;const l=$('#launchLabel');if(l)l.textContent='LAUNCH';const p=$('#launchProgress');if(p)p.style.width='0%';const s=$('#dockStatus');if(s)s.classList.remove('show');hideLaunchOverlay()}
+function resetLaunch(){
+  UI.launching=false;UI.running=false;UI.runningProfile='';
+  const b=$('#launchBtn');if(b){b.disabled=false;b.classList.remove('stop')}
+  const l=$('#launchLabel');if(l)l.textContent='LAUNCH';
+  const p=$('#launchProgress');if(p)p.style.width='0%';
+  const s=$('#dockStatus');if(s)s.classList.remove('show');hideLaunchOverlay()
+}
+async function doStop(){
+  if(!UI.running)return;
+  const id=UI.runningProfile||activeProfile().id;
+  if(api()){try{const r=JSON.parse(await api().stopProfile(id));if(!r.stopped)toast('Already closed','The game process is no longer running','i')}catch(e){toast('Stop failed',e.message||String(e),'!','warn')}}
+  const s=$('#dockStatus');if(s)s.textContent='Game stopped';
+  toast('Game stopped','Minecraft was closed','■','ok');
+  resetLaunch();
+}
 function onNativeMessage(e){
   const d=e.data;if(!d)return;
   if(d.type==='crash'){
+    if(d.exitCode===0){const s=$('#dockStatus');if(s)s.textContent='Game closed';resetLaunch();return}
+    UI.running=false;UI.runningProfile='';$('#launchBtn')?.classList.remove('stop');
     const el=$('#launchError');const msg='Game exited (code '+d.exitCode+'). '+(d.tail||'').split('\n').slice(-3).join(' ');
     if(el)el.textContent=msg.slice(0,400);
     toast('Game exited',msg.slice(0,120),'!','warn');
@@ -2042,7 +2076,7 @@ const ACTIONS={
  navigate:el=>navigate(el.dataset.v),
  goWardrobe:()=>navigate('wardrobe'),
  goSettings:()=>navigate('settings'),
- quickLaunch:doLaunch,
+ quickLaunch:()=>UI.running?doStop():doLaunch(),
  setEdition:el=>{UI.edition=el.dataset.v;persist();renderHeaderState();renderHome();toast('Edition switched',UI.edition==='bedrock'?'Bedrock Edition':'Java Edition','OK','ok')},
  openBedrockStore:()=>{const u='ms-windows-store://pdp/?ProductId=9NBLGGH2JHXJ';if(native()?.openUrl)native().openUrl(u);else window.open('https://www.minecraft.net/en-us/download','_blank')},
  openDrawer:el=>openInstance(el.dataset.id),
@@ -2078,6 +2112,20 @@ const ACTIONS={
    const p=state.profiles.find(x=>x.id===el.dataset.id);if(!p)return;
    if(state.profiles.length===1)return toast('Cannot delete','At least one profile is required','⚠','warn');
    openModal(`${modalHead('Delete profile?',`This removes the local instance entry for ${p.name}. The prototype does not delete real files.`)}<div class="modal-foot"><button class="btn" data-act="closeOverlay">Cancel</button><button class="btn danger" data-act="confirmDeleteProfile" data-id="${p.id}">Delete permanently</button></div>`);
+ },
+ psBlock:el=>{
+  const b=el.dataset.v;if(!PS_DRAFT)return;
+  PS_DRAFT.block=b;
+  $$('.pms .block-opt').forEach(x=>x.classList.toggle('on',x.dataset.v===b));
+  const img=$('#psIconPreview');if(img)img.src='textures/'+b+'.png';
+ },
+ psDelete:el=>{
+  if(el.dataset.confirm!=='1'){el.dataset.confirm='1';el.textContent='Click again to confirm deletion';return}
+  const id=el.dataset.id,i=state.profiles.findIndex(x=>x.id===id);if(i<0)return;
+  const name=state.profiles[i].name;state.profiles.splice(i,1);
+  if(state.activeProfile===id)state.activeProfile=state.profiles[0]?.id||'';
+  if(UI.instanceId===id)UI.instanceId='';
+  PS_DRAFT=null;persist();closeOverlay();renderAll();toast('Profile deleted',name,'✕');
  },
  confirmDeleteProfile:el=>{state.profiles=state.profiles.filter(x=>x.id!==el.dataset.id);if(state.activeProfile===el.dataset.id)state.activeProfile=state.profiles[0].id;persist();closeOverlay();renderAll();toast('Profile deleted','Instance removed from library','✕')},
  exportProfile:el=>{const p=state.profiles.find(x=>x.id===el.dataset.id);if(!p)return;const blob=new Blob([JSON.stringify({format:'mrpack-lite',profile:p},null,2)],{type:'application/zip'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=p.name.replace(/\s+/g,'-')+'.mrpack';a.click();toast('Export started',p.name+'.mrpack','⇪','ok')},
@@ -2338,7 +2386,7 @@ $('.topbar').addEventListener('pointerdown',e=>{
   if(e.target.closest('button,input'))return;
   bridge()?.drag?.();
 });
-$('#launchBtn').addEventListener('click',doLaunch);
+$('#launchBtn').addEventListener('click',()=>UI.running?doStop():doLaunch());
 $('#quickWardrobe').addEventListener('click',()=>navigate('wardrobe'));
 $('#quickTheme').addEventListener('click',()=>navigate('settings'));
 

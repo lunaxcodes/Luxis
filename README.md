@@ -35,6 +35,9 @@ The window is frameless: drag the top bar to move it, and use `─ □ ×` in th
 - **Updates tab** — a dedicated sidebar page checks GitHub releases on open and on startup, verifies SHA-256, and replaces the exe on restart.
 - **Skins & capes** — accurate 64×64 front/back character rendering (including slim arms), real cape artwork in the library, and equip buttons for capes your Microsoft account actually owns. Preset skins are no longer added automatically.
 - **Lunax Mod** — the in-game module section is a beta placeholder; no mod is bundled or installed.
+- **Profile controls** — delete a profile from its settings (with confirmation), and pick from 115 real Minecraft block textures for its icon.
+- **Launch & stop** — the Launch button turns into Stop while the game runs, and the launch overlay closes automatically at 100%.
+- **Modrinth matching** — shaders and resource packs fall back from exact version to major version to any version, so packs that omit loader metadata still install.
 
 ## About the Microsoft sign-in page
 
