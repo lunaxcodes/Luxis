@@ -17,5 +17,6 @@
   <ItemGroup>
     <EmbeddedResource Include="..\index.html" LogicalName="Luxis.index.html" />
     <EmbeddedResource Include="..\textures\*.png" LogicalName="tex_%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\LuxisClientMod.jar" LogicalName="Luxis.LuxisClientMod.jar" />
   </ItemGroup>
 </Project>

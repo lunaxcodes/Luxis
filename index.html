@@ -1512,15 +1512,37 @@ function renderInstance(){
   if(api()&&!ENRICHED.has(p.id)){ENRICHED.add(p.id);enrichCustomMods(p)}
 }
 function renderLuxisMod(){
+  state.luxisModProfiles=state.luxisModProfiles||{};
+  const canNative=!!(native()&&native().luxisModStatus);
+  const rows=state.profiles.map(pr=>{
+    let st={installed:false,enabled:false,fabricApi:false};
+    if(canNative){try{st=JSON.parse(native().luxisModStatus(pr.name))||st}catch(e){}}
+    const installed=!!(st.installed||state.luxisModProfiles[pr.id]);
+    const fabric=!!st.fabricApi;
+    return `<div class="mod-row ${installed?'':'off'}"><div class="m-ico" style="color:var(--accent)">✦</div>
+      <div class="m-meta"><b>${esc(pr.name)}</b><small>${esc(pr.version)} · ${pr.loader==='fabric'?'Fabric '+esc(pr.loaderVersion):esc(pr.loader)} · ${fabric?'Fabric API ready':'Fabric API not detected'}</small></div>
+      <span class="chip ${installed?'ok':''}">${installed?'INSTALLED':'NOT INSTALLED'}</span>
+      <button class="btn sm ${installed?'danger':'primary'}" data-act="${installed?'removeLuxisMod':'addLuxisMod'}" data-profile="${esc(pr.id)}">${installed?'Remove':'Add to profile'}</button></div>`;
+  }).join('');
   $('#view-luxismod').innerHTML=`
-   <div class="view-head"><div><div class="view-title">Luxis <em>Mod</em></div><div class="view-desc">Status of the in-game module system.</div></div></div>
-   <div class="card" style="padding:34px;max-width:640px;text-align:center">
-     <div style="font-size:54px;line-height:1">⚠</div>
-     <h2 style="font-size:20px;font-weight:820;margin-top:14px">This feature is in beta</h2>
-     <p class="muted" style="font-size:12.5px;line-height:1.7;margin-top:10px">The in-game Luxis module menu is not available in this release. It is being rebuilt for stability — no files are installed and no settings are changed.</p>
-     <span class="chip warn" style="margin-top:16px">BETA · UNAVAILABLE</span>
-   </div>`;
+   <div class="view-head"><div><div class="view-title">Luxis <em>Mod</em></div><div class="view-desc">Add the in-game Fabric mod menu to any profile. It opens with RIGHT SHIFT and never installs automatically.</div></div>
+     <div class="view-actions"><span class="chip accent">✦ v1.0.0</span><span class="chip">Fabric 0.19.5</span></div></div>
+   <div class="settings-grid">
+    <div class="card set-card"><h3>What it adds</h3><div class="sub">A windowed mod menu with profiles, per-module options, HUD layout editor and 16 fair-play HUD / optimization / visual modules.</div>
+      <div class="pms" style="margin-top:12px"><div style="display:grid;gap:8px">
+        <div class="tiny muted">◆ Windowed menu — MODS / SETTINGS / WAYPOINTS tabs</div>
+        <div class="tiny muted">◆ Drag-and-drop HUD Layout Editor with snapping and guides</div>
+        <div class="tiny muted">◆ Every module has keybinds, modes, sliders and colors</div>
+        <div class="tiny muted">◆ Profiles saved to <span class="mono">config/luxis/profiles/</span></div>
+        <div class="tiny muted">◆ No cheats, auto-clickers, hitboxes or unfair advantages</div>
+      </div></div></div>
+    <div class="card set-card"><h3>Requirements</h3><div class="sub">Minecraft Java 26.3 · Fabric Loader 0.19.5+ · Fabric API 0.167.0+26.3 · Java 25+</div>
+      <div class="tiny muted" style="margin-top:10px">The mod only changes rendering and input display. It does not modify game logic. Config backups still run before every launch.</div></div>
+   </div>
+   <div class="card set-card" style="grid-column:1/-1"><h3>Install to profiles</h3><div class="sub">Choose which instances should load <span class="mono">LuxisClientMod.jar</span>. Nothing is changed until you click a button.</div>
+     <div style="margin-top:12px">${rows||'<div class="empty">No profiles yet.</div>'}</div></div>`;
 }
+
 function renderUpdates(){
   $('#view-updates').innerHTML=`
   <div class="view-head"><div><div class="view-title">Software <em>Updates</em></div><div class="view-desc">Keep Luxis up to date with the latest GitHub release.</div></div></div>
@@ -2154,6 +2176,29 @@ async function updateMods(onlyIds){
 }
 
 const ACTIONS={
+ addLuxisMod:async el=>{
+  state.luxisModProfiles=state.luxisModProfiles||{};
+  const pr=state.profiles.find(x=>x.id===el.dataset.profile);if(!pr)return;
+  if(!api())return toast('Desktop launcher required','Run Luxis.exe to install the mod','!','warn');
+  try{
+    const r=JSON.parse(await api().installLuxisMod(pr.name));
+    if(!r.ok)return toast('Install failed',r.error||'Unknown error','!','warn');
+    if(!pr.mods.some(m=>m.id==='luxis-client-mod'))pr.mods.push({id:'luxis-client-mod',title:'Luxis Client Mod',v:'1.0.0',file:'LuxisClientMod.jar',on:true});
+    state.luxisModProfiles[pr.id]=true;persist();renderLuxisMod();toast('Luxis Mod installed',pr.name+' · press RIGHT SHIFT in game','OK','ok');
+  }catch(e){toast('Install failed',e.message||String(e),'!','warn')}
+ },
+ removeLuxisMod:async el=>{
+  state.luxisModProfiles=state.luxisModProfiles||{};
+  const pr=state.profiles.find(x=>x.id===el.dataset.profile);if(!pr)return;
+  if(!api())return toast('Desktop launcher required','Run Luxis.exe to remove the mod','!','warn');
+  try{
+    const r=JSON.parse(await api().removeLuxisMod(pr.name));
+    if(!r.ok)return toast('Remove failed',r.error||'Unknown error','!','warn');
+    pr.mods=pr.mods.filter(m=>m.id!=='luxis-client-mod');
+    state.luxisModProfiles[pr.id]=false;persist();renderLuxisMod();toast('Luxis Mod removed',pr.name,'OK','ok');
+  }catch(e){toast('Remove failed',e.message||String(e),'!','warn')}
+ },
+
  closeOverlay,
  winMin:()=>bridge()?.minimize?.(),
  winMax:()=>bridge()?.maximize?.(),

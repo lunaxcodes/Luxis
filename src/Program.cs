@@ -217,6 +217,42 @@ public sealed class Bridge
     public string analyzeInstance(string profileName) => _minecraft.Analyze(profileName);
     public string toggleModFile(string profileName, string file, bool enabled) => _minecraft.ToggleMod(profileName, file, enabled);
 
+    // ---- bundled in-game Luxis mod ----
+    public string luxisModStatus(string profileName)
+    {
+        var mods = Path.Combine(_minecraft.InstanceDir(profileName), "mods");
+        var jar = Path.Combine(mods, "LuxisClientMod.jar");
+        var fabric = Directory.Exists(mods) && Directory.GetFiles(mods, "fabric-api*.jar").Length > 0;
+        return Util.Json(new { installed = File.Exists(jar) || File.Exists(jar + ".disabled"), enabled = File.Exists(jar), fabricApi = fabric });
+    }
+
+    public string installLuxisMod(string profileName)
+    {
+        var mods = Path.Combine(_minecraft.InstanceDir(profileName), "mods");
+        Directory.CreateDirectory(mods);
+        if (Directory.GetFiles(mods, "fabric-api*.jar").Length == 0)
+            return Util.Json(new { ok = false, error = "Install Fabric API 0.167.0+26.3 in this instance first." });
+        using var src = Assembly.GetExecutingAssembly().GetManifestResourceStream("Luxis.LuxisClientMod.jar");
+        if (src == null) return Util.Json(new { ok = false, error = "Bundled mod file is missing." });
+        var jar = Path.Combine(mods, "LuxisClientMod.jar");
+        using (var dst = File.Create(jar)) src.CopyTo(dst);
+        var off = jar + ".disabled";
+        if (File.Exists(off)) File.Delete(off);
+        return Util.Json(new { ok = true, file = "LuxisClientMod.jar" });
+    }
+
+    public string removeLuxisMod(string profileName)
+    {
+        var mods = Path.Combine(_minecraft.InstanceDir(profileName), "mods");
+        try
+        {
+            File.Delete(Path.Combine(mods, "LuxisClientMod.jar"));
+            File.Delete(Path.Combine(mods, "LuxisClientMod.jar.disabled"));
+        }
+        catch { }
+        return Util.Json(new { ok = true });
+    }
+
     private static bool IsValidJar(string path)
     {
         try { using var zip = ZipFile.OpenRead(path); return zip.Entries.Count > 0; }
