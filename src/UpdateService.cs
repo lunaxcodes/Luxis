@@ -73,7 +73,9 @@ public sealed class UpdateService
         if (string.IsNullOrEmpty(url)) throw new Exception("Update URL missing.");
         var target = Process.GetCurrentProcess().MainModule?.FileName ?? Path.Combine(AppContext.BaseDirectory, "Lunax.exe");
         var tmp = Path.Combine(Path.GetTempPath(), "lunax-update-" + Guid.NewGuid().ToString("N") + ".exe");
-        await Util.Download(url, tmp, null, string.IsNullOrEmpty(sha) ? null : sha);
+        // The manifest hash is SHA-256; Util.Download's 4th argument is SHA-512.
+        // Download unchecked here and verify with SHA-256 below.
+        await Util.Download(url, tmp);
         using var stream = File.OpenRead(tmp);
         var actual = Convert.ToHexString(SHA256.HashData(stream)).ToLowerInvariant();
         if (!string.IsNullOrEmpty(sha) && actual != sha.ToLowerInvariant())

@@ -38,6 +38,7 @@ The window is frameless: drag the top bar to move it, and use `─ □ ×` in th
 - **Profile controls** — delete a profile from its settings (with confirmation), and pick from 115 real Minecraft block textures for its icon.
 - **Launch & stop** — the Launch button turns into Stop while the game runs, and the launch overlay closes automatically at 100%.
 - **Modrinth matching** — shaders and resource packs fall back from exact version to major version to any version, so packs that omit loader metadata still install.
+- **Custom mod icons & Update all** — locally added jars are matched to Modrinth projects for their real icons, and Update all detects outdated mods even when they were not installed through Lunax.
 
 ## About the Microsoft sign-in page
 

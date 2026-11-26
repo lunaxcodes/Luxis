@@ -1000,6 +1000,8 @@ function modalHead(title,sub){return `<div class="modal-head"><div><h2>${title}<
 
 /* ---------- view routing ---------- */
 const UI={view:'home',launching:false,running:false,runningProfile:'',instanceId:'',instFilter:'mods',instSearch:'',edition:'java',lunaxMenuGlobal:false};
+let leaveTimer=null,navOffsets=[];const MOD_UPDATES={};const VIEW_DIRTY=new Set(['home','profiles','modrinth','packs','wardrobe','settings','instance','capes','lunaxmod','updates']);
+function refreshNavOffsets(){navOffsets=$$('.nav-item').map(x=>x.offsetTop)}
 const BEDROCK={checked:false,installed:false,version:''};
 async function refreshBedrock(){
   if(!native())return;
@@ -1010,19 +1012,18 @@ const VIEW_LABEL={home:'Home',profiles:'Profiles',modrinth:'Modrinth Hub',packs:
 function navigate(v){
   if(!VIEW_LABEL[v]||v===UI.view)return;
   const old=$('.view.active');if(old){old.classList.add('leaving');old.classList.remove('active')}
-  setTimeout(()=>$$('.view').forEach(x=>x.classList.remove('leaving')),420/state.theme.speed);
+  clearTimeout(leaveTimer);leaveTimer=setTimeout(()=>$$('.view').forEach(x=>x.classList.remove('leaving')),260/state.theme.speed);
   const next=$(`#view-${v}`);next.classList.add('active');
   UI.view=v;closeOverlay();
   $('#crumb').innerHTML=`<span>Lunax</span><span class="sep">/</span><span>${VIEW_LABEL[v]}</span>`;
   const items=$$('.nav-item'),idx=items.findIndex(x=>x.dataset.view===v);
-  if(idx>=0)$('#navIndicator').style.transform=`translateY(${items[idx].offsetTop}px)`;
+  if(idx>=0)$('#navIndicator').style.transform=`translateY(${navOffsets[idx]??items[idx].offsetTop}px)`;
   items.forEach(x=>x.classList.toggle('active',x.dataset.view===v));
   if(v==='wardrobe')requestAnimationFrame(drawFlatPreview);
   if(v==='modrinth'||v==='packs')$('#globalSearch').value=state.ui.mrSearch||'';
-  renderView(v);
+  if(VIEW_DIRTY.has(v)){renderView(v);VIEW_DIRTY.delete(v)}
   if(v==='modrinth')loadModrinth(true);
   if(v==='updates')ACTIONS.checkForUpdate();
-  if(v==='capes'||v==='wardrobe')refreshMojangCapes().then(()=>{if(UI.view===v){renderView(v)}});
 }
 
 /* ---------- renderers ---------- */
@@ -1189,7 +1190,7 @@ function renderModrinth(){
   const type=MR_TYPE[u.mrTab],p=activeProfile();
   $('#view-modrinth').innerHTML=`
    <div class="view-head"><div><div class="view-title">Modrinth <em>Hub</em></div><div class="view-desc">Live from api.modrinth.com · installing into <b>${esc(p.name)}</b> (${esc(p.version)}, ${esc(p.loader)}).</div></div>
-   <div class="view-actions"><span class="chip accent">◈ ${esc(p.version)}</span><span class="chip">${p.loader==='fabric'?'Fabric '+p.loaderVersion:esc(p.loader)}</span></div></div>
+   <div class="view-actions"><span class="chip accent">◈ ${esc(p.version)}</span><span class="chip">${p.loader==='fabric'?'Fabric '+p.loaderVersion:esc(p.loader)}</span>${u.mrTab==='mods'?'<button class="btn" data-act="updateAllMods">↓ Update all</button>':''}</div></div>
    <div class="mr-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
      <input id="mrSearch" placeholder="Search ${u.mrTab==='mods'?'mods':u.mrTab==='packs'?'resource packs':'shader packs'} on Modrinth…" value="${esc(u.mrSearch||'')}" autocomplete="off">
      '<span class="chip ok">● LIVE</span>'</div>
@@ -1487,7 +1488,7 @@ function renderInstance(){
   const worldLinks=[['saves','WORLDS','◈'],['screenshots','SCREENSHOTS','▣'],['logs','LOGS','≡'],['config','CONFIG','⚙']];
   const tiles=filter==='mods'?mods.map(m=>{const c=catalog(m.id);const title=m.title||c?.title||m.id;
     return `<div class="mod-tile ${m.on?'':'off'}"><div class="mi">${m.icon?`<img src="${esc(m.icon)}" style="width:100%;height:100%;object-fit:cover;border-radius:9px" onerror="this.style.display='none'">`:c?.icon||'▦'}</div><div class="mt"><b>${esc(title)}</b><small>${esc(m.v||c?.cats[0]||'local')}${m.file?' · '+esc(m.file):''}</small></div>
-      <button class="btn sm ghost" data-act="checkUpdate" data-id="${m.id}">↻</button><button class="switch ${m.on?'on':''}" data-act="toggleMod" data-id="${m.id}" data-pid="${p.id}"></button></div>`}).join('')
+      ${MOD_UPDATES[m.id]?'<button class="btn sm ghost" data-act="updateOne" data-id="'+esc(m.id)+'" title="Update available" style="color:var(--ok)">⇅</button>':''}<button class="btn sm ghost" data-act="checkUpdate" data-id="${m.id}">↻</button><button class="switch ${m.on?'on':''}" data-act="toggleMod" data-id="${m.id}" data-pid="${p.id}"></button></div>`}).join('')
     :filter==='resourcepacks'?packs.map((x,i)=>`<div class="mod-tile"><div class="mi">❖</div><div class="mt"><b>${esc(x.title||x.id)}</b><small>${esc(x.file||'')}</small></div><button class="btn sm danger ghost" data-act="uninstallPack" data-i="${i}">✕</button></div>`).join('')
     :shaders.map((x,i)=>`<div class="mod-tile"><div class="mi">✦</div><div class="mt"><b>${esc(x.title||x.id)}</b><small>${esc(x.file||'')}</small></div><button class="btn sm danger ghost" data-act="uninstallShader" data-i="${i}">✕</button></div>`).join('');
   $('#view-instance').innerHTML=`
@@ -1501,18 +1502,14 @@ function renderInstance(){
      <div class="stat-tile"><div class="lbl">▤ DISK</div><div class="val" id="instDisk">…</div></div></div>
    <div class="inst-layout"><div>
      <div class="inst-toolbar"><input id="instSearch" placeholder="Search ${filter==='mods'?'mods':filter==='resourcepacks'?'resource packs':'shaders'}…" value="${esc(UI.instSearch||'')}">
-       <button class="btn icon" data-act="filterReset" title="Clear">⌫</button><button class="btn icon" data-act="diagnose" title="Diagnose launch">!</button><button class="btn" data-act="pickMods">＋ Add Mods</button><button class="btn ghost" data-act="openMrTab" data-v="${filter==='mods'?'mods':filter==='resourcepacks'?'packs':'shaders'}">Modrinth</button></div>
+       <button class="btn icon" data-act="filterReset" title="Clear">⌫</button><button class="btn icon" data-act="diagnose" title="Diagnose launch">!</button><button class="btn" data-act="pickMods">＋ Add Mods</button><button class="btn" data-act="findIcons">Find icons</button><button class="btn" data-act="updateAllMods">↓ Update all</button><button class="btn ghost" data-act="openMrTab" data-v="${filter==='mods'?'mods':filter==='resourcepacks'?'packs':'shaders'}">Modrinth</button></div>
      <div class="mod-grid">${tiles||'<div class="empty">Nothing here yet. Add content from Modrinth.</div>'}</div>
    </div><div class="card inst-side">
      <div class="side-group"><h4>Content</h4>${contentLinks.map(([k,l,ic,n])=>`<button class="side-link ${filter===k?'on':''}" data-act="instFilter" data-v="${k}">${ic} ${l}<span class="cnt">${n}</span></button>`).join('')}</div>
      <div class="side-group"><h4>World</h4>${worldLinks.map(([k,l,ic])=>`<button class="side-link" data-act="openFolder" data-v="${k}">${ic} ${l}</button>`).join('')}</div>
    </div></div>`;
   if(native()?.instanceStats){try{const s=JSON.parse(native().instanceStats(p.name));const el=$('#instDisk');if(el)el.textContent=(s.bytes/1048576).toFixed(0)+' MB'}catch(e){}}
-  if(api())(p.mods||[]).forEach(m=>{
-    if(!m.icon&&!m.iconFetch&&m.id){m.iconFetch=true;
-      (api()?api().getProjectIcon(m.id).then(u=>JSON.parse(u)):fetch('https://api.modrinth.com/v2/project/'+encodeURIComponent(m.id)).then(r=>r.json()).then(j=>j.icon_url||''))
-        .then(u=>{m.icon=u||'';persist();if(UI.view==='instance'&&UI.instanceId===p.id)renderInstance()}).catch(()=>{})}
-  });
+  if(api()&&!ENRICHED.has(p.id)){ENRICHED.add(p.id);enrichCustomMods(p)}
 }
 function renderLunaxMod(){
   $('#view-lunaxmod').innerHTML=`
@@ -1583,7 +1580,7 @@ function renderView(v){
   else if(v==='capes')renderCapes();
   else if(v==='lunaxmod')renderLunaxMod();
 }
-function renderAll(){applyTheme();renderHeaderState();renderView(UI.view);refreshHeads();}
+function renderAll(){applyTheme();renderHeaderState();renderView(UI.view);refreshHeads();Object.keys(VIEW_LABEL).forEach(k=>VIEW_DIRTY.add(k));}
 
 /* ---------- account switcher ---------- */
 function openAccountPopover(anchor){
@@ -1919,6 +1916,7 @@ async function importDroppedJars(files,profile){
       if(!profile.mods.some(m=>m.id===id))profile.mods.push({id,title:id,file:name,v:'local',on:true});
     });
     persist();renderAll();if(UI.view==='instance')renderInstance();
+    if(api())enrichCustomMods(profile);
     toast('Mods installed',`${(r.files||[]).length} file(s) copied to mods/`,'OK','ok');
     if((r.rejected||[]).length)toast('Invalid mod files',r.rejected.join(', ')+' - not a valid .jar','!','warn');
   }catch(e){toast('Import failed',e.message||String(e),'!','warn')}
@@ -2068,6 +2066,93 @@ function versionHistory(id){
 
 /* ---------- actions ---------- */
 const bridge=native;
+const MOD_PROJECTS={},ENRICHED=new Set();
+function normMod(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'')}
+function normVer(s){const m=String(s||'').match(/(\d+\.\d+(?:\.\d+)?)/);return m?m[1]:normMod(s)}
+async function findModProject(m){
+  const key=m.id||m.title||'';
+  if(MOD_PROJECTS[key]!==undefined)return MOD_PROJECTS[key];
+  const raw=(m.title&&m.title!==m.id)?m.title:m.id;
+  const first=String(raw||'').replace(/\.jar$/i,'').split(/[-_]/)[0].trim();
+  const spaced=first.replace(/([a-z0-9])([A-Z])/g,'$1 $2').replace(/^([A-Z])([A-Z][a-z])/,'$1 $2');
+  if(first.length<3){MOD_PROJECTS[key]=null;return null}
+  try{
+    const queries=[first,spaced].filter((v,i,a)=>v&&a.indexOf(v)===i),hits=[];
+    for(const q of queries){
+      const r=JSON.parse(await api().searchModrinth(q.slice(0,60),'mod','All','All','',0));
+      hits.push(...(r.hits||[]));
+    }
+    const a=normMod(raw),qn=normMod(first);
+    const score=h=>{
+      const s=normMod(h.slug||''),t=normMod(h.title);
+      if(s&&s===qn)return 5;
+      if(s.length>=3&&a.includes(s))return 4;
+      if(t.length>=4&&a.includes(t))return 3;
+      if(s.length>=3&&s.includes(qn))return 2;
+      if(t.length>=4&&t.includes(a.slice(0,Math.min(a.length,8))))return 1;
+      return 0;
+    };
+    const best=hits.map(h=>({h,s:score(h)})).filter(x=>x.s>0).sort((x,y)=>y.s-x.s)[0];
+    const hit=best?.h;
+    MOD_PROJECTS[key]=hit?{id:hit.id,title:hit.title,icon:hit.iconUrl}:null;
+  }catch(e){MOD_PROJECTS[key]=null}
+  return MOD_PROJECTS[key];
+}
+async function enrichCustomMods(p,force=false){
+  if(!api())return;
+  let changed=false;
+  for(const m of (p.mods||[]).slice(0,40)){
+    if(m.icon&&!force)continue;
+    const proj=await findModProject(m);
+    if(!proj?.icon)continue;
+    m.icon=proj.icon;
+    if(!m.projectId||m.projectId===m.id)m.projectId=proj.id;
+    if(!m.title||m.title===m.id)m.title=proj.title;
+    changed=true;
+  }
+  if(changed){persist();if(UI.view==='instance')renderInstance();else renderAll();toast('Icons resolved','Matched custom mods to Modrinth artwork','OK','ok')}
+}
+async function updateMods(onlyIds){
+  if(!api())return toast('Desktop launcher required','Run Lunax.exe to update mods','!','warn');
+  const p=viewedProfile(),candidates=(p.mods||[]).filter(m=>m.id&&m.sha512!=='browser'&&(!onlyIds||onlyIds.includes(m.id)));
+  if(!candidates.length)return toast('Nothing to update','No mods found in this instance','i');
+  toast('Checking for updates',`${candidates.length} mod(s)…`,'↻');
+  const outdated=[];
+  for(const m of candidates){
+    try{
+      let update=false;
+      if(m.sha512){const r=JSON.parse(await api().checkModrinthUpdate(m.sha512,m.id));update=!!r.update}
+      else{
+        const proj=await findModProject(m);
+        if(proj){
+          const vs=JSON.parse(await api().modrinthVersions(proj.id,p.version,p.loader));
+          const newest=vs[0];
+          if(newest&&normVer(newest.versionNumber)!==normVer(m.v||m.file||m.id))update=true;
+          m.projectId=proj.id;if(!m.icon&&proj.icon)m.icon=proj.icon;
+        }
+      }
+      MOD_UPDATES[m.id]=update;if(update)outdated.push(m);
+    }catch(e){}
+  }
+  if(!outdated.length){if(UI.view==='instance')renderInstance();return toast('All mods up to date',`${candidates.length} checked`,'OK','ok')}
+  let done=0;
+  for(const m of outdated){
+    try{
+      const proj=m.projectId||await findModProject(m);
+      if(!proj)continue;
+      const raw=await api().installModrinth(JSON.stringify({id:proj.id,title:m.title||m.id,projectType:'mod'}),JSON.stringify(p));
+      const r=JSON.parse(raw),item=(r.installed||[])[0];
+      if(item){
+        if(m.file&&m.file!==item.file&&native()?.deleteModFile)native().deleteModFile(p.name,m.file);
+        const i=p.mods.indexOf(m);if(i>=0)p.mods[i]={...m,file:item.file,v:item.version,sha512:item.sha512,on:m.on};
+        MOD_UPDATES[m.id]=false;done++;
+      }
+    }catch(e){}
+  }
+  persist();if(UI.view==='instance')renderInstance();else renderAll();
+  toast('Update complete',`${done} of ${outdated.length} mod(s) updated`,'✓','ok');
+}
+
 const ACTIONS={
  closeOverlay,
  winMin:()=>bridge()?.minimize?.(),
@@ -2147,9 +2232,12 @@ const ACTIONS={
   checkUpdate:async el=>{
     const p=viewedProfile(),m=p.mods.find(x=>x.id===el.dataset.id);
     if(!api()||!m?.sha512)return toast('Update check','Use the Modrinth Hub for live version checks','v');
-    try{const r=JSON.parse(await api().checkModrinthUpdate(m.sha512,m.id));toast(r.update?'Update available':'Up to date',r.update?`${m.title||m.id} -> ${r.version}`:`${m.title||m.id} is current`,r.update?'v':'OK',r.update?'warn':'ok')}
+    try{const r=JSON.parse(await api().checkModrinthUpdate(m.sha512,m.id));MOD_UPDATES[m.id]=!!r.update;if(UI.view==='instance')renderInstance();toast(r.update?'Update available':'Up to date',r.update?`${m.title||m.id} -> ${r.version}`:`${m.title||m.id} is current`,r.update?'v':'OK',r.update?'warn':'ok')}
     catch(e){toast('Update check failed',e.message,'!','warn')}
   },
+  findIcons:()=>enrichCustomMods(viewedProfile(),true),
+  updateOne:el=>updateMods([el.dataset.id]),
+  updateAllMods:async()=>updateMods(),
   openFolder:el=>{const p=viewedProfile();bridge()?.openFolder?.(el.dataset.v,p.name);toast('Opening folder',el.dataset.v+'/ Â· '+p.name,'folder','ok')},
   mrTab:el=>{state.ui.mrTab=el.dataset.v;state.ui.mrCat='All';state.ui.mrLoader='All';state.ui.mrVer='All';MR.items=[];MR.offset=0;persist();renderModrinth();loadModrinth(true)},
   openMrTab:el=>{state.ui.mrTab=el.dataset.v;state.ui.mrCat='All';state.ui.mrLoader='All';state.ui.mrVer='All';persist();closeOverlay();navigate('modrinth');loadModrinth(true)},
@@ -2368,7 +2456,7 @@ document.addEventListener('drop',e=>{
   else if(d.dataset.jarDrop){const p=state.profiles.find(x=>x.id===d.dataset.jarDrop);if(p&&f)importDroppedJars([f],p)}
 });
 /* jar picker via hidden input */
-$('#jarFileInput').addEventListener('change',e=>{const f=e.target.files[0];const p=activeProfile();if(f&&p){p.mods.push({id:f.name.replace(/\.jar$/i,''),on:true,v:'local'});persist();renderAll();toast('Mod imported',f.name,'↓','ok')}e.target.value=''});
+$('#jarFileInput').addEventListener('change',e=>{const f=e.target.files[0];const p=activeProfile();if(f&&p){p.mods.push({id:f.name.replace(/\.jar$/i,''),on:true,v:'local'});persist();renderAll();if(api())enrichCustomMods(p);toast('Mod imported',f.name,'↓','ok')}e.target.value=''});
 /* modpack import */
 $('#mrpackInput').addEventListener('change',e=>{
   const f=e.target.files[0];if(!f)return;
@@ -2392,8 +2480,10 @@ $('#quickTheme').addEventListener('click',()=>navigate('settings'));
 
 /* ---------- boot ---------- */
 syncNativeAccounts();
+refreshNavOffsets();window.addEventListener('resize',refreshNavOffsets);
 persist();
 renderAll();
+refreshMojangCapes().then(()=>{if(UI.view==='capes'||UI.view==='wardrobe')renderView(UI.view)});
 refreshBedrock().then(()=>{if(UI.view==='home')renderHome()});
 const navItems=$$('.nav-item'),cur=navItems.findIndex(x=>x.dataset.view===UI.view);
 const first=$$('.nav-item')[cur];if(first)$('#navIndicator').style.transform=`translateY(${first.offsetTop}px)`;

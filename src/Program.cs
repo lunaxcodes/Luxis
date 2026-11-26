@@ -155,6 +155,7 @@ public sealed class Bridge
     public Task<string> setMojangCape(string id, string capeId) => _auth.SetActiveCape(id, capeId);
     public Task<string> getCapeTexture(string id, string capeId) => _auth.GetCapeTexture(id, capeId);
 
+
     public string javaStatus()
     {
         var majors = new[] { 8, 17, 21, 25 };
@@ -277,6 +278,7 @@ public sealed class Bridge
     public Task<string> getProjectIcon(string projectId) => _modrinth.GetProjectIcon(projectId);
 
     public string restoreConfigs(string profileName) => _minecraft.RestoreConfigs(profileName);
+    public string deleteModFile(string profileName, string fileName) => _minecraft.DeleteModFile(profileName, fileName);
 
     public string bedrockStatus()
     {

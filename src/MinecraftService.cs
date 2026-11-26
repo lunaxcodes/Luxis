@@ -394,6 +394,19 @@ public sealed class MinecraftService
         return Util.Json(new { restored = count, from = newest });
     }
 
+    public string DeleteModFile(string profileName, string fileName)
+    {
+        var name = Path.GetFileName(fileName ?? "");
+        if (string.IsNullOrEmpty(name)) return Util.Json(new { deleted = false });
+        var dir = Path.Combine(InstanceDir(profileName), "mods");
+        foreach (var path in new[] { Path.Combine(dir, name), Path.Combine(dir, name + ".disabled") })
+        {
+            try { if (File.Exists(path)) { File.Delete(path); return Util.Json(new { deleted = true }); } }
+            catch { }
+        }
+        return Util.Json(new { deleted = false });
+    }
+
     public string Stop(string profileId)
     {
         if (!_processes.TryRemove(profileId, out var proc)) return Util.Json(new { stopped = false });
