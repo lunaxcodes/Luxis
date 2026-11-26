@@ -1,0 +1,30 @@
+# Build output
+/Lunax.exe
+bin/
+obj/
+publish/
+release/
+installer/*.exe
+!dist/*.exe
+*.pdb
+*.user
+
+# Local runtime data — never commit personal state
+accounts.json
+settings.json
+auth-debug.log
+mrpack-debug.log
+app/
+game/
+instances/
+textures/
+
+# Editors / OS
+.vs/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+dist/Lunax.exe
+
