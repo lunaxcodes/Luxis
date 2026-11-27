@@ -16,6 +16,20 @@ public final class Draw {
         g.fill(x, y + r, x + w, y + h - r, color);
     }
 
+    public static void softBorder(GuiGraphicsExtractor g, int x, int y, int w, int h, int r, int color) {
+        g.fill(x + r, y, x + w - r, y + 1, color);
+        g.fill(x + r, y + h - 1, x + w - r, y + h, color);
+        g.fill(x, y + r, x + 1, y + h - r, color);
+        g.fill(x + w - 1, y + r, x + w, y + h - r, color);
+        for (int i = 0; i < r; i++) {
+            int inset = r - (int) Math.sqrt(r * r - (r - i) * (r - i));
+            g.fill(x + inset, y + i, x + inset + 1, y + i + 1, color);
+            g.fill(x + w - inset - 1, y + i, x + w - inset, y + i + 1, color);
+            g.fill(x + inset, y + h - i - 1, x + inset + 1, y + h - i, color);
+            g.fill(x + w - inset - 1, y + h - i - 1, x + w - inset, y + h - i, color);
+        }
+    }
+
     public static void shadow(GuiGraphicsExtractor g, int x, int y, int w, int h, int r) {
         for (int i = 3; i >= 1; i--) {
             int a = Math.max(0, 20 - i * 4);

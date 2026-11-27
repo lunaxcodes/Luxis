@@ -47,10 +47,10 @@ public final class LuxisModScreen extends Screen {
         float pulse = (float) (0.5 + 0.5 * Math.sin(System.currentTimeMillis() * 0.0025));
 
         g.fill(0, 0, width, height, 0x99050709);
-        Draw.shadow(g, px, py, sw, sh, 22);
-        Draw.rounded(g, px, py, sw, sh, 22, th.bg);
-        Draw.rounded(g, px, py, sw, sh, 22, 0x18000000);
-        Draw.rounded(g, px + 1, py + 1, sw - 2, 1, 1, AnimationUtil.lerpColor(th.accent, th.accent2, pulse));
+        Draw.shadow(g, px, py, sw, sh, 24);
+        Draw.softBorder(g, px, py, sw, sh, 24, 0x2AFFFFFF);
+        Draw.rounded(g, px, py, sw, sh, 24, th.bg);
+                Draw.rounded(g, px + 1, py + 1, sw - 2, 1, 1, AnimationUtil.lerpColor(th.accent, th.accent2, pulse));
 
         regions.clear();
         drawHeader(g, px, py, sw, th, pulse);
@@ -70,13 +70,14 @@ public final class LuxisModScreen extends Screen {
             case "WAYPOINTS" -> "Waypoints";
             default -> "Mods";
         };
-        label(g, "LUNAX CLIENT", px + 34, py + 26, th.accent);
+        bigLabel(g, "Luxis client", px + 34, py + 22, th.accent, 1.25F);
         label(g, title, px + 32, py + 40, th.text);
 
         int sx = px + w - 340;
-        Draw.rounded(g, sx, py + 30, 306, 34, 10, 0x22FFFFFF);
-        Draw.rounded(g, sx, py + 30, 306, 34, 10, 0x11000000);
-        label(g, "⌕   Search effects", sx + 14, py + 39, th.muted);
+        Draw.rounded(g, sx, py + 30, 306, 34, 12, 0x22FFFFFF);
+        Draw.softBorder(g, sx, py + 30, 306, 34, 12, 0x22FFFFFF);
+        bigLabel(g, "⌕", sx + 12, py + 33, th.muted, 1.8F);
+        label(g, "Search effects", sx + 42, py + 39, th.muted);
         regions.add(new ClickRegion(sx, py + 30, 306, 34, "search", ""));
 
         int tx = px + 34, ty = py + 88;
@@ -141,11 +142,10 @@ public final class LuxisModScreen extends Screen {
         float stagger = AnimationUtil.approach("card_" + index, 1F, 10F, dt);
         boolean hover = mx >= x && mx <= x + w && my >= y && my <= y + h;
         float lift = (float) (-3 * AnimationUtil.approach("hover_" + m.id, hover ? 1F : 0F, 16F, dt) * stagger);
-        Draw.shadow(g, x, (int) (y + lift), w, h, 10);
-        Draw.rounded(g, x, (int) (y + lift), w, h, 10,
+        Draw.shadow(g, x, (int) (y + lift), w, h, 12);
+        Draw.rounded(g, x, (int) (y + lift), w, h, 12,
                 hover ? AnimationUtil.lerpColor(0x18FFFFFF, th.accent, 0.10F) : 0x10FFFFFF);
-        Draw.rounded(g, x, (int) (y + lift), w, h, 10, 0x14000000);
-        String name = m.name.length() > 22 ? m.name.substring(0, 21) + "..." : m.name;
+                String name = m.name.length() > 22 ? m.name.substring(0, 21) + "..." : m.name;
         String desc = m.description.length() > 30 ? m.description.substring(0, 29) + "..." : m.description;
         label(g, name, x + 14, (int) (y + lift + 10), th.text);
         label(g, desc, x + 14, (int) (y + lift + 30), th.muted);
@@ -174,6 +174,15 @@ public final class LuxisModScreen extends Screen {
     private void drawWaypoints(GuiGraphicsExtractor g, int cx, int cy, GuiTheme.Palette th) {
         label(g, "Waypoints", cx, cy, th.text);
         label(g, "Display-only bookmarks. No radar or entity tracking.", cx, cy + 24, th.muted);
+    }
+
+    private void bigLabel(GuiGraphicsExtractor g, String s, int x, int y, int color, float scale) {
+        g.pose().pushMatrix();
+        g.pose().translate(x, y);
+        g.pose().scale(scale, scale);
+        Draw.text(g, font, s, 0, 0, color, false);
+        Draw.text(g, font, s, 1, 0, color, false);
+        g.pose().popMatrix();
     }
 
     private void label(GuiGraphicsExtractor g, String s, int x, int y, int color) {
