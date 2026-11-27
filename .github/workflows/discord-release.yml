@@ -3,6 +3,20 @@ name: Announce release on Discord
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g. v3.1.1)'
+        required: true
+      url:
+        description: 'Release URL'
+        required: true
+      title:
+        description: 'Release title'
+        required: true
+      body:
+        description: 'Release notes'
+        required: false
 
 jobs:
   announce:
@@ -11,10 +25,10 @@ jobs:
       - name: Post release link to Discord
         env:
           WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-          TAG: ${{ github.event.release.tag_name }}
-          RELEASE_URL: ${{ github.event.release.html_url }}
-          RELEASE_NAME: ${{ github.event.release.name }}
-          BODY: ${{ github.event.release.body }}
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+          RELEASE_URL: ${{ github.event.release.html_url || inputs.url }}
+          RELEASE_NAME: ${{ github.event.release.name || inputs.title }}
+          BODY: ${{ github.event.release.body || inputs.body }}
         run: |
           payload=$(jq -n \
             --arg tag "$TAG" \
