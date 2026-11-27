@@ -35,13 +35,24 @@ jobs:
             installer\*.exe
             release\*
 
-      - name: Create GitHub Release
+      - name: Create or update GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           $v = (Get-Content version.txt -Raw).Trim()
-          gh release create "v$v" `
-            "installer/Luxis-Setup-$v.exe" `
-            "release/Luxis.exe" `
-            "release/version.json" `
-            --title "Luxis v$v" --generate-notes
+          $tag = "v$v"
+          $assets = @("installer/Luxis-Setup-$v.exe", "release/Luxis.exe", "release/version.json")
+          $notes = @"
+          ## Luxis v$v
+
+          **In-game Luxis Mod v1.4.0** — 15 new PvP HUD readouts covering cooldowns, consumable stock, durability, health, latency, and target distance. Read-only; no automation or reach changes.
+
+          **Motion update** — adjustable window width/height, Glide/Zoom/Fade transitions, configurable menu particles, and new performance/visual modules from v1.3.0.
+
+          Update in-app from the Updates tab; use the Luxis Mod tab to install the new mod jar.
+          "@
+          if (gh release view $tag -R lunaxcodes/Luxis >$null 2>&1) {
+            gh release upload $tag @assets -R lunaxcodes/Luxis --clobber
+          } else {
+            gh release create $tag @assets -R lunaxcodes/Luxis --title "Luxis v$v" --notes $notes
+          }

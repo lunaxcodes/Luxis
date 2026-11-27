@@ -39,8 +39,9 @@ $manifest = [ordered]@{
 $isc = @(
   'C:\Program\ISCC.exe',
   'C:\Program Files (x86)\Inno Setup 6\ISCC.exe',
-  'C:\Program Files\Inno Setup 6\ISCC.exe'
-) | Where-Object { Test-Path $_ } | Select-Object -First 1
+  'C:\Program Files\Inno Setup 6\ISCC.exe',
+  (Join-Path $env:LOCALAPPDATA 'Programs\Inno Setup 6\ISCC.exe')
+) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
 if (-not $isc) { throw 'Inno Setup compiler not found. Install Inno Setup 6.' }
 & $isc "/DMyAppVersion=$version" 'installer.iss' | Out-Host
 if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed with exit code $LASTEXITCODE" }

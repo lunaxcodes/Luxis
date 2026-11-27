@@ -377,6 +377,17 @@ button:disabled{cursor:not-allowed;opacity:.45}
 .mod-row .m-meta{flex:1;min-width:0}
 .mod-row .m-meta b{font-size:11.5px;display:block;font-weight:700}
 .mod-row .m-meta small{font-size:9.5px;color:var(--faint)}
+.luxis-mod-hero{padding:22px;margin-bottom:16px;border-radius:20px;border:1px solid var(--border);background:linear-gradient(135deg,rgba(var(--accent-rgb),.14),rgba(255,255,255,.03));display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.luxis-mod-hero .sub,.luxis-mod-summary{font-size:12px;line-height:1.6;color:var(--muted);margin-top:5px}
+.luxis-mod-list .mod-row{min-height:62px;flex-wrap:wrap;transition:none}
+.luxis-mod-list .m-meta b{font-size:13px}
+.luxis-mod-list .m-meta small{font-size:11px;color:var(--muted)}
+.luxis-mod-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.luxis-mod-features{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.luxis-mod-feature{padding:14px 16px;background:rgba(255,255,255,.035);border:1px solid var(--border);border-radius:13px}
+.luxis-mod-feature b{display:block;font-size:13px;margin-bottom:3px}
+.luxis-mod-feature small{display:block;font-size:11px;line-height:1.55;color:var(--muted)}
+.luxis-mod-filters{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
 .folder-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
 .folder-tile{padding:12px;border-radius:11px;border:1px solid var(--border);background:rgba(255,255,255,.03);font-size:11px;font-weight:650;display:flex;align-items:center;gap:8px;transition:all var(--e2)}
 .folder-tile:hover{transform:translateY(-2px);border-color:var(--border-strong)}
@@ -1021,7 +1032,7 @@ function navigate(v){
   items.forEach(x=>x.classList.toggle('active',x.dataset.view===v));
   if(v==='wardrobe')requestAnimationFrame(drawFlatPreview);
   if(v==='modrinth'||v==='packs')$('#globalSearch').value=state.ui.mrSearch||'';
-  if(VIEW_DIRTY.has(v)){renderView(v);VIEW_DIRTY.delete(v)}
+  if(v==='luxismod'||VIEW_DIRTY.has(v)){renderView(v);VIEW_DIRTY.delete(v)}
   if(v==='modrinth')loadModrinth(true);
   if(v==='updates')ACTIONS.checkForUpdate();
 }
@@ -1512,36 +1523,89 @@ function renderInstance(){
   if(native()?.instanceStats){try{const s=JSON.parse(native().instanceStats(p.name));const el=$('#instDisk');if(el)el.textContent=(s.bytes/1048576).toFixed(0)+' MB'}catch(e){}}
   if(api()&&!ENRICHED.has(p.id)){ENRICHED.add(p.id);enrichCustomMods(p)}
 }
-function renderLuxisMod(){
-  state.luxisModProfiles=state.luxisModProfiles||{};
-  const canNative=!!(native()&&native().luxisModStatus);
-  const rows=state.profiles.map(pr=>{
-    let st={installed:false,enabled:false,fabricApi:false};
-    if(canNative){try{st=JSON.parse(native().luxisModStatus(pr.name))||st}catch(e){}}
-    const installed=!!(st.installed||state.luxisModProfiles[pr.id]);
-    const fabric=!!st.fabricApi;
-    return `<div class="mod-row ${installed?'':'off'}"><div class="m-ico" style="color:var(--accent)">✦</div>
-      <div class="m-meta"><b>${esc(pr.name)}</b><small>${esc(pr.version)} · ${pr.loader==='fabric'?'Fabric '+esc(pr.loaderVersion):esc(pr.loader)} · ${fabric?'Fabric API ready':'Fabric API not detected'}</small></div>
-      <span class="chip ${installed?'ok':''}">${installed?'INSTALLED':'NOT INSTALLED'}</span>
-      <button class="btn sm ${installed?'danger':'primary'}" data-act="${installed?'removeLuxisMod':'addLuxisMod'}" data-profile="${esc(pr.id)}">${installed?'Remove':'Add to profile'}</button></div>`;
-  }).join('');
+let luxisModRender=0,luxisModFilter='all',luxisModBusy=false,luxisModEntries=[];
+const canUpdateLuxisMod=(pr,st)=>pr.loader==='fabric'&&st.supported&&st.fabricApi&&!st.wrongBuild&&st.installed&&!st.current&&!(st.pendingUpdate&&st.inUse);
+function luxisModRow(pr,st){
+  const profile=esc(pr.id);
+  const button=(action,label,style='')=>{
+    const blocked=luxisModBusy||UI.launching||(UI.running&&action!=='updateLuxisMod')||(action==='removeLuxisMod'&&st.inUse);
+    return `<button class="btn sm ${style}" data-act="${action}" data-profile="${profile}" ${(blocked&&action!=='openLuxisConfigs')?'disabled':''}>${label}</button>`;
+  };
+  const supported=st.supported&&pr.loader==='fabric';
+  const ready=supported&&st.fabricApi&&!st.wrongBuild;
+  let label='Not installed',tone='',actions='';
+  if(st.preview){label='Desktop only'}
+  else if(st.error){label='Check failed';tone='warn'}
+  else if(st.wrongBuild){label='Wrong build';tone='warn'}
+  else if(!supported){label=st.supported?'Fabric required':'Unsupported version';tone='warn'}
+  else if(!st.fabricApi){label='Fabric API needed';tone='warn'}
+  else if(st.pendingUpdate){label='Queued for next launch';tone='warn'}
+  else if(st.installed&&!st.current){label=st.inUse?'In use · update available':st.enabled?'Update available':'Disabled · update available';tone='warn'}
+  else if(st.installed){label=st.enabled?'Up to date':'Disabled';tone=st.enabled?'ok':''}
+  if(ready){
+    if(!st.installed)actions+=button('addLuxisMod','Install','primary');
+    else if(canUpdateLuxisMod(pr,st))actions+=button('updateLuxisMod',st.inUse?'Queue update':st.pendingUpdate?'Apply now':'Update','primary');
+    else if(st.current&&!st.enabled)actions+=button('addLuxisMod','Enable','primary');
+  }
+  if(supported&&!st.fabricApi)actions+=button('downloadFabricApi','Download Fabric API','primary');
+  if(st.installed)actions+=button('openLuxisConfigs','Configs','ghost');
+  if(st.installed||st.wrongBuild)actions+=button('removeLuxisMod','Remove','danger ghost');
+  const builds=st.bundledVersion?` · ${st.installed?'Installed '+esc(st.installedVersion||'unknown')+' · ':''}Bundled ${esc(st.bundledVersion)}`:'';
+  const loader=pr.loader==='fabric'?'Fabric '+esc(pr.loaderVersion||''):esc(pr.loader);
+  return `<div class="mod-row"><div class="m-ico" style="color:var(--accent)">✦</div>
+    <div class="m-meta"><b>${esc(pr.name)}${pr.id===state.activeProfile?' <span class="chip">Active</span>':''}</b>
+      <small>${esc(pr.version)} · ${loader}${builds}${st.error?' · '+esc(st.error):''}</small></div>
+    <div class="luxis-mod-actions"><span class="chip ${tone}">${label}</span>${actions}</div></div>`;
+}
+async function renderLuxisMod(){
+  const rev=++luxisModRender;
+  luxisModEntries=[];
+  const profiles=[...state.profiles].sort((a,b)=>Number(b.id===state.activeProfile)-Number(a.id===state.activeProfile));
+  const host=api();
   $('#view-luxismod').innerHTML=`
-   <div class="view-head"><div><div class="view-title">Luxis <em>Mod</em></div><div class="view-desc">Add the in-game Fabric mod menu to any profile. It opens with RIGHT SHIFT and never installs automatically.</div></div>
-     <div class="view-actions"><span class="chip accent">✦ v1.0.0</span><span class="chip">Fabric 0.19.5</span></div></div>
-   <div class="settings-grid">
-    <div class="card set-card"><h3>What it adds</h3><div class="sub">A windowed mod menu with profiles, per-module options, HUD layout editor and 16 fair-play HUD / optimization / visual modules.</div>
-      <div class="pms" style="margin-top:12px"><div style="display:grid;gap:8px">
-        <div class="tiny muted">◆ Windowed menu — MODS / SETTINGS / WAYPOINTS tabs</div>
-        <div class="tiny muted">◆ Drag-and-drop HUD Layout Editor with snapping and guides</div>
-        <div class="tiny muted">◆ Every module has keybinds, modes, sliders and colors</div>
-        <div class="tiny muted">◆ Profiles saved to <span class="mono">config/luxis/profiles/</span></div>
-        <div class="tiny muted">◆ No cheats, auto-clickers, hitboxes or unfair advantages</div>
-      </div></div></div>
-    <div class="card set-card"><h3>Requirements</h3><div class="sub">Minecraft 1.21.x &amp; 26.x · Fabric Loader 0.19.5+ · matching Fabric API · Java 21+/25+</div>
-      <div class="tiny muted" style="margin-top:10px">The mod only changes rendering and input display. It does not modify game logic. Config backups still run before every launch.</div></div>
-   </div>
-   <div class="card set-card" style="grid-column:1/-1"><h3>Install to profiles</h3><div class="sub">Choose which instances should load <span class="mono">LuxisClientMod.jar</span>. Supports Minecraft 1.21.x and 26.x — the launcher installs the matching jar automatically. Nothing is changed until you click a button.</div>
-     <div style="margin-top:12px">${rows||'<div class="empty">No profiles yet.</div>'}</div></div>`;
+    <div class="view-head"><div><div class="view-title">Luxis <em>Mod</em></div><div class="view-desc">Manage the in-game mod for each Minecraft profile.</div></div>
+      <div class="view-actions"><button class="btn" data-act="refreshLuxisMod">Refresh status</button>
+        <button class="btn primary" id="luxisUpdateAll" data-act="updateAllLuxisMods" disabled>Update installed mods</button></div></div>
+    <div class="luxis-mod-hero"><div><div class="eyebrow">THE MOTION UPDATE</div><h2>A smoother, smaller Luxis menu</h2>
+      <div class="sub">Animated categories, adjustable window size, menu particles, and real rendering budgets.</div></div>
+      <div class="luxis-mod-actions"><span class="chip" id="luxisBundledBadge">Bundled with Luxis</span><span class="chip accent">Right Shift in-game</span></div></div>
+    <div class="luxis-mod-features">
+      <div class="luxis-mod-feature"><b>11 performance tools</b><small>Crystal and PvP Optimizers, FPS Booster, and independent rendering budgets. Frame Time and Memory Monitor are under HUD.</small></div>
+      <div class="luxis-mod-feature"><b>Window and motion controls</b><small>Set width and height separately. Pick Glide, Zoom, or Fade, or turn animations off.</small></div>
+      <div class="luxis-mod-feature"><b>Customize your atmosphere</b><small>Drift, Stars, or Comets with adjustable count, speed, and opacity. No Minecraft world particles are spawned.</small></div>
+      <div class="luxis-mod-feature"><b>New Visual tools</b><small>Hand viewmodel, directional motion blur, a display-only reach ring, and controls for camera, outlines, and glint.</small></div>
+    </div>
+    <div class="card set-card"><h3>Profile installations</h3>
+      <div class="luxis-mod-summary">If Minecraft has the mod open, you can queue the update. Close the game, then use Play in Luxis to apply it before the next launch. Requires Fabric Loader 0.19.5+ and the matching Fabric API for 1.21.11 or 26.3.</div>
+      <div class="luxis-mod-filters" aria-label="Filter profiles">
+        <button class="btn sm" data-act="filterLuxisMods" data-v="all">All profiles</button>
+        <button class="btn sm" data-act="filterLuxisMods" data-v="installed">Installed</button>
+        <button class="btn sm" data-act="filterLuxisMods" data-v="updates">Updates</button>
+      </div>
+      <div id="luxisModProfiles" class="luxis-mod-list" style="margin-top:14px" aria-live="polite"><div class="empty">Checking installed builds…</div></div></div>`;
+  const rows=await Promise.all(profiles.map(async pr=>{
+    if(!host)return [pr,{preview:true}];
+    try{return [pr,JSON.parse(await host.luxisModStatus(pr.name,pr.version))||{error:'Status is unavailable.'}]}
+    catch(e){return [pr,{error:'Status is unavailable. Refresh or reopen the launcher.'}]}
+  }));
+  if(rev!==luxisModRender||UI.view!=='luxismod')return;
+  luxisModEntries=rows;
+  const bundle=rows.find(([,st])=>st.bundledVersion)?.[1]?.bundledVersion;
+  if(bundle)$('#luxisBundledBadge').textContent='Bundled v'+bundle;
+  drawLuxisModList();
+}
+function drawLuxisModList(){
+  const list=$('#luxisModProfiles');if(!list)return;
+  const updates=luxisModEntries.filter(([pr,st])=>canUpdateLuxisMod(pr,st));
+  const rows=luxisModFilter==='updates'?luxisModEntries.filter(([pr,st])=>st.pendingUpdate||canUpdateLuxisMod(pr,st)):luxisModFilter==='installed'?luxisModEntries.filter(([,st])=>st.installed):luxisModEntries;
+  list.innerHTML=rows.map(([pr,st])=>luxisModRow(pr,st)).join('')||`<div class="empty">${luxisModFilter==='updates'?'No compatible updates available.':'No profiles in this view.'}</div>`;
+  const bulk=$('#luxisUpdateAll');
+  bulk.disabled=UI.running||UI.launching||luxisModBusy||!updates.length;
+  bulk.textContent=luxisModBusy?'Working…':updates.length?`Update installed (${updates.length})`:'Update installed mods';
+  $$('#view-luxismod .luxis-mod-filters button').forEach(btn=>{
+    const active=btn.dataset.v===luxisModFilter;
+    btn.classList.toggle('primary',active);btn.setAttribute('aria-pressed',String(active));
+  });
 }
 
 function renderUpdates(){
@@ -2186,30 +2250,91 @@ function resolveModFile(p,m){
   return hit?hit.replace(/\.disabled$/i,''):'';
 }
 
-const ACTIONS={
- addLuxisMod:async el=>{
-  state.luxisModProfiles=state.luxisModProfiles||{};
-  const pr=state.profiles.find(x=>x.id===el.dataset.profile);if(!pr)return;
-  if(!api())return toast('Desktop launcher required','Run Luxis.exe to install the mod','!','warn');
-  try{
-    const r=JSON.parse(await api().installLuxisMod(pr.name,pr.version));
-    if(!r.ok)return toast('Install failed',r.error||'Unknown error','!','warn');
-    if(!pr.mods.some(m=>m.id==='luxis-client-mod'))pr.mods.push({id:'luxis-client-mod',title:'Luxis Client Mod',v:'1.0.0',file:'LuxisClientMod.jar',on:true});
-    state.luxisModProfiles[pr.id]=true;persist();renderLuxisMod();toast('Luxis Mod installed',pr.name+' · press RIGHT SHIFT in game','OK','ok');
-  }catch(e){toast('Install failed',e.message||String(e),'!','warn')}
- },
- removeLuxisMod:async el=>{
-  state.luxisModProfiles=state.luxisModProfiles||{};
-  const pr=state.profiles.find(x=>x.id===el.dataset.profile);if(!pr)return;
-  if(!api())return toast('Desktop launcher required','Run Luxis.exe to remove the mod','!','warn');
-  try{
-    const r=JSON.parse(await api().removeLuxisMod(pr.name,pr.version));
-    if(!r.ok)return toast('Remove failed',r.error||'Unknown error','!','warn');
-    pr.mods=pr.mods.filter(m=>m.id!=='luxis-client-mod');
-    state.luxisModProfiles[pr.id]=false;persist();renderLuxisMod();toast('Luxis Mod removed',pr.name,'OK','ok');
-  }catch(e){toast('Remove failed',e.message||String(e),'!','warn')}
- },
+function syncLuxisProfile(pr,result){
+  pr.mods=(pr.mods||[]).filter(m=>m.id!=='luxis-client-mod');
+  if(result)pr.mods.push({id:'luxis-client-mod',title:'Luxis Client Mod',v:result.version,file:result.file,on:result.enabled});
+  VIEW_DIRTY.add('instance');
+}
 
+async function changeLuxisMod(el,action){
+  const pr=state.profiles.find(x=>x.id===el.dataset.profile);if(!pr)return;
+  const host=api();
+  if(!host)return toast('Desktop launcher required','Open Luxis.exe to manage the mod','!','warn');
+  if(luxisModBusy)return;
+  const removing=action==='remove',updating=action==='update';
+  if(UI.launching||(!updating&&UI.running))return toast('Minecraft is running','Close the game before changing Luxis Mod','!','warn');
+  el.disabled=true;
+  try{
+    const raw=removing?await host.removeLuxisMod(pr.name):updating?await host.updateLuxisMod(pr.name,pr.version):await host.installLuxisMod(pr.name,pr.version);
+    const r=JSON.parse(raw);
+    if(!r.ok)return toast('Luxis Mod could not be changed',r.error||'Unknown error','!','warn');
+    if(r.queued){
+      if(UI.view==='luxismod')renderLuxisMod();else VIEW_DIRTY.add('luxismod');
+      return toast('Luxis Mod update queued','Close Minecraft, then click Play in Luxis to apply it.','↻','ok');
+    }
+    syncLuxisProfile(pr,removing?null:r);
+    persist();
+    if(UI.view==='luxismod')renderLuxisMod();else VIEW_DIRTY.add('luxismod');
+    toast(`Luxis Mod ${removing?'removed':updating?'updated':'ready'}`,removing?pr.name:`${pr.name} · v${r.version} · ${r.enabled?'relaunch Minecraft':'still disabled'}`,'OK','ok');
+  }catch(e){toast('Luxis Mod could not be changed',e.message||String(e),'!','warn')}
+  finally{el.disabled=false}
+}
+
+async function updateAllLuxisMods(){
+  const host=api(),targets=luxisModEntries.filter(([pr,st])=>canUpdateLuxisMod(pr,st));
+  if(!host||UI.running||UI.launching||luxisModBusy||!targets.length)return;
+  let updated=0,queued=0;
+  luxisModBusy=true;drawLuxisModList();
+  try{
+    for(const [pr] of targets){
+      if(UI.running||UI.launching)break;
+      try{
+        const result=JSON.parse(await host.updateLuxisMod(pr.name,pr.version));
+        if(result.queued)queued++;
+        else if(result.ok){syncLuxisProfile(pr,result);updated++}
+      }catch(e){}
+    }
+    if(updated)persist();
+  }finally{
+    luxisModBusy=false;
+    if(UI.view==='luxismod')renderLuxisMod();else VIEW_DIRTY.add('luxismod');
+  }
+  const failed=targets.length-updated-queued;
+  toast('Luxis Mod updates',`${updated} updated, ${queued} queued. ${failed?'Open the profile row to retry failed updates.':'Relaunch Minecraft from Luxis to load the new build.'}`,'↻',failed?'warn':'ok');
+}
+
+async function downloadFabricApi(el){
+  const pr=state.profiles.find(x=>x.id===el.dataset.profile);if(!pr)return;
+  const host=api();
+  if(!host)return toast('Desktop launcher required','Open Luxis.exe to install Fabric API','!','warn');
+  if(UI.running||UI.launching||luxisModBusy)return toast('Minecraft is running','Close the game before installing Fabric API','!','warn');
+  el.disabled=true;
+  try{
+    const raw=await host.installModrinth(JSON.stringify({id:'P7dR8mSH',title:'Fabric API',projectType:'mod'}),JSON.stringify(pr));
+    const r=JSON.parse(raw);
+    (r.installed||[]).forEach(item=>{
+      if(item.type!=='mods'||pr.mods.some(m=>m.id===item.projectId))return;
+      pr.mods.push({id:item.projectId,title:item.title||'Fabric API',file:item.file,v:item.version,on:true,sha512:item.sha512,icon:item.icon});
+    });
+    VIEW_DIRTY.add('instance');persist();
+    if(UI.view==='luxismod')renderLuxisMod();else VIEW_DIRTY.add('luxismod');
+    toast('Fabric API installed',pr.name+' · '+(r.installed||[]).length+' file(s)','✓','ok');
+  }catch(e){toast('Download failed',e.message||String(e),'!','warn')}
+  finally{el.disabled=false}
+}
+
+const ACTIONS={
+ addLuxisMod:el=>changeLuxisMod(el,'install'),
+ updateLuxisMod:el=>changeLuxisMod(el,'update'),
+ removeLuxisMod:el=>changeLuxisMod(el,'remove'),
+ downloadFabricApi,
+  refreshLuxisMod:()=>renderLuxisMod(),
+  updateAllLuxisMods,
+  filterLuxisMods:el=>{luxisModFilter=el.dataset.v;drawLuxisModList()},
+  openLuxisConfigs:el=>{
+    const pr=state.profiles.find(x=>x.id===el.dataset.profile);
+    if(pr)native()?.openFolder?.('config/luxis',pr.name);
+  },
  closeOverlay,
  winMin:()=>bridge()?.minimize?.(),
  winMax:()=>bridge()?.maximize?.(),
@@ -2568,7 +2693,6 @@ $('#quickTheme').addEventListener('click',()=>navigate('settings'));
 
 /* ---------- boot ---------- */
 syncNativeAccounts();
-if(api()){for(const pr of state.profiles){const v=String(pr.version||'');const major=parseInt(v.split('.')[0],10);try{const st=JSON.parse(native().luxisModStatus(pr.name,pr.version));if(st.installed){if(st.family==="unsupported")native().removeLuxisMod(pr.name,pr.version);else native().syncLuxisMod(pr.name,pr.version)}}catch(e){}}}
 refreshNavOffsets();window.addEventListener('resize',refreshNavOffsets);
 persist();
 renderAll();

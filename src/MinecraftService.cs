@@ -60,11 +60,16 @@ public sealed class MinecraftService
         var jvm = p.Str("jvm", "default");
         var res = p.Str("res", "1920x1080");
         var accountId = string.IsNullOrEmpty(p.Str("accountId")) ? activeAccountId : p.Str("accountId");
+        var dir = InstanceDir(name);
+        if (loader == "fabric")
+        {
+            var pendingModError = BundledLuxisMod.ApplyPendingUpdate(Path.Combine(dir, "mods"), version);
+            if (pendingModError != null) throw new IOException("Queued Luxis Mod update: " + pendingModError);
+        }
 
         Stage("Authenticating Session", 8, "Signing in with " + accountId);
         var session = await _auth.GetSession(accountId);
 
-        var dir = InstanceDir(name);
         var natives = Path.Combine(dir, "natives");
         foreach (var sub in new[] { "mods", "resourcepacks", "shaderpacks", "config", "saves", "logs" })
             Directory.CreateDirectory(Path.Combine(dir, sub));
