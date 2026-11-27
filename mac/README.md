@@ -2,6 +2,23 @@
 
 This folder contains the native macOS port of Luxis. It reuses the existing HTML/JS interface and most C# services.
 
+## Install
+
+1. Download the build for your Mac:
+   - Apple Silicon (M1/M2/M3/M4): `Luxis-Mac-arm64.app.zip`
+   - Intel: `Luxis-Mac-x64.app.zip`
+   - Not sure? Apple menu → About This Mac. Apple Silicon shows a chip name; Intel shows an Intel processor.
+2. Double-click the `.zip` to extract `Luxis.app`.
+3. Drag `Luxis.app` into your `Applications` folder.
+4. First launch: **right-click `Luxis.app` → Open → Open**. macOS may also ask you to approve it under System Settings → Privacy & Security.
+5. If macOS blocks it, open Terminal and run:
+   ```bash
+   xattr -cr /Applications/Luxis.app
+   ```
+   then launch it again.
+
+After the first install, use **Updates** inside Luxis for future versions. The app picks the correct Apple Silicon or Intel manifest automatically.
+
 ## Build
 
 From the workspace root on Windows or macOS:
