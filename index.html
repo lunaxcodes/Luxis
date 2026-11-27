@@ -1536,10 +1536,10 @@ function renderLuxisMod(){
         <div class="tiny muted">◆ Profiles saved to <span class="mono">config/luxis/profiles/</span></div>
         <div class="tiny muted">◆ No cheats, auto-clickers, hitboxes or unfair advantages</div>
       </div></div></div>
-    <div class="card set-card"><h3>Requirements</h3><div class="sub">Minecraft 26.1 through latest · Fabric Loader 0.19.5+ · Fabric API 0.167.0+ · Java 25+</div>
+    <div class="card set-card"><h3>Requirements</h3><div class="sub">Minecraft 1.21.x &amp; 26.x · Fabric Loader 0.19.5+ · matching Fabric API · Java 21+/25+</div>
       <div class="tiny muted" style="margin-top:10px">The mod only changes rendering and input display. It does not modify game logic. Config backups still run before every launch.</div></div>
    </div>
-   <div class="card set-card" style="grid-column:1/-1"><h3>Install to profiles</h3><div class="sub">Choose which instances should load <span class="mono">LuxisClientMod.jar</span>. Supports Minecraft 26.1 through the latest release; older versions such as 1.21.11 are not supported by this build. Nothing is changed until you click a button.</div>
+   <div class="card set-card" style="grid-column:1/-1"><h3>Install to profiles</h3><div class="sub">Choose which instances should load <span class="mono">LuxisClientMod.jar</span>. Supports Minecraft 1.21.x and 26.x — the launcher installs the matching jar automatically. Nothing is changed until you click a button.</div>
      <div style="margin-top:12px">${rows||'<div class="empty">No profiles yet.</div>'}</div></div>`;
 }
 
@@ -2192,7 +2192,7 @@ const ACTIONS={
   const pr=state.profiles.find(x=>x.id===el.dataset.profile);if(!pr)return;
   if(!api())return toast('Desktop launcher required','Run Luxis.exe to remove the mod','!','warn');
   try{
-    const r=JSON.parse(await api().removeLuxisMod(pr.name));
+    const r=JSON.parse(await api().removeLuxisMod(pr.name,pr.version));
     if(!r.ok)return toast('Remove failed',r.error||'Unknown error','!','warn');
     pr.mods=pr.mods.filter(m=>m.id!=='luxis-client-mod');
     state.luxisModProfiles[pr.id]=false;persist();renderLuxisMod();toast('Luxis Mod removed',pr.name,'OK','ok');
@@ -2525,7 +2525,7 @@ $('#quickTheme').addEventListener('click',()=>navigate('settings'));
 
 /* ---------- boot ---------- */
 syncNativeAccounts();
-if(api()){for(const pr of state.profiles){const v=String(pr.version||'');const major=parseInt(v.split('.')[0],10);try{const st=JSON.parse(native().luxisModStatus(pr.name));if(st.installed){if(!isNaN(major)&&major<26)native().removeLuxisMod(pr.name);else native().syncLuxisMod(pr.name)}}catch(e){}}}
+if(api()){for(const pr of state.profiles){const v=String(pr.version||'');const major=parseInt(v.split('.')[0],10);try{const st=JSON.parse(native().luxisModStatus(pr.name,pr.version));if(st.installed){if(st.family==="unsupported")native().removeLuxisMod(pr.name,pr.version);else native().syncLuxisMod(pr.name,pr.version)}}catch(e){}}}
 refreshNavOffsets();window.addEventListener('resize',refreshNavOffsets);
 persist();
 renderAll();

@@ -256,44 +256,67 @@ public sealed class Bridge
     public string toggleModFile(string profileName, string file, bool enabled) => _minecraft.ToggleMod(profileName, file, enabled);
 
     // ---- bundled in-game Luxis mod ----
-    private static bool IsOlderThan26(string version)
+    private static int[] Parts(string version)
     {
-        var parts = version.Split('.');
-        return !int.TryParse(parts.FirstOrDefault(), out var major) || major < 26;
+        return (version ?? "").Split('.').Take(2).Select(x => int.TryParse(x, out var v) ? v : 0).ToArray();
     }
 
-    public string luxisModStatus(string profileName)
+    private static bool Is121(string version)
+    {
+        var p = Parts(version);
+        return p.Length > 1 && p[0] == 1 && p[1] == 21;
+    }
+
+    private static bool Is26x(string version)
+    {
+        var p = Parts(version);
+        return p.Length > 0 && p[0] >= 26;
+    }
+
+    private static string ModFile(string version) => Is121(version) ? "LuxisClientMod-1.21x.jar" : "LuxisClientMod.jar";
+    private static string ModResource(string version) => Is121(version) ? "Luxis.LuxisClientMod-1.21x.jar" : "Luxis.LuxisClientMod.jar";
+
+    public string luxisModStatus(string profileName, string version = "")
     {
         var mods = Path.Combine(_minecraft.InstanceDir(profileName), "mods");
-        var jar = Path.Combine(mods, "LuxisClientMod.jar");
+        var modern = Path.Combine(mods, "LuxisClientMod.jar");
+        var legacy = Path.Combine(mods, "LuxisClientMod-1.21x.jar");
         var fabric = Directory.Exists(mods) && Directory.GetFiles(mods, "fabric-api*.jar").Length > 0;
-        return Util.Json(new { installed = File.Exists(jar) || File.Exists(jar + ".disabled"), enabled = File.Exists(jar), fabricApi = fabric });
+        var active = Path.Combine(mods, ModFile(version));
+        return Util.Json(new
+        {
+            installed = File.Exists(modern) || File.Exists(legacy) || File.Exists(modern + ".disabled") || File.Exists(legacy + ".disabled"),
+            enabled = File.Exists(active),
+            family = Is121(version) ? "1.21.x" : Is26x(version) ? "26.x" : "unsupported",
+            fabricApi = fabric
+        });
     }
 
     public string installLuxisMod(string profileName, string version = "")
     {
-        if (!string.IsNullOrEmpty(version) && IsOlderThan26(version))
-            return Util.Json(new { ok = false, error = "Luxis Mod currently supports Minecraft 26.1 and newer." });
+        if (!Is121(version) && !Is26x(version))
+            return Util.Json(new { ok = false, error = "Luxis Mod supports Minecraft 1.21.x and 26.x only." });
         var mods = Path.Combine(_minecraft.InstanceDir(profileName), "mods");
         Directory.CreateDirectory(mods);
         if (Directory.GetFiles(mods, "fabric-api*.jar").Length == 0)
-            return Util.Json(new { ok = false, error = "Install Fabric API 0.167.0+26.3 in this instance first." });
-        using var src = Assembly.GetExecutingAssembly().GetManifestResourceStream("Luxis.LuxisClientMod.jar");
+            return Util.Json(new { ok = false, error = "Install Fabric API in this instance first (0.141.6+ for 1.21.x, 0.167.0+ for 26.x)." });
+        using var src = Assembly.GetExecutingAssembly().GetManifestResourceStream(ModResource(version));
         if (src == null) return Util.Json(new { ok = false, error = "Bundled mod file is missing." });
-        var jar = Path.Combine(mods, "LuxisClientMod.jar");
+        var file = ModFile(version);
+        var jar = Path.Combine(mods, file);
         using (var dst = File.Create(jar)) src.CopyTo(dst);
         var off = jar + ".disabled";
         if (File.Exists(off)) File.Delete(off);
-        return Util.Json(new { ok = true, file = "LuxisClientMod.jar" });
+        return Util.Json(new { ok = true, file });
     }
 
-    public string syncLuxisMod(string profileName)
+    public string syncLuxisMod(string profileName, string version = "")
     {
-        var jar = Path.Combine(_minecraft.InstanceDir(profileName), "mods", "LuxisClientMod.jar");
+        var jar = Path.Combine(_minecraft.InstanceDir(profileName), "mods", ModFile(version));
         if (!File.Exists(jar)) return Util.Json(new { updated = false });
         try
         {
-            using var src = Assembly.GetExecutingAssembly().GetManifestResourceStream("Luxis.LuxisClientMod.jar");
+            using var src = Assembly.GetExecutingAssembly().GetManifestResourceStream(ModResource(version));
             if (src == null) return Util.Json(new { updated = false });
             using var dst = File.Create(jar);
             src.CopyTo(dst);
@@ -302,13 +325,16 @@ public sealed class Bridge
         catch { return Util.Json(new { updated = false }); }
     }
 
-    public string removeLuxisMod(string profileName)
+    public string removeLuxisMod(string profileName, string version = "")
     {
         var mods = Path.Combine(_minecraft.InstanceDir(profileName), "mods");
         try
         {
-            File.Delete(Path.Combine(mods, "LuxisClientMod.jar"));
-            File.Delete(Path.Combine(mods, "LuxisClientMod.jar.disabled"));
+            foreach (var name in new[] { "LuxisClientMod.jar", "LuxisClientMod-1.21x.jar" })
+            {
+                File.Delete(Path.Combine(mods, name));
+                File.Delete(Path.Combine(mods, name + ".disabled"));
+            }
         }
         catch { }
         return Util.Json(new { ok = true });
