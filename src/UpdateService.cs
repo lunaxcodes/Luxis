@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text.Json;
 
@@ -38,7 +39,19 @@ public sealed class UpdateService
     private string CurrentVersion()
     {
         try { return File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "version.txt")).Trim(); }
-        catch { return "0.0.0"; }
+        catch { }
+        try
+        {
+            using var resource = Assembly.GetExecutingAssembly().GetManifestResourceStream("Luxis.version.txt");
+            if (resource != null)
+            {
+                using var reader = new StreamReader(resource);
+                var value = reader.ReadToEnd().Trim();
+                if (!string.IsNullOrEmpty(value)) return value;
+            }
+        }
+        catch { }
+        return "0.0.0";
     }
 
     public async Task<string> Check()
@@ -70,8 +83,10 @@ public sealed class UpdateService
         var r = doc.RootElement;
         var url = r.Str("url");
         var sha = r.Str("sha256");
+        var version = r.Str("version", "0.0.0");
         if (string.IsNullOrEmpty(url)) throw new Exception("Update URL missing.");
         var target = Process.GetCurrentProcess().MainModule?.FileName ?? Path.Combine(AppContext.BaseDirectory, "Luxis.exe");
+        var versionFile = Path.Combine(Path.GetDirectoryName(target) ?? AppContext.BaseDirectory, "version.txt");
         var tmp = Path.Combine(Path.GetTempPath(), "luxis-update-" + Guid.NewGuid().ToString("N") + ".exe");
         // The manifest hash is SHA-256; Util.Download's 4th argument is SHA-512.
         // Download unchecked here and verify with SHA-256 below.
@@ -88,6 +103,7 @@ public sealed class UpdateService
             "set /a n=0\r\n" +
             ":retry\r\n" +
             $"copy /Y \"{tmp}\" \"{target}\" >nul\r\n" +
+            $"echo {version}> \"{versionFile}\"\r\n" +
             "if errorlevel 1 (\r\n" +
             "  set /a n+=1\r\n" +
             "  if %n% LSS 20 (timeout /t 1 /nobreak >nul & goto retry)\r\n" +
