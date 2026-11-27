@@ -1030,9 +1030,9 @@ function navigate(v){
   const items=$$('.nav-item'),idx=items.findIndex(x=>x.dataset.view===v);
   if(idx>=0)$('#navIndicator').style.transform=`translateY(${navOffsets[idx]??items[idx].offsetTop}px)`;
   items.forEach(x=>x.classList.toggle('active',x.dataset.view===v));
-  if(v==='wardrobe')requestAnimationFrame(drawFlatPreview);
+  if(v==='wardrobe'){R.lastFrame=0}
   if(v==='modrinth'||v==='packs')$('#globalSearch').value=state.ui.mrSearch||'';
-  if(v==='luxismod'||VIEW_DIRTY.has(v)){renderView(v);VIEW_DIRTY.delete(v)}
+  if(v==='wardrobe'||v==='luxismod'||VIEW_DIRTY.has(v)){renderView(v);VIEW_DIRTY.delete(v)}
   if(v==='modrinth')loadModrinth(true);
   if(v==='updates')ACTIONS.checkForUpdate();
 }
@@ -1262,7 +1262,15 @@ function renderPacks(){
    </div>`;
 }
 const LAYERS=[['hat','Hat'],['jacket','Jacket'],['rightSleeve','R. Sleeve'],['leftSleeve','L. Sleeve'],['rightPants','R. Pants'],['leftPants','L. Pants']];
-const R={yaw:0,walk:false,auto:true,drag:false,lastX:0,t:0,lastFrame:0};
+const R={yaw:0,walk:false,auto:false,drag:false,lastX:0,t:0,lastFrame:0,zoom:1};
+function bindPreviewControls(){
+  const stage=$('.preview-stage');if(!stage)return;
+  stage.onpointerdown=e=>{if(e.target.closest('button'))return;R.drag=true;R.lastX=e.clientX;R.auto=false;stage.setPointerCapture?.(e.pointerId)};
+  stage.onpointermove=e=>{if(!R.drag)return;R.yaw+=(e.clientX-R.lastX)*0.012;R.lastX=e.clientX};
+  stage.onpointerup=()=>{R.drag=false};
+  stage.onpointercancel=()=>{R.drag=false};
+  stage.onwheel=e=>{e.preventDefault();R.zoom=Math.max(.62,Math.min(1.7,R.zoom*(e.deltaY>0?.94:1.06)))};
+}
 // Correct 64x64 Minecraft UV layout, used by both cards and the large preview.
 function paintCharacter(ctx,im,w,h,opt){
   const slim=!!opt.slim,back=!!opt.back,layers=opt.layers||{},walk=opt.walk||0,cape=opt.cape;
@@ -1401,8 +1409,8 @@ function renderWardrobe(){
      </div>
      <div class="card wardrobe-side">
        <div class="eyebrow" style="margin-bottom:8px">Current look</div>
-       <div class="preview-stage"><canvas id="skinCanvas"></canvas><div class="view-toggle"><button data-act="viewAngle" data-v="front" class="${WARDROBE.view!=='back'?'on':''}">Front</button><button data-act="viewAngle" data-v="back" class="${WARDROBE.view==='back'?'on':''}">Back</button></div></div>
-       <div class="preview-controls" style="margin-top:10px"><button class="btn sm ${WARDROBE.walk?'primary':''}" data-act="toggleWalk">${WARDROBE.walk?'Stop walk':'Walk'}</button><button class="btn sm" data-act="toggleAuto">Flip view</button></div>
+       <div class="preview-stage"><canvas id="skinCanvas"></canvas><div class="view-toggle"><button data-act="viewAngle" data-v="front" class="${WARDROBE.view==='front'?'on':''}">Front</button><button data-act="viewAngle" data-v="side" class="${WARDROBE.view==='side'?'on':''}">Side</button><button data-act="viewAngle" data-v="back" class="${WARDROBE.view==='back'?'on':''}">Back</button></div><div class="preview-hint">Drag to rotate ? scroll to zoom</div></div>
+       <div class="preview-controls" style="margin-top:10px"><button class="btn sm ${WARDROBE.walk?'primary':''}" data-act="toggleWalk">${WARDROBE.walk?'Stop walk':'Walk'}</button><button class="btn sm ${R.auto?'primary':''}" data-act="toggleAuto">${R.auto?'Stop spin':'Auto spin'}</button><button class="btn sm ghost" data-act="resetAngle">Reset</button></div>
        <div class="eyebrow" style="margin:16px 0 7px">Capes <button class="btn sm ghost" style="float:right" data-act="goCapes">Browse</button></div><div class="cape-grid">${allCapes().map(c=>`<div class="card cape-card ${a.cape===c.id?'active':''}" data-act="equipCape" data-id="${esc(c.id)}"><canvas data-cape-thumb="${esc(c.id)}"></canvas><span>${esc(c.name)}</span></div>`).join('')}</div>
        <div class="eyebrow" style="margin:16px 0 7px">Model</div><div class="seg" style="width:100%"><button class="${a.model==='classic'?'on':''}" data-act="setModel" data-v="classic">Classic</button><button class="${a.model==='slim'?'on':''}" data-act="setModel" data-v="slim">Slim</button></div>
        ${a.type==='microsoft'&&a.skinUrl?`<button class="btn block" style="margin-top:12px" data-act="fetchMojangSkin">Import my Mojang skin</button>`:''}
@@ -1411,7 +1419,7 @@ function renderWardrobe(){
    </div>`;
   $$('[data-skin-card]').forEach(cv=>{const sk=(a.skins||[]).find(x=>x.src===cv.dataset.skinCard);drawSkinCard(cv,cv.dataset.skinCard,!!sk?.slim)});
   $$('[data-cape-thumb]').forEach(cv=>paintCapeThumb(cv,allCapes().find(x=>x.id===cv.dataset.capeThumb)));
-  refreshHeads();drawFlatPreview();
+  refreshHeads();bindPreviewControls();
 }
 const WARDROBE={view:'front',walk:false,tick:0};
 function drawFlatPreview(){
@@ -1913,55 +1921,81 @@ function drawBox(ctx,im,box,yaw,cx,cy,scale,swing,uvMap,alpha=1){
   quads.sort((a,b)=>b.depth-a.depth);
   ctx.globalAlpha=alpha;quads.forEach(q=>texQuad(ctx,im,q.uv,q.pts));ctx.globalAlpha=1;
 }
+function shadeQuad(ctx,pts,color){
+  ctx.save();ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
+  for(let i=1;i<pts.length;i++)ctx.lineTo(pts[i].x,pts[i].y);
+  ctx.closePath();ctx.fillStyle=color;ctx.fill();ctx.restore();
+}
+function drawCape3D(ctx,im,yaw,cx,cy,scale,t){
+  if(!im)return;
+  const panels=6,top=7.4,bottom=-13.4;
+  const tw=im.naturalWidth||im.width||96,th=im.naturalHeight||im.height||144;
+  const wave=Math.sin(t*0.0032)*0.45,flutter=Math.sin(t*0.005+1)*0.2;
+  const bend=x=>-3.5-Math.cos((x+5)/10*Math.PI)*0.85;
+  for(let i=0;i<panels;i++){
+    const x0=-5+i*10/panels,x1=-5+(i+1)*10/panels,z0=bend(x0),z1=bend(x1);
+    const f0=x0*.10,f1=x1*.10;
+    const pts=[
+      proj({x:x1,y:top,z:z1},cx,cy,scale,yaw,0,0),
+      proj({x:x0,y:top,z:z0},cx,cy,scale,yaw,0,0),
+      proj({x:x0+f0+wave*.3,y:bottom,z:z0-.5+flutter*(i/panels)},cx,cy,scale,yaw,0,0),
+      proj({x:x1+f1+wave*.3,y:bottom,z:z1-.5+flutter*((i+1)/panels)},cx,cy,scale,yaw,0,0)
+    ];
+    texQuad(ctx,im,[i*tw/panels,0,tw/panels,th],pts);
+    shadeQuad(ctx,pts,'rgba(0,0,0,'+(0.08+0.12*Math.abs(Math.cos((i+.5)/panels*Math.PI))).toFixed(3)+')');
+  }
+  const fold=[
+    proj({x:5,y:top+.3,z:-2.9},cx,cy,scale,yaw,0,0),
+    proj({x:-5,y:top+.3,z:-2.9},cx,cy,scale,yaw,0,0),
+    proj({x:-5,y:top-1.1,z:bend(-5)},cx,cy,scale,yaw,0,0),
+    proj({x:5,y:top-1.1,z:bend(5)},cx,cy,scale,yaw,0,0)
+  ];
+  texQuad(ctx,im,[0,0,tw,Math.max(4,th*.08)],fold);
+  shadeQuad(ctx,fold,'rgba(0,0,0,.18)');
+}
 function loopCharacter(ts){
+  requestAnimationFrame(loopCharacter);
   const cv=$('#skinCanvas');
   if(UI.view!=='wardrobe'||!cv){R.lastFrame=0;return}
   const dt=R.lastFrame?Math.min(ts-R.lastFrame,50):16;R.lastFrame=ts;R.t+=dt;
   if(R.auto&&!R.drag)R.yaw+=dt*0.00038;
   const dpr=Math.min(devicePixelRatio||1,2),w=cv.clientWidth,h=cv.clientHeight;
-  if(!w||!h){requestAnimationFrame(loopCharacter);return}
+  if(!w||!h)return;
   if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr)}
-  const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
+  const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);ctx.imageSmoothingEnabled=false;
   const a=activeAccount(),src=skinOf(a)?.src;
   getImg(src,im=>{
     if(!im)return;
-    const scale=Math.min(w/46,h/40),cx=w/2,cy=h/2+8,yaw=R.yaw;
-    const sw=R.walk?Math.sin(R.t*0.006)*.38:0;
-    // cape behind model
-    const cape=CAPES.find(c=>c.id===a.cape);
-    if(cape&&cape.id!=='none'){
-      const im2=CAPE_IMG[cape.id];const wave=Math.sin(R.t*0.003)*.5;
-      const pts=[[-4.6,8,-3.6],[4.6,8,-3.6],[4.6+wave,-14,-4.2],[-4.6+wave,-14,-4.2]].map(v=>proj({x:v[0],y:v[1],z:v[2]},cx,cy,scale,yaw,0,0));
-      ctx.globalAlpha=.98;texQuad(ctx,im2,[0,0,im2.width,im2.height],pts);ctx.globalAlpha=1;
-    }
-    const slim=a.model==='slim'||skinOf(a)?.slim,aw=slim?3:4;
-    const L=a.skins&&activeAccount().layers;
-    const layers=L||{hat:true,jacket:true,rightSleeve:true,leftSleeve:true,rightPants:true,leftPants:true};
-    // legs / arms behind body drawn with painter sorting across all boxes
-    const boxes=[
-      {x:0,y:14,z:0,w:8,h:8,d:8,uv:UV.head,pivot:14},
-      {x:0,y:2,z:0,w:8,h:12,d:4,uv:UV.body},
-      {x:6,y:2,z:0,w:aw,h:12,d:4,uv:UV.rarm,pivot:8,swing:-sw},
-      {x:-6,y:2,z:0,w:aw,h:12,d:4,uv:UV.larm,pivot:8,swing:sw},
-      {x:2,y:-10,z:0,w:4,h:12,d:4,uv:UV.rleg,pivot:-4,swing:sw},
-      {x:-2,y:-10,z:0,w:4,h:12,d:4,uv:UV.lleg,pivot:-4,swing:-sw}
-    ];
-    const over=[
-      {on:layers.hat,b:{x:0,y:14,z:0,w:8.6,h:8.6,d:8.6,uv:UV.hat}},
-      {on:layers.jacket,b:{x:0,y:2,z:0,w:8.6,h:12.6,d:4.6,uv:UV.jacket}},
-      {on:layers.rightSleeve,b:{x:6,y:2,z:0,w:aw+.6,h:12.6,d:4.6,uv:UV.rsleeve,pivot:8,swing:-sw}},
-      {on:layers.leftSleeve,b:{x:-6,y:2,z:0,w:aw+.6,h:12.6,d:4.6,uv:UV.lsleeve,pivot:8,swing:sw}},
-      {on:layers.rightPants,b:{x:2,y:-10,z:0,w:4.6,h:12.6,d:4.6,uv:UV.rpants,pivot:-4,swing:sw}},
-      {on:layers.leftPants,b:{x:-2,y:-10,z:0,w:4.6,h:12.6,d:4.6,uv:UV.lpants,pivot:-4,swing:-sw}}
-    ].filter(o=>o.on);
-    // compute depth of each box center for global painter ordering
-    const entries=[
-      ...boxes.map(b=>({b,depth:72-(b.x*Math.sin(yaw)+b.z*Math.cos(yaw))})),
-      ...over.map(o=>({b:o.b,depth:72-(o.b.x*Math.sin(yaw)+o.b.z*Math.cos(yaw))-.05}))
-    ].sort((p,q)=>q.depth-p.depth);
-    entries.forEach(e=>drawBox(ctx,im,e.b,yaw,cx,cy,scale,e.b.swing||0,e.b.uv));
+    equippedCapeImage(a,capeIm=>{
+      const scale=Math.min(w/46,h/40)*R.zoom,cx=w/2,cy=h/2+8,yaw=R.yaw;
+      const sw=R.walk?Math.sin(R.t*0.006)*.38:0;
+      drawCape3D(ctx,capeIm,yaw,cx,cy,scale,R.t);
+      const slim=a.model==='slim'||skinOf(a)?.slim,aw=slim?3:4;
+      const L=a.skins&&activeAccount().layers;
+      const layers=L||{hat:true,jacket:true,rightSleeve:true,leftSleeve:true,rightPants:true,leftPants:true};
+      const boxes=[
+        {x:0,y:14,z:0,w:8,h:8,d:8,uv:UV.head,pivot:14},
+        {x:0,y:2,z:0,w:8,h:12,d:4,uv:UV.body},
+        {x:6,y:2,z:0,w:aw,h:12,d:4,uv:UV.rarm,pivot:8,swing:-sw},
+        {x:-6,y:2,z:0,w:aw,h:12,d:4,uv:UV.larm,pivot:8,swing:sw},
+        {x:2,y:-10,z:0,w:4,h:12,d:4,uv:UV.rleg,pivot:-4,swing:sw},
+        {x:-2,y:-10,z:0,w:4,h:12,d:4,uv:UV.lleg,pivot:-4,swing:-sw}
+      ];
+      const over=[
+        {on:layers.hat,b:{x:0,y:14,z:0,w:8.6,h:8.6,d:8.6,uv:UV.hat}},
+        {on:layers.jacket,b:{x:0,y:2,z:0,w:8.6,h:12.6,d:4.6,uv:UV.jacket}},
+        {on:layers.rightSleeve,b:{x:6,y:2,z:0,w:aw+.6,h:12.6,d:4.6,uv:UV.rsleeve,pivot:8,swing:-sw}},
+        {on:layers.leftSleeve,b:{x:-6,y:2,z:0,w:aw+.6,h:12.6,d:4.6,uv:UV.lsleeve,pivot:8,swing:sw}},
+        {on:layers.rightPants,b:{x:2,y:-10,z:0,w:4.6,h:12.6,d:4.6,uv:UV.rpants,pivot:-4,swing:sw}},
+        {on:layers.leftPants,b:{x:-2,y:-10,z:0,w:4.6,h:12.6,d:4.6,uv:UV.lpants,pivot:-4,swing:-sw}}
+      ].filter(o=>o.on);
+      const entries=[
+        ...boxes.map(b=>({b,depth:72-(b.x*Math.sin(yaw)+b.z*Math.cos(yaw))})),
+        ...over.map(o=>({b:o.b,depth:72-(o.b.x*Math.sin(yaw)+o.b.z*Math.cos(yaw))-.05}))
+      ].sort((p,q)=>q.depth-p.depth);
+      entries.forEach(e=>drawBox(ctx,im,e.b,yaw,cx,cy,scale,e.b.swing||0,e.b.uv));
+    });
   });
-  requestAnimationFrame(loopCharacter);
 }
 
 /* ---------- launch sequence ---------- */
@@ -2542,10 +2576,10 @@ const ACTIONS={
    const v=$('#importVal').value.trim();if(!v)return;const h=[...v].reduce((n,c)=>n*31+c.charCodeAt(0)|0,7),p=PRESET_SKINS[Math.abs(h)%PRESET_SKINS.length];
    const a=activeAccount(),s={id:uid('s'),name:v.length>18?v.slice(0,18)+'…':v,src:makeSkin(p.colors,p.slim),slim:p.slim,fav:false};a.skins.push(s);a.activeSkin=s.id;persist();closeOverlay();renderWardrobe();renderHeaderState();toast('Skin imported',s.name,'↓','ok');
  },
- toggleWalk:()=>{WARDROBE.walk=!WARDROBE.walk;renderWardrobe();if(WARDROBE.walk)requestAnimationFrame(animateWardrobe)},
- toggleAuto:()=>{WARDROBE.view=WARDROBE.view==='front'?'back':'front';renderWardrobe()},
- resetAngle:()=>{WARDROBE.view='front';renderWardrobe()},
- viewAngle:el=>{WARDROBE.view=el.dataset.v;$$('[data-act="viewAngle"]').forEach(x=>x.classList.toggle('on',x===el));drawFlatPreview()},
+ toggleWalk:()=>{WARDROBE.walk=!WARDROBE.walk;renderWardrobe()},
+ toggleAuto:()=>{R.auto=!R.auto;renderWardrobe()},
+ resetAngle:()=>{R.yaw=0;R.zoom=1;R.auto=false;WARDROBE.view='front';renderWardrobe()},
+ viewAngle:el=>{WARDROBE.view=el.dataset.v;R.auto=false;R.yaw=el.dataset.v==='back'?Math.PI:el.dataset.v==='side'?Math.PI/2:0;renderWardrobe()},
  toggleLayer:el=>{
    const a=activeAccount();a.layers=a.layers||{hat:true,jacket:true,rightSleeve:true,leftSleeve:true,rightPants:true,leftPants:true};
    const k=el.dataset.k;a.layers[k]=!a.layers[k];el.classList.toggle('on',a.layers[k]);el.closest('.layer-pill')?.classList.toggle('on',a.layers[k]);persist();
@@ -2700,7 +2734,7 @@ refreshMojangCapes().then(()=>{if(UI.view==='capes'||UI.view==='wardrobe')render
 refreshBedrock().then(()=>{if(UI.view==='home')renderHome()});
 const navItems=$$('.nav-item'),cur=navItems.findIndex(x=>x.dataset.view===UI.view);
 const first=$$('.nav-item')[cur];if(first)$('#navIndicator').style.transform=`translateY(${first.offsetTop}px)`;
-requestAnimationFrame(drawFlatPreview);
+requestAnimationFrame(loopCharacter);
 startParticles();
 toast('Welcome to Luxis',state.accounts.length+' accounts · '+state.profiles.length+' instances ready','✦','ok');
 if(api())api().checkUpdate().then(raw=>{try{const r=JSON.parse(raw);if(r.available)toast('Update available','Luxis '+r.latest+' — open the Updates tab','↻','warn')}catch(e){}}).catch(()=>{});
