@@ -522,6 +522,17 @@ button:disabled{cursor:not-allowed;opacity:.45}
 .acct-choice{display:flex;gap:9px;flex-wrap:wrap;margin-top:8px}
 .acct-choice button{padding:8px 11px;border-radius:11px;border:1px solid var(--border);background:rgba(255,255,255,.04);font-size:11px;font-weight:650;color:var(--muted);transition:all var(--e2)}
 .acct-choice button.on{border-color:var(--accent);background:rgba(var(--accent-rgb),.12);color:var(--text)}
+
+/* ---------- running instances ---------- */
+.inst-run-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px}
+.inst-run-card{padding:15px;border-radius:14px;border:1px solid var(--border);background:rgba(255,255,255,.035);display:flex;flex-direction:column;gap:9px}
+.inst-run-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.inst-run-title{font-size:13px;font-weight:760}
+.inst-run-sub{font-size:10.5px;color:var(--muted);margin-top:3px}
+.inst-run-dot{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 12px var(--ok);flex:none;margin-top:4px}
+.inst-run-log{font:10.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;word-break:break-word;height:108px;overflow:auto;padding:9px;border-radius:10px;background:rgba(0,0,0,.28);color:var(--muted);border:1px solid var(--border)}
+.inst-run-actions{display:flex;gap:7px;flex-wrap:wrap}
+.inst-run-meta{display:flex;gap:6px;flex-wrap:wrap}
 </style>
 </head>
 <body>
@@ -542,6 +553,7 @@ button:disabled{cursor:not-allowed;opacity:.45}
       <span class="nav-indicator" id="navIndicator"></span>
       <button class="nav-item active" data-view="home" data-tip="Home - dashboard &amp; quick launch"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>Home</span></button>
       <button class="nav-item" data-view="profiles" data-tip="Profiles - isolated instances"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg><span>Profiles</span><span class="nav-count" id="profileCount">4</span></button>
+      <button class="nav-item" data-view="instances" data-tip="Running instances - monitor and close games"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 9h6v6H9zM4 9h2M18 9h2M9 4v2M15 4v2"/></svg><span>Instances</span><span class="nav-count" id="instanceCount">0</span></button>
       <button class="nav-item" data-view="modrinth" data-tip="Modrinth Hub - mods, packs &amp; shaders"><svg viewBox="0 0 24 24"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M3 7l9 5 9-5M12 12v10"/></svg><span>Modrinth Hub</span></button>
       <button class="nav-item" data-view="packs" data-tip="Installed resource &amp; shader packs"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M4 10h16M10 5v14"/></svg><span>Resource &amp; Shaders</span></button>
       <button class="nav-item" data-view="wardrobe" data-tip="Skins &amp; capes wardrobe"><svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg><span>Skins &amp; Capes</span></button>
@@ -571,6 +583,7 @@ button:disabled{cursor:not-allowed;opacity:.45}
     <div class="viewport" id="viewport">
       <section class="view active" data-view="home" id="view-home"></section>
       <section class="view" data-view="profiles" id="view-profiles"></section>
+      <section class="view" data-view="instances" id="view-instances"></section>
       <section class="view" data-view="modrinth" id="view-modrinth"></section>
       <section class="view" data-view="packs" id="view-packs"></section>
       <section class="view" data-view="wardrobe" id="view-wardrobe"></section>
@@ -1015,8 +1028,8 @@ function openModal(html,wide=false,sticky=false){
 function modalHead(title,sub){return `<div class="modal-head"><div><h2>${title}</h2><p>${sub}</p></div><button class="btn icon ghost" data-act="closeOverlay">✕</button></div>`}
 
 /* ---------- view routing ---------- */
-const UI={view:'home',launching:false,running:false,runningProfile:'',instanceId:'',instFilter:'mods',instSearch:'',edition:'java',luxisMenuGlobal:false};
-let leaveTimer=null,navOffsets=[];const MOD_UPDATES={};const VIEW_DIRTY=new Set(['home','profiles','modrinth','packs','wardrobe','settings','instance','capes','luxismod','updates']);
+const UI={view:'home',launching:false,running:false,runningProfile:'',instanceId:'',instances:[],instFilter:'mods',instSearch:'',edition:'java',luxisMenuGlobal:false};
+let leaveTimer=null,navOffsets=[];const MOD_UPDATES={};const VIEW_DIRTY=new Set(['home','profiles','instances','modrinth','packs','wardrobe','settings','instance','capes','luxismod','updates']);
 function refreshNavOffsets(){navOffsets=$$('.nav-item').map(x=>x.offsetTop)}
 const BEDROCK={checked:false,installed:false,version:'',wu:'Unknown',wuStart:'Unknown',ready:false};
 async function refreshBedrock(){
@@ -1024,7 +1037,7 @@ async function refreshBedrock(){
   try{const r=JSON.parse(native().bedrockStatus());BEDROCK.checked=true;BEDROCK.installed=!!r.installed;BEDROCK.version=r.version||'';BEDROCK.wu=r.wu||'Unknown';BEDROCK.wuStart=r.wuStart||'Unknown';BEDROCK.ready=!!r.ready}
   catch(e){BEDROCK.checked=true}
 }
-const VIEW_LABEL={home:'Home',profiles:'Profiles',modrinth:'Modrinth Hub',packs:'Resource & Shader Packs',wardrobe:'Skins & Capes',settings:'Settings & Themes',instance:'Instance',capes:'Cape Library',luxismod:'Luxis Mod',updates:'Updates'};
+const VIEW_LABEL={home:'Home',profiles:'Profiles',instances:'Running Instances',modrinth:'Modrinth Hub',packs:'Resource & Shader Packs',wardrobe:'Skins & Capes',settings:'Settings & Themes',instance:'Instance',capes:'Cape Library',luxismod:'Luxis Mod',updates:'Updates'};
 function navigate(v){
   if(!VIEW_LABEL[v]||v===UI.view)return;
   const old=$('.view.active');if(old){old.classList.add('leaving');old.classList.remove('active')}
@@ -1671,6 +1684,7 @@ function renderSettings(){
 function renderView(v){
   if(v==='home')renderHome();
   else if(v==='profiles')renderProfiles();
+  else if(v==='instances')renderInstances();
   else if(v==='modrinth')renderModrinth();
   else if(v==='packs')renderPacks();
   else if(v==='wardrobe')renderWardrobe();
@@ -2066,6 +2080,51 @@ async function showDiagnostics(name){
       <div class="tiny muted" style="margin-top:8px">${r.hasCrash?'Crash report found.':'No crash report.'} ${esc(r.logPath)}</div>`;
   }catch(e){const b=$('#diagBody');if(b)b.innerHTML=`<div class="empty">${esc(e.message||e)}</div>`}
 }
+function instanceUptime(started){
+  const ms=Date.now()-Date.parse(started);
+  if(!isFinite(ms)||ms<0)return 'just now';
+  const s=Math.floor(ms/1000),m=Math.floor(s/60),h=Math.floor(m/60);
+  return h?`${h}h ${m%60}m`:m?`${m}m ${s%60}s`:`${s}s`;
+}
+function updateLaunchButton(){
+  const count=(UI.instances||[]).length;UI.running=count>0;
+  const btn=$('#launchBtn'),label=$('#launchLabel');
+  if(btn)btn.classList.toggle('stop',UI.running);
+  if(label)label.textContent=UI.running?(count>1?count+' RUNNING':'INSTANCES'):'LAUNCH';
+  const hint=$('#dockHint');if(hint)hint.textContent=UI.running?`${count} game${count===1?'':'s'} running ? click to manage`:'Profile isolated ? mods synced';
+  const badge=$('#instanceCount');if(badge)badge.textContent=count;
+}
+async function syncInstances(){
+  if(!native()?.listInstances)return;
+  try{UI.instances=JSON.parse(await native().listInstances())||[]}catch(e){UI.instances=[]}
+  updateLaunchButton();
+  if(UI.view==='instances')renderInstances();
+}
+function renderInstances(){
+  const host=$('#view-instances');if(!host)return;
+  const list=UI.instances||[];
+  host.innerHTML=`
+   <div class="view-head"><div><div class="view-title">Running <em>Instances</em></div><div class="view-desc">Launch as many profiles as you like and close only the one you want.</div></div>
+     <div class="view-actions"><button class="btn" data-act="newInstance">? Launch another</button><button class="btn danger ghost" data-act="stopAllInstances" ${list.length?'':'disabled'}>Stop all</button></div></div>
+   ${!list.length?`<div class="card set-card"><div class="empty">No Minecraft instances are running. Launch a profile to see it here.</div></div>`:`<div class="inst-run-grid">${list.map(x=>`
+     <div class="inst-run-card"><div class="inst-run-top"><div><div class="inst-run-title">${esc(x.name)}</div><div class="inst-run-sub">${esc(x.version)} ? PID ${x.pid} ? ${instanceUptime(x.started)}</div></div><span class="inst-run-dot"></span></div>
+       <div class="inst-run-meta"><span class="chip">${esc(x.id)}</span><span class="chip">Java process</span></div>
+       <pre class="inst-run-log" id="log-${esc(x.id)}">${esc((x.log||[]).join('\n'))||'Waiting for output?'}</pre>
+       <div class="inst-run-actions"><button class="btn sm danger" data-act="stopInstance" data-id="${esc(x.id)}">Stop this instance</button><button class="btn sm ghost" data-act="instanceFolder" data-name="${esc(x.name)}">Open folder</button></div></div>`).join('')}</div>`}`;
+  const pre=host.querySelector('.inst-run-log');if(pre)pre.scrollTop=pre.scrollHeight;
+}
+async function stopOneInstance(id){
+  if(!api())return;
+  try{const r=JSON.parse(await api().stopInstance(id));if(r.stopped)toast('Instance closed',id,'?','ok')}
+  catch(e){toast('Stop failed',e.message||String(e),'!','warn')}
+  syncInstances();
+}
+async function stopEveryInstance(){
+  if(!api())return;
+  try{const r=JSON.parse(await api().stopAllInstances());toast('Instances closed',`${r.stopped} game(s) stopped`,'?','ok')}
+  catch(e){toast('Stop failed',e.message||String(e),'!','warn')}
+  syncInstances();
+}
 async function doLaunch(){
   if(UI.launching)return;
   if(UI.edition==='bedrock'){
@@ -2092,11 +2151,11 @@ async function doLaunch(){
     const raw=await api().launchProfile(JSON.stringify(p),state.activeAccount);
     const r=JSON.parse(raw);
     if(!r.ok)throw new Error(r.message||'Launch failed');
-    label.textContent='STOP';prog.style.width='100%';status.textContent=`${p.version} · Java ${r.javaMajor} · PID ${r.pid}`;
+    label.textContent='INSTANCES';prog.style.width='100%';status.textContent=`${p.version} ? Java ${r.javaMajor} ? PID ${r.pid}`;
     updateLaunchOverlay('Running',100,'PID '+r.pid);
-    UI.running=true;UI.runningProfile=p.id;btn.disabled=false;btn.classList.add('stop');
-    state.launched++;persist();renderAll();
-    toast('Minecraft launched',`${p.name} · ${p.version} · ${acc.username}`,'PLAY','ok');
+    UI.running=true;UI.runningProfile=p.id;UI.instanceId=r.instanceId||p.id;btn.disabled=false;btn.classList.add('stop');
+    state.launched++;persist();renderAll();syncInstances();
+    toast('Minecraft launched',`${p.name} ? ${p.version} ? PID ${r.pid}`,'PLAY','ok');
   }catch(e){
     label.textContent='LAUNCH';prog.style.width='0%';status.textContent='Launch failed';
     const msg=e.message||String(e),err=$('#launchError');
@@ -2109,31 +2168,32 @@ async function doLaunch(){
   }
 }
 function resetLaunch(){
-  UI.launching=false;UI.running=false;UI.runningProfile='';
-  const b=$('#launchBtn');if(b){b.disabled=false;b.classList.remove('stop')}
-  const l=$('#launchLabel');if(l)l.textContent='LAUNCH';
+  UI.launching=false;
   const p=$('#launchProgress');if(p)p.style.width='0%';
-  const s=$('#dockStatus');if(s)s.classList.remove('show');hideLaunchOverlay()
+  const s=$('#dockStatus');if(s)s.classList.remove('show');hideLaunchOverlay();
+  syncInstances();
 }
 async function doStop(){
   if(!UI.running)return;
-  const id=UI.runningProfile||activeProfile().id;
-  if(api()){try{const r=JSON.parse(await api().stopProfile(id));if(!r.stopped)toast('Already closed','The game process is no longer running','i')}catch(e){toast('Stop failed',e.message||String(e),'!','warn')}}
-  const s=$('#dockStatus');if(s)s.textContent='Game stopped';
-  toast('Game stopped','Minecraft was closed','■','ok');
+  await stopEveryInstance();
+  const s=$('#dockStatus');if(s)s.textContent='All games stopped';
   resetLaunch();
 }
 function onNativeMessage(e){
   const d=e.data;if(!d)return;
+  if(d.type==='instance'){syncInstances();return}
+  if(d.type==='log'&&d.instance){
+    const pre=document.getElementById('log-'+d.instance);
+    if(pre){pre.textContent+=((pre.textContent&&pre.textContent!=='Waiting for output?')?'\n':'')+d.line;pre.scrollTop=pre.scrollHeight}
+    return;
+  }
   if(d.type==='crash'){
-    if(d.exitCode===0){const s=$('#dockStatus');if(s)s.textContent='Game closed';resetLaunch();return}
-    UI.running=false;UI.runningProfile='';$('#launchBtn')?.classList.remove('stop');
+    syncInstances();
+    if(d.exitCode===0){const s=$('#dockStatus');if(s)s.textContent='Game closed';return}
     const el=$('#launchError');const msg='Game exited (code '+d.exitCode+'). '+(d.tail||'').split('\n').slice(-3).join(' ');
     if(el)el.textContent=msg.slice(0,400);
     toast('Game exited',msg.slice(0,120),'!','warn');
-    if(d.instance)showDiagnostics(d.instance);
-    const l=$('#launchLabel');if(l)l.textContent='CRASHED';
-    setTimeout(resetLaunch,4000);return;
+    if(d.instanceName)showDiagnostics(d.instanceName);
   }
   if(d.type==='java'){
     const st=$('#launchStage');if(st)st.textContent=d.stage||'';
@@ -2375,6 +2435,10 @@ const ACTIONS={
  updateLuxisMod:el=>changeLuxisMod(el,'update'),
  removeLuxisMod:el=>changeLuxisMod(el,'remove'),
  downloadFabricApi,
+  stopInstance:el=>stopOneInstance(el.dataset.id),
+  stopAllInstances:()=>stopEveryInstance(),
+  instanceFolder:el=>{const p=state.profiles.find(x=>x.name===el.dataset.name);if(p&&native()?.openFolder)native().openFolder('',p.name)},
+  newInstance:()=>navigate('profiles'),
   refreshLuxisMod:()=>renderLuxisMod(),
   updateAllLuxisMods,
   filterLuxisMods:el=>{luxisModFilter=el.dataset.v;drawLuxisModList()},
@@ -2743,6 +2807,7 @@ syncNativeAccounts();
 refreshNavOffsets();window.addEventListener('resize',refreshNavOffsets);
 persist();
 renderAll();
+syncInstances();
 refreshMojangCapes().then(()=>{if(UI.view==='capes'||UI.view==='wardrobe')renderView(UI.view)});
 refreshBedrock().then(()=>{if(UI.view==='home')renderHome()});
 const navItems=$$('.nav-item'),cur=navItems.findIndex(x=>x.dataset.view===UI.view);

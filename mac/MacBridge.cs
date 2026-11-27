@@ -111,6 +111,9 @@ public sealed class MacBridge
 
     public Task<string> launchProfile(string profileJson, string activeAccountId) => _minecraft.Launch(profileJson, activeAccountId);
     public string stopProfile(string profileId) => _minecraft.Stop(profileId);
+    public string listInstances() => _minecraft.ListInstances();
+    public string stopInstance(string instanceId) => _minecraft.Stop(instanceId);
+    public string stopAllInstances() => _minecraft.StopAll();
     public string analyzeInstance(string profileName) => _minecraft.Analyze(profileName);
     public string toggleModFile(string profileName, string file, bool enabled) => _minecraft.ToggleMod(profileName, file, enabled);
 
