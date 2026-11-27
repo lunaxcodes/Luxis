@@ -1929,6 +1929,7 @@ function drawQuad(ctx,q){
   ctx.globalAlpha=q.alpha??1;
   texQuad(ctx,q.im,q.uv,q.pts);
   if(q.shade)shadeQuad(ctx,q.pts,q.shade);
+  if(q.gradient)capeGradient(ctx,q.pts);
   ctx.globalAlpha=1;
 }
 function drawBox(ctx,im,box,yaw,cx,cy,scale,swing,uvMap,alpha=1){
@@ -1939,30 +1940,33 @@ function shadeQuad(ctx,pts,color){
   for(let i=1;i<pts.length;i++)ctx.lineTo(pts[i].x,pts[i].y);
   ctx.closePath();ctx.fillStyle=color;ctx.fill();ctx.restore();
 }
+function capeGradient(ctx,pts){
+  ctx.save();ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
+  for(let i=1;i<pts.length;i++)ctx.lineTo(pts[i].x,pts[i].y);
+  ctx.closePath();ctx.clip();
+  const xs=pts.map(p=>p.x),ys=pts.map(p=>p.y);
+  const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
+  const side=ctx.createLinearGradient(x0,0,x1,0);
+  side.addColorStop(0,'rgba(0,0,0,.19)');side.addColorStop(.24,'rgba(0,0,0,0)');
+  side.addColorStop(.52,'rgba(255,255,255,.055)');side.addColorStop(.8,'rgba(0,0,0,0)');
+  side.addColorStop(1,'rgba(0,0,0,.19)');
+  ctx.fillStyle=side;ctx.fillRect(x0,y0,x1-x0,y1-y0);
+  const drop=ctx.createLinearGradient(0,y0,0,y1);
+  drop.addColorStop(0,'rgba(255,255,255,.045)');drop.addColorStop(1,'rgba(0,0,0,.24)');
+  ctx.fillStyle=drop;ctx.fillRect(x0,y0,x1-x0,y1-y0);
+  ctx.restore();
+}
 function capeQuads(im,yaw,cx,cy,scale,t){
   if(!im)return [];
-  const out=[],panels=6,top=7.4,bottom=-13.4;
   const tw=im.naturalWidth||im.width||96,th=im.naturalHeight||im.height||144;
-  const wave=Math.sin(t*0.0032)*0.45,flutter=Math.sin(t*0.005+1)*0.2;
-  const bend=x=>-3.5-Math.cos((x+5)/10*Math.PI)*0.85;
-  const add=(pts,uv,shade)=>out.push({im,pts,uv,depth:pts.reduce((a,b)=>a+b.depth,0)/4,alpha:.98,shade});
-  for(let i=0;i<panels;i++){
-    const x0=-5+i*10/panels,x1=-5+(i+1)*10/panels,z0=bend(x0),z1=bend(x1);
-    const f0=x0*.10,f1=x1*.10;
-    add([
-      proj({x:x1,y:top,z:z1},cx,cy,scale,yaw,0,0),
-      proj({x:x0,y:top,z:z0},cx,cy,scale,yaw,0,0),
-      proj({x:x0+f0+wave*.3,y:bottom,z:z0-.5+flutter*(i/panels)},cx,cy,scale,yaw,0,0),
-      proj({x:x1+f1+wave*.3,y:bottom,z:z1-.5+flutter*((i+1)/panels)},cx,cy,scale,yaw,0,0)
-    ],[i*tw/panels,0,tw/panels,th],'rgba(0,0,0,'+(0.08+0.12*Math.abs(Math.cos((i+.5)/panels*Math.PI))).toFixed(3)+')');
-  }
-  add([
-    proj({x:5,y:top+.3,z:-2.9},cx,cy,scale,yaw,0,0),
-    proj({x:-5,y:top+.3,z:-2.9},cx,cy,scale,yaw,0,0),
-    proj({x:-5,y:top-1.1,z:bend(-5)},cx,cy,scale,yaw,0,0),
-    proj({x:5,y:top-1.1,z:bend(5)},cx,cy,scale,yaw,0,0)
-  ],[0,0,tw,Math.max(4,th*.08)],'rgba(0,0,0,.18)');
-  return out;
+  const top=7.4,bottom=-13.4,wave=Math.sin(t*0.0032)*0.45,flutter=Math.sin(t*0.005+1)*0.2;
+  const pts=[
+    proj({x:5,y:top,z:-3.6},cx,cy,scale,yaw,0,0),
+    proj({x:-5,y:top,z:-3.6},cx,cy,scale,yaw,0,0),
+    proj({x:-5+wave*.35,y:bottom,z:-4.05+flutter},cx,cy,scale,yaw,0,0),
+    proj({x:5+wave*.35,y:bottom,z:-4.05+flutter},cx,cy,scale,yaw,0,0)
+  ];
+  return [{im,pts,uv:[0,0,tw,th],depth:pts.reduce((a,b)=>a+b.depth,0)/4,alpha:.99,gradient:true}];
 }
 function loopCharacter(ts){
   requestAnimationFrame(loopCharacter);
