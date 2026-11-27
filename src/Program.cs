@@ -103,6 +103,8 @@ public sealed class MainForm : Form
             var env = await CoreWebView2Environment.CreateAsync(userDataFolder: userData);
             await _web.EnsureCoreWebView2Async(env);
             _web.CoreWebView2.SetVirtualHostNameToFolderMapping("luxis.local", appFiles, CoreWebView2HostResourceAccessKind.Allow);
+            _web.CoreWebView2.SetVirtualHostNameToFolderMapping("lunax.local", appFiles, CoreWebView2HostResourceAccessKind.Allow);
+            await MigrateLocalStorageAsync();
             _web.CoreWebView2.AddHostObjectToScript("bridge", new Bridge(this, _auth, _minecraft, _modrinth, _mrpack, _updates, _java, _root));
             await _web.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(
                 "window.__luxis = window.chrome?.webview?.hostObjects?.bridge || null;" +
@@ -124,6 +126,42 @@ public sealed class MainForm : Form
     public void MaximizeWindow() => BeginInvoke(() =>
         WindowState = WindowState == FormWindowState.Maximized ? FormWindowState.Normal : FormWindowState.Maximized);
     public void CloseWindow() => BeginInvoke(Close);
+
+    private async Task MigrateLocalStorageAsync()
+    {
+        var flag = Path.Combine(_root, "localstorage-migrated.txt");
+        if (File.Exists(flag)) return;
+        try
+        {
+            var blank = Path.Combine(Path.Combine(_root, "app"), "migrate.html");
+            if (!File.Exists(blank)) await File.WriteAllTextAsync(blank, "<!doctype html><title>Migration</title>");
+
+            async Task Go(string url)
+            {
+                var done = new TaskCompletionSource<bool>();
+                void Handler(object? sender, CoreWebView2NavigationCompletedEventArgs e)
+                {
+                    _web.NavigationCompleted -= Handler;
+                    done.TrySetResult(e.IsSuccess);
+                }
+                _web.NavigationCompleted += Handler;
+                _web.CoreWebView2.Navigate(url);
+                await done.Task;
+            }
+
+            await Go("https://lunax.local/migrate.html");
+            var raw = await _web.CoreWebView2.ExecuteScriptAsync("localStorage.getItem('lunacher.state.v1') || ''");
+            var value = JsonSerializer.Deserialize<string>(raw) ?? "";
+            if (!string.IsNullOrEmpty(value))
+            {
+                await Go("https://luxis.local/migrate.html");
+                var escaped = JsonSerializer.Serialize(value);
+                await _web.CoreWebView2.ExecuteScriptAsync("localStorage.setItem('lunacher.state.v1', " + escaped + ")");
+            }
+            await File.WriteAllTextAsync(flag, DateTimeOffset.UtcNow.ToString("O"));
+        }
+        catch { }
+    }
 
     public void StartDrag()
     {
@@ -218,6 +256,12 @@ public sealed class Bridge
     public string toggleModFile(string profileName, string file, bool enabled) => _minecraft.ToggleMod(profileName, file, enabled);
 
     // ---- bundled in-game Luxis mod ----
+    private static bool IsOlderThan26(string version)
+    {
+        var parts = version.Split('.');
+        return !int.TryParse(parts.FirstOrDefault(), out var major) || major < 26;
+    }
+
     public string luxisModStatus(string profileName)
     {
         var mods = Path.Combine(_minecraft.InstanceDir(profileName), "mods");
@@ -226,8 +270,10 @@ public sealed class Bridge
         return Util.Json(new { installed = File.Exists(jar) || File.Exists(jar + ".disabled"), enabled = File.Exists(jar), fabricApi = fabric });
     }
 
-    public string installLuxisMod(string profileName)
+    public string installLuxisMod(string profileName, string version = "")
     {
+        if (!string.IsNullOrEmpty(version) && IsOlderThan26(version))
+            return Util.Json(new { ok = false, error = "Luxis Mod currently supports Minecraft 26.1 and newer." });
         var mods = Path.Combine(_minecraft.InstanceDir(profileName), "mods");
         Directory.CreateDirectory(mods);
         if (Directory.GetFiles(mods, "fabric-api*.jar").Length == 0)
@@ -239,6 +285,21 @@ public sealed class Bridge
         var off = jar + ".disabled";
         if (File.Exists(off)) File.Delete(off);
         return Util.Json(new { ok = true, file = "LuxisClientMod.jar" });
+    }
+
+    public string syncLuxisMod(string profileName)
+    {
+        var jar = Path.Combine(_minecraft.InstanceDir(profileName), "mods", "LuxisClientMod.jar");
+        if (!File.Exists(jar)) return Util.Json(new { updated = false });
+        try
+        {
+            using var src = Assembly.GetExecutingAssembly().GetManifestResourceStream("Luxis.LuxisClientMod.jar");
+            if (src == null) return Util.Json(new { updated = false });
+            using var dst = File.Create(jar);
+            src.CopyTo(dst);
+            return Util.Json(new { updated = true });
+        }
+        catch { return Util.Json(new { updated = false }); }
     }
 
     public string removeLuxisMod(string profileName)

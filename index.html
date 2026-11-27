@@ -1536,10 +1536,10 @@ function renderLuxisMod(){
         <div class="tiny muted">◆ Profiles saved to <span class="mono">config/luxis/profiles/</span></div>
         <div class="tiny muted">◆ No cheats, auto-clickers, hitboxes or unfair advantages</div>
       </div></div></div>
-    <div class="card set-card"><h3>Requirements</h3><div class="sub">Minecraft Java 26.3 · Fabric Loader 0.19.5+ · Fabric API 0.167.0+26.3 · Java 25+</div>
+    <div class="card set-card"><h3>Requirements</h3><div class="sub">Minecraft 26.1 through latest · Fabric Loader 0.19.5+ · Fabric API 0.167.0+ · Java 25+</div>
       <div class="tiny muted" style="margin-top:10px">The mod only changes rendering and input display. It does not modify game logic. Config backups still run before every launch.</div></div>
    </div>
-   <div class="card set-card" style="grid-column:1/-1"><h3>Install to profiles</h3><div class="sub">Choose which instances should load <span class="mono">LuxisClientMod.jar</span>. Nothing is changed until you click a button.</div>
+   <div class="card set-card" style="grid-column:1/-1"><h3>Install to profiles</h3><div class="sub">Choose which instances should load <span class="mono">LuxisClientMod.jar</span>. Supports Minecraft 26.1 through the latest release; older versions such as 1.21.11 are not supported by this build. Nothing is changed until you click a button.</div>
      <div style="margin-top:12px">${rows||'<div class="empty">No profiles yet.</div>'}</div></div>`;
 }
 
@@ -2181,7 +2181,7 @@ const ACTIONS={
   const pr=state.profiles.find(x=>x.id===el.dataset.profile);if(!pr)return;
   if(!api())return toast('Desktop launcher required','Run Luxis.exe to install the mod','!','warn');
   try{
-    const r=JSON.parse(await api().installLuxisMod(pr.name));
+    const r=JSON.parse(await api().installLuxisMod(pr.name,pr.version));
     if(!r.ok)return toast('Install failed',r.error||'Unknown error','!','warn');
     if(!pr.mods.some(m=>m.id==='luxis-client-mod'))pr.mods.push({id:'luxis-client-mod',title:'Luxis Client Mod',v:'1.0.0',file:'LuxisClientMod.jar',on:true});
     state.luxisModProfiles[pr.id]=true;persist();renderLuxisMod();toast('Luxis Mod installed',pr.name+' · press RIGHT SHIFT in game','OK','ok');
@@ -2525,6 +2525,7 @@ $('#quickTheme').addEventListener('click',()=>navigate('settings'));
 
 /* ---------- boot ---------- */
 syncNativeAccounts();
+if(api()){for(const pr of state.profiles){const v=String(pr.version||'');const major=parseInt(v.split('.')[0],10);try{const st=JSON.parse(native().luxisModStatus(pr.name));if(st.installed){if(!isNaN(major)&&major<26)native().removeLuxisMod(pr.name);else native().syncLuxisMod(pr.name)}}catch(e){}}}
 refreshNavOffsets();window.addEventListener('resize',refreshNavOffsets);
 persist();
 renderAll();
