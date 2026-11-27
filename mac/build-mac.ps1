@@ -5,6 +5,21 @@
 $ErrorActionPreference = 'Stop'
 $version = (Get-Content 'version.txt' -Raw).Trim()
 $out = 'dist/mac-release'
+
+# Keep the macOS bridge in lockstep with the Windows bridge.
+function Get-BridgeMethods([string] $text) {
+  [regex]::Matches($text, 'public\s+(?:async\s+)?(?:[\w<>\[\],\.]+)\s+(\w+)\s*\(') |
+    ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique
+}
+$winBridge = (Get-Content 'src/Program.cs' -Raw)
+$winStart = $winBridge.IndexOf('public sealed class Bridge')
+$winEnd = $winBridge.IndexOf('internal static class NativeMethods', $winStart)
+if ($winStart -lt 0 -or $winEnd -lt 0) { throw 'Could not locate the Windows Bridge class.' }
+$winMethods = Get-BridgeMethods $winBridge.Substring($winStart, $winEnd - $winStart)
+$macMethods = Get-BridgeMethods (Get-Content 'mac/MacBridge.cs' -Raw)
+$missing = @($winMethods | Where-Object { $_ -notin $macMethods })
+if ($missing.Count -gt 0) { throw "MacBridge is missing bridge methods added on Windows: $($missing -join ', ')" }
+Write-Host "Bridge parity verified: $($winMethods.Count) methods."
 New-Item -ItemType Directory -Force -Path $out | Out-Null
 
 foreach ($rid in @('osx-arm64', 'osx-x64')) {

@@ -34,6 +34,7 @@ jobs:
           path: |
             installer\*.exe
             release\*
+            dist\mac-release\*
 
       - name: Create or update GitHub Release
         env:
@@ -42,12 +43,17 @@ jobs:
           $v = (Get-Content version.txt -Raw).Trim()
           $tag = "v$v"
           $assets = @("installer/Luxis-Setup-$v.exe", "release/Luxis.exe", "release/version.json")
+          Get-ChildItem 'dist/mac-release' -File | ForEach-Object { $assets += $_.FullName }
           $notes = @"
           ## Luxis v$v
 
+          **Windows:** installer, portable exe, and auto-update manifest.
+
+          **macOS:** Apple Silicon and Intel `.app.zip` bundles, plus per-architecture update manifests. Open with Right-click → Open on first launch if Gatekeeper warns.
+
           **In-game Luxis Mod v1.4.0** — 15 new PvP HUD readouts covering cooldowns, consumable stock, durability, health, latency, and target distance. Read-only; no automation or reach changes.
 
-          **Motion update** — adjustable window width/height, Glide/Zoom/Fade transitions, configurable menu particles, and new performance/visual modules from v1.3.0.
+          **Motion update** — adjustable window width/height, Glide/Zoom/Fade transitions, configurable menu particles, 3D skin and cape viewer, and new performance/visual modules.
 
           Update in-app from the Updates tab; use the Luxis Mod tab to install the new mod jar.
           "@
