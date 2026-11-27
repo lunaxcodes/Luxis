@@ -1,6 +1,8 @@
 package com.luxis.gui;
 
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 
 /** Soft rounded drawing helpers — no raw OpenGL, no sharp blocky panels. */
 public final class Draw {
@@ -14,6 +16,20 @@ public final class Draw {
             g.fill(x + inset, y + h - i - 1, x + w - inset, y + h - i, color);
         }
         g.fill(x, y + r, x + w, y + h - r, color);
+    }
+
+    public static void glow(GuiGraphicsExtractor g, int x, int y, int w, int h, int r, int color) {
+        for (int i = 4; i >= 1; i--) {
+            int a = Math.max(0, 18 - i * 3);
+            rounded(g, x - i, y - i, w + i * 2, h + i * 2, r + i, (a << 24) | (color & 0xFFFFFF));
+        }
+    }
+
+    public static void styled(GuiGraphicsExtractor g, net.minecraft.client.gui.Font font, String value,
+                              int x, int y, int color, boolean bold, boolean shadow) {
+        Component c = Component.literal(value);
+        if (bold) c = c.copy().withStyle(ChatFormatting.BOLD);
+        g.text(font, c, x, y, color, shadow);
     }
 
     public static void softBorder(GuiGraphicsExtractor g, int x, int y, int w, int h, int r, int color) {

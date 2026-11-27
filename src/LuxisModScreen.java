@@ -48,9 +48,11 @@ public final class LuxisModScreen extends Screen {
 
         g.fill(0, 0, width, height, 0x99050709);
         Draw.shadow(g, px, py, sw, sh, 24);
-        Draw.softBorder(g, px, py, sw, sh, 24, 0x2AFFFFFF);
-        Draw.rounded(g, px, py, sw, sh, 24, th.bg);
-                Draw.rounded(g, px + 1, py + 1, sw - 2, 1, 1, AnimationUtil.lerpColor(th.accent, th.accent2, pulse));
+        Draw.glow(g, px, py, sw, sh, 24, AnimationUtil.lerpColor(th.accent, th.accent2, pulse));
+        int borderA = (int) (60 + 50 * pulse);
+        Draw.softBorder(g, px, py, sw, sh, 24, (borderA << 24) | (th.accent & 0xFFFFFF));
+        Draw.rounded(g, px, py, sw, sh, 26, th.bg);
+                Draw.rounded(g, px + 1, py + 1, sw - 2, 2, 1, AnimationUtil.lerpColor(th.accent, th.accent2, pulse));
 
         regions.clear();
         drawHeader(g, px, py, sw, th, pulse);
@@ -70,14 +72,14 @@ public final class LuxisModScreen extends Screen {
             case "WAYPOINTS" -> "Waypoints";
             default -> "Mods";
         };
-        bigLabel(g, "Luxis client", px + 34, py + 22, th.accent, 1.25F);
+        bigLabel(g, "Luxis client", px + 34, py + 20, th.accent, 1.65F);
         label(g, title, px + 32, py + 40, th.text);
 
         int sx = px + w - 340;
-        Draw.rounded(g, sx, py + 30, 306, 34, 12, 0x22FFFFFF);
-        Draw.softBorder(g, sx, py + 30, 306, 34, 12, 0x22FFFFFF);
-        bigLabel(g, "⌕", sx + 12, py + 33, th.muted, 1.8F);
-        label(g, "Search effects", sx + 42, py + 39, th.muted);
+        Draw.rounded(g, sx, py + 30, 306, 34, 14, 0x22FFFFFF);
+        Draw.softBorder(g, sx, py + 30, 306, 34, 14, (0x44 << 24) | (th.accent & 0xFFFFFF));
+        bigLabel(g, "⌕", sx + 10, py + 30, th.accent, 2.3F);
+        label(g, "Search effects", sx + 52, py + 39, th.muted);
         regions.add(new ClickRegion(sx, py + 30, 306, 34, "search", ""));
 
         int tx = px + 34, ty = py + 88;
@@ -100,7 +102,8 @@ public final class LuxisModScreen extends Screen {
         int fx = cx, fy = cy;
         for (String f : FILTERS) {
             int fw = f.length() * 7 + 24, on = f.equals(filter) ? 1 : 0;
-            Draw.rounded(g, fx, fy, fw, 22, 9, on == 1 ? AnimationUtil.lerpColor(th.accent, th.accent2, 0.35F) : 0x14FFFFFF);
+            Draw.rounded(g, fx, fy, fw, 22, 10, on == 1 ? AnimationUtil.lerpColor(th.accent, th.accent2, 0.35F) : 0x14FFFFFF);
+            Draw.softBorder(g, fx, fy, fw, 22, 10, on == 1 ? (0x77 << 24) | (th.accent & 0xFFFFFF) : 0x22FFFFFF);
             label(g, f, fx + 9, fy + 5, on == 1 ? 0xFFFFFFFF : th.muted);
             regions.add(new ClickRegion(fx, fy, fw, 22, "filter", f));
             fx += fw + 8;
@@ -139,24 +142,30 @@ public final class LuxisModScreen extends Screen {
 
     private void drawCard(GuiGraphicsExtractor g, Module m, int x, int y, int w, int h, double mx, double my,
                           float dt, GuiTheme.Palette th, int index) {
-        float stagger = AnimationUtil.approach("card_" + index, 1F, 10F, dt);
+        float stagger = AnimationUtil.spring("card_" + index, 1F, dt, 170F);
+        stagger = Math.max(0F, Math.min(1.04F, stagger));
         boolean hover = mx >= x && mx <= x + w && my >= y && my <= y + h;
-        float lift = (float) (-3 * AnimationUtil.approach("hover_" + m.id, hover ? 1F : 0F, 16F, dt) * stagger);
-        Draw.shadow(g, x, (int) (y + lift), w, h, 12);
-        Draw.rounded(g, x, (int) (y + lift), w, h, 12,
-                hover ? AnimationUtil.lerpColor(0x18FFFFFF, th.accent, 0.10F) : 0x10FFFFFF);
+        float hv = Math.max(0F, Math.min(1F, AnimationUtil.spring("hover_" + m.id, hover ? 1F : 0F, dt, 210F)));
+        int dw = (int) (w * (0.94F + 0.06F * stagger)), dh = (int) (h * (0.94F + 0.06F * stagger));
+        int dx = x + (w - dw) / 2, dy = y + (h - dh) / 2 - (int) (3 * hv);
+        Draw.shadow(g, dx, dy, dw, dh, 14);
+        Draw.rounded(g, dx, dy, dw, dh, 14,
+                AnimationUtil.lerpColor(0x10FFFFFF, th.accent, 0.14F * hv));
+        Draw.softBorder(g, dx, dy, dw, dh, 14,
+                (((int) (40 + 90 * hv)) << 24) | (th.accent & 0xFFFFFF));
                 String name = m.name.length() > 22 ? m.name.substring(0, 21) + "..." : m.name;
         String desc = m.description.length() > 30 ? m.description.substring(0, 29) + "..." : m.description;
-        label(g, name, x + 14, (int) (y + lift + 10), th.text);
-        label(g, desc, x + 14, (int) (y + lift + 30), th.muted);
-        drawSwitch(g, x + w - 52, (int) (y + lift + 20), m.enabled, dt, th, m.id);
-        regions.add(new ClickRegion(x, (int) (y + lift), w - 60, h, "options_zone", m.id));
-        regions.add(new ClickRegion(x + w - 56, (int) (y + lift), 56, h, "toggle_zone", m.id));
+        label(g, name, dx + 14, dy + 10, th.text);
+        label(g, desc, dx + 14, dy + 30, th.muted);
+        drawSwitch(g, dx + dw - 52, dy + 20, m.enabled, dt, th, m.id);
+        regions.add(new ClickRegion(dx, dy, dw - 60, dh, "options_zone", m.id));
+        regions.add(new ClickRegion(dx + dw - 56, dy, 56, dh, "toggle_zone", m.id));
     }
 
     private void drawSwitch(GuiGraphicsExtractor g, int x, int y, boolean on, float dt, GuiTheme.Palette th, String key) {
-        float v = AnimationUtil.approach("switch_" + key, on ? 1F : 0F, 14F, dt);
+        float v = Math.max(0F, Math.min(1F, AnimationUtil.spring("switch_" + key, on ? 1F : 0F, dt, 190F)));
         Draw.rounded(g, x, y, 38, 20, 10, AnimationUtil.lerpColor(0x33FFFFFF, th.accent, v));
+        Draw.softBorder(g, x, y, 38, 20, 10, (0x44 << 24) | (th.accent & 0xFFFFFF));
         int knob = x + 2 + (int) (18 * AnimationUtil.easeOutCubic(v));
         Draw.rounded(g, knob, y + 2, 16, 16, 8, 0xFFFFFFFF);
     }
@@ -180,13 +189,16 @@ public final class LuxisModScreen extends Screen {
         g.pose().pushMatrix();
         g.pose().translate(x, y);
         g.pose().scale(scale, scale);
-        Draw.text(g, font, s, 0, 0, color, false);
-        Draw.text(g, font, s, 1, 0, color, false);
+        Draw.styled(g, font, s, 0, 0, color, true, false);
         g.pose().popMatrix();
     }
 
     private void label(GuiGraphicsExtractor g, String s, int x, int y, int color) {
-        Draw.text(g, font, s, x, y, color, false);
+        g.pose().pushMatrix();
+        g.pose().translate(x, y);
+        g.pose().scale(0.9F, 0.9F);
+        Draw.styled(g, font, s, 0, 0, color, false, false);
+        g.pose().popMatrix();
     }
 
     @Override

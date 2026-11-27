@@ -17,7 +17,7 @@ public final class ModuleOptionsOverlay {
 
     public void draw(GuiGraphicsExtractor g, int px, int py, int pw, int ph, double mx, double my, Module m, float dt) {
         regions.clear();
-        float anim = AnimationUtil.approach("options_open", 1F, 14F, dt);
+        float anim = Math.max(0F, Math.min(1F, AnimationUtil.spring("options_open", 1F, dt, 190F)));
         float scale = 0.9F + 0.1F * AnimationUtil.easeOutCubic(anim);
         w = Math.min(520, pw - 60); h = Math.min(ph - 50, 560);
         x = px + (pw - w) / 2; y = py + (ph - h) / 2;
