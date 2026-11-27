@@ -16,7 +16,11 @@ public sealed class JavaInstaller
     {
         var home = RuntimePath(major);
         if (!Directory.Exists(home)) return "";
+#if MAC
+        var exe = Directory.GetFiles(home, "java", SearchOption.AllDirectories).FirstOrDefault();
+#else
         var exe = Directory.GetFiles(home, "java.exe", SearchOption.AllDirectories).FirstOrDefault();
+#endif
         return exe ?? "";
     }
 
@@ -29,7 +33,15 @@ public sealed class JavaInstaller
         var dir = RuntimePath(major);
         Directory.CreateDirectory(dir);
         var zip = Path.Combine(Path.GetTempPath(), "luxis-jdk-" + major + ".zip");
+#if MAC
+        var arch = System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture
+            == System.Runtime.InteropServices.Architecture.Arm64 ? "aarch64" : "x64";
+        var url = $"https://api.adoptium.net/v3/binary/latest/{major}/ga/mac/{arch}/jdk/hotspot/normal/eclipse";
+        var archive = Path.Combine(Path.GetTempPath(), "luxis-jdk-" + major + ".tar.gz");
+#else
         var url = $"https://api.adoptium.net/v3/binary/latest/{major}/ga/windows/x64/jdk/hotspot/normal/eclipse";
+        var archive = zip;
+#endif
         _emit(Util.Json(new { type = "java", stage = "Downloading Java " + major, progress = 5 }));
         // Adoptium returns 406 if a JSON Accept header is sent — use a clean client.
         using var client = new HttpClient { Timeout = TimeSpan.FromMinutes(10) };
@@ -54,12 +66,21 @@ public sealed class JavaInstaller
         _emit(Util.Json(new { type = "java", stage = "Extracting Java " + major, progress = 92 }));
         try
         {
+#if MAC
+            var psi = new ProcessStartInfo("/bin/tar", $"-xzf \"{archive}\" -C \"{dir}\" --strip-components=1")
+            { RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true };
+            using var proc = Process.Start(psi)!;
+            var errors = proc.StandardError.ReadToEnd();
+            proc.WaitForExit(10000);
+            if (proc.ExitCode != 0) throw new Exception(errors);
+#else
             ZipFile.ExtractToDirectory(zip, dir, true);
+#endif
         }
-        finally { try { File.Delete(zip); } catch { } }
+        finally { try { File.Delete(archive); } catch { } }
 
         var exe = JavaExe(major);
-        if (string.IsNullOrEmpty(exe)) throw new Exception("Java extraction did not produce java.exe.");
+        if (string.IsNullOrEmpty(exe)) throw new Exception("Java extraction did not produce a java executable.");
         _emit(Util.Json(new { type = "java", stage = "Java " + major + " ready", progress = 100 }));
         return Util.Json(new { ok = true, path = exe, major });
     }

@@ -278,11 +278,12 @@ public sealed class AuthService
         var expiresIn = root.Int("expires_in", 3600);
         var result = await CompleteAuth(msToken, refresh, expiresIn);
 
+        var accountId = "ms-" + Guid.NewGuid().ToString("N")[..10];
         var account = new Account
         {
-            id = "ms-" + Guid.NewGuid().ToString("N")[..10],
+            id = accountId,
             username = result.username, uuid = result.uuid, type = "microsoft",
-            refreshEncrypted = Encrypt(refresh), expiresAt = DateTime.UtcNow.AddSeconds(expiresIn),
+            refreshEncrypted = Encrypt(refresh, accountId), expiresAt = DateTime.UtcNow.AddSeconds(expiresIn),
             skinUrl = result.skinUrl, capeUrl = result.capeUrl, capes = result.capes
         };
         _accounts.RemoveAll(a => a.uuid == result.uuid && a.type == "microsoft");
@@ -459,7 +460,7 @@ public sealed class AuthService
         if (a.type == "offline") return Util.Json(new { status = "offline" });
         try
         {
-            var refresh = Encoding.UTF8.GetString(ProtectedData.Unprotect(Convert.FromBase64String(a.refreshEncrypted), null, DataProtectionScope.CurrentUser));
+            var refresh = Decrypt(a.refreshEncrypted, a.id);
             var body = await Util.PostForm(AuthBase + "/token",
                 new Dictionary<string, string> { ["client_id"] = ClientId, ["grant_type"] = "refresh_token", ["refresh_token"] = refresh });
             using var doc = Util.ParseJson(body, "Microsoft refresh endpoint");
@@ -469,7 +470,7 @@ public sealed class AuthService
             var newRefresh = doc.RootElement.Str("refresh_token", refresh);
             var result = await CompleteAuth(msToken, newRefresh, expiresIn);
             a.username = result.username; a.uuid = result.uuid; a.skinUrl = result.skinUrl; a.capeUrl = result.capeUrl; a.capes = result.capes;
-            a.refreshEncrypted = Encrypt(newRefresh); a.expiresAt = DateTime.UtcNow.AddSeconds(expiresIn);
+            a.refreshEncrypted = Encrypt(newRefresh, a.id); a.expiresAt = DateTime.UtcNow.AddSeconds(expiresIn);
             _sessions[id] = new McSession { Username = result.username, Uuid = result.uuid, Token = result.mcToken, Expires = result.expires, Online = true };
             Save();
             return Util.Json(new { status = "success", account = ToPublic(a) });
@@ -591,11 +592,12 @@ public sealed class AuthService
         var refresh = doc.RootElement.Str("refresh_token");
         var expiresIn = doc.RootElement.Int("expires_in", 3600);
         var result = await CompleteAuth(msToken, refresh, expiresIn);
+        var accountId = "ms-" + Guid.NewGuid().ToString("N")[..10];
         var account = new Account
         {
-            id = "ms-" + Guid.NewGuid().ToString("N")[..10],
+            id = accountId,
             username = result.username, uuid = result.uuid, type = "microsoft",
-            refreshEncrypted = Encrypt(refresh), expiresAt = DateTime.UtcNow.AddSeconds(expiresIn),
+            refreshEncrypted = Encrypt(refresh, accountId), expiresAt = DateTime.UtcNow.AddSeconds(expiresIn),
             skinUrl = result.skinUrl, capeUrl = result.capeUrl, capes = result.capes
         };
         _accounts.RemoveAll(a => a.uuid == result.uuid && a.type == "microsoft");
@@ -607,6 +609,68 @@ public sealed class AuthService
         return Util.Json(new { status = "success", account = ToPublic(account) });
     }
 
-    private static string Encrypt(string value)
-        => Convert.ToBase64String(ProtectedData.Protect(Encoding.UTF8.GetBytes(value), null, DataProtectionScope.CurrentUser));
+    private static string Encrypt(string value, string id)
+    {
+#if MAC
+        KeychainStore(id, value);
+        return "keychain:" + id;
+#else
+        return Convert.ToBase64String(ProtectedData.Protect(Encoding.UTF8.GetBytes(value), null, DataProtectionScope.CurrentUser));
+#endif
+    }
+
+    private static string Decrypt(string value, string id)
+    {
+#if MAC
+        return KeychainRead(id) ?? "";
+#else
+        return Encoding.UTF8.GetString(ProtectedData.Unprotect(Convert.FromBase64String(value), null, DataProtectionScope.CurrentUser));
+#endif
+    }
+
+#if MAC
+    private const string KeychainService = "Luxis.RefreshTokens";
+    private static System.Text.Json.JsonElement KeychainDocument()
+    {
+        try
+        {
+            var psi = new System.Diagnostics.ProcessStartInfo("/usr/bin/security", "find-generic-password -a luxis -s " + KeychainService + " -w")
+            { RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true };
+            using var proc = System.Diagnostics.Process.Start(psi)!;
+            var text = proc.StandardOutput.ReadToEnd().Trim();
+            proc.WaitForExit(3000);
+            using var parsed = System.Text.Json.JsonDocument.Parse(string.IsNullOrEmpty(text) ? "{}" : text);
+            return parsed.RootElement.Clone();
+        }
+        catch { using var empty = System.Text.Json.JsonDocument.Parse("{}"); return empty.RootElement.Clone(); }
+    }
+    private static string KeychainRead(string id)
+    {
+        try
+        {
+            var doc = KeychainDocument();
+            return doc.TryGetProperty(id, out var value) ? value.GetString() : null;
+        }
+        catch { return null; }
+    }
+    private static void KeychainStore(string id, string token)
+    {
+        try
+        {
+            var map = new Dictionary<string, string>();
+            var doc = KeychainDocument();
+            if (doc.ValueKind == System.Text.Json.JsonValueKind.Object)
+                foreach (var p in doc.EnumerateObject()) map[p.Name] = p.Value.GetString();
+            map[id] = token;
+            var json = Util.Json(map);
+            var psi = new System.Diagnostics.ProcessStartInfo("/usr/bin/security", "add-generic-password -a luxis -s " + KeychainService + " -w")
+            { RedirectStandardInput = true, UseShellExecute = false, CreateNoWindow = true };
+            using var proc = System.Diagnostics.Process.Start(psi)!;
+            proc.StandardInput.Write(json);
+            proc.StandardInput.Close();
+            proc.WaitForExit(3000);
+        }
+        catch { }
+    }
+#endif
 }

@@ -529,14 +529,39 @@ public sealed class MinecraftService
         Add(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Java", "latest", "bin", "java.exe"));
 
         // Official Minecraft launcher keeps private runtimes under .minecraft\runtime.
+#if MAC
+        var mcRuntime = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "Application Support", "minecraft", "runtime");
+#else
         var mcRuntime = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ".minecraft", "runtime");
+#endif
         if (Directory.Exists(mcRuntime))
+            #if MAC
+            foreach (var f in Directory.EnumerateFiles(mcRuntime, "java", SearchOption.AllDirectories)) Add(f);
+#else
             foreach (var f in Directory.EnumerateFiles(mcRuntime, "java.exe", SearchOption.AllDirectories)) Add(f);
+#endif
 
+#if MAC
+        // macOS JVM layouts.
+        string[] macRoots = {
+            "/Library/Java/JavaVirtualMachines", "/System/Library/Java/JavaVirtualMachines",
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "Java", "JavaVirtualMachines"),
+            "/opt/homebrew", "/usr/local"
+        };
+        foreach (var root in macRoots)
+        {
+            if (!Directory.Exists(root)) continue;
+            foreach (var f in Directory.EnumerateFiles(root, "java", SearchOption.AllDirectories)) Add(f);
+        }
+#endif
         // Anything on PATH.
         try
         {
+#if MAC
+            var psi = new ProcessStartInfo("/bin/sh", "-c \"command -v java\"") { RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true };
+#else
             var psi = new ProcessStartInfo("cmd.exe", "/c where java") { RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true };
+#endif
             using var proc = Process.Start(psi)!;
             var output = proc.StandardOutput.ReadToEnd();
             proc.WaitForExit(3000);

@@ -8,12 +8,28 @@ namespace Luxis;
 public sealed class UpdateService
 {
     private readonly string _root;
+#if MAC
+    public const string DefaultManifest = "https://github.com/lunaxcodes/Luxis/releases/latest/download/version-mac.json";
+#else
     public const string DefaultManifest = "https://github.com/lunaxcodes/Luxis/releases/latest/download/version.json";
+#endif
     public string UpdateUrl { get; private set; } = DefaultManifest;
+
+    private static string MacManifest()
+    {
+#if MAC
+        var arch = System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture
+            == System.Runtime.InteropServices.Architecture.Arm64 ? "arm64" : "x64";
+        return $"https://github.com/lunaxcodes/Luxis/releases/latest/download/version-mac-{arch}.json";
+#else
+        return DefaultManifest;
+#endif
+    }
 
     public UpdateService(string root)
     {
         _root = root;
+        UpdateUrl = MacManifest();
         try
         {
             var settings = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, "settings.json")));
@@ -96,6 +112,17 @@ public sealed class UpdateService
         if (!string.IsNullOrEmpty(sha) && actual != sha.ToLowerInvariant())
             throw new Exception("Update failed SHA-256 verification.");
 
+#if MAC
+        var script = Path.Combine(Path.GetTempPath(), "luxis-update-" + Guid.NewGuid().ToString("N") + ".sh");
+        File.WriteAllText(script,
+            "#!/bin/bash\n" +
+            "sleep 3\n" +
+            $"cp -f \"{tmp}\" \"{target}\"\n" +
+            $"printf '%s' \"{version}\" > \"{versionFile}\"\n" +
+            $"open \"{target}\"\n" +
+            "rm -f \"$0\"\n");
+        Process.Start(new ProcessStartInfo("/bin/bash", "\"" + script + "\"") { UseShellExecute = false, CreateNoWindow = true });
+#else
         var bat = Path.Combine(Path.GetTempPath(), "luxis-update-" + Guid.NewGuid().ToString("N") + ".bat");
         File.WriteAllText(bat,
             "@echo off\r\n" +
@@ -111,6 +138,7 @@ public sealed class UpdateService
             $"start \"\" \"{target}\"\r\n" +
             "del \"%~f0\"\r\n");
         Process.Start(new ProcessStartInfo("cmd.exe", "/c \"" + bat + "\"") { UseShellExecute = false, CreateNoWindow = true });
+#endif
         return Util.Json(new { started = true });
     }
 }
