@@ -12,60 +12,31 @@ public sealed class MinecraftService
     private readonly string _root, _game, _instances;
     private readonly AuthService _auth;
     private readonly Action<string> _emit;
-    private sealed class RunningInstance
-    {
-        public string Id = "", ProfileId = "", Name = "", Version = "";
-        public Process Process = null!;
-        public DateTime Started;
-        public readonly ConcurrentQueue<string> Log = new();
-    }
-    private readonly ConcurrentDictionary<string, RunningInstance> _running = new();
+    private readonly GameProcesses _games;
+    private readonly SemaphoreSlim _launchGate = new(1, 1);
     private static readonly AsyncLocal<string> InstanceId = new();
-    private static readonly AsyncLocal<string> InstanceName = new();
 
     public MinecraftService(string root, AuthService auth, Action<string> emit)
     {
         _root = root; _game = Path.Combine(root, "game"); _instances = Path.Combine(root, "instances");
         _auth = auth; _emit = emit;
         Directory.CreateDirectory(_game); Directory.CreateDirectory(_instances);
+        _games = new GameProcesses(root, emit);
     }
 
     private void Stage(string stage, int progress, string detail = "")
-        => _emit(Util.Json(new { type = "launch", stage, progress, detail,
-            instance = InstanceId.Value, instanceName = InstanceName.Value }));
+        => _emit(Util.Json(new { type = "launch", stage, progress, detail, instance = InstanceId.Value }));
 
-    private void Log(string line)
-    {
-        var id = InstanceId.Value;
-        if (!string.IsNullOrEmpty(id) && _running.TryGetValue(id, out var running))
-        {
-            running.Log.Enqueue(line);
-            while (running.Log.Count > 40) running.Log.TryDequeue(out _);
-        }
-        _emit(Util.Json(new { type = "log", line, instance = id, instanceName = InstanceName.Value }));
-    }
+    public string ListInstances() => _games.List();
+    public string Stop(string id) => _games.Stop(id);
+    public string StopProfile(string profileId) => _games.StopProfile(profileId);
+    public string StopAll() => _games.StopAll();
 
-    public string ListInstances()
+    public string InstanceDir(string profileName)
     {
-        var items = _running.Values.OrderBy(x => x.Started).Select(x => new
-        {
-            id = x.Id, profileId = x.ProfileId, name = x.Name, version = x.Version,
-            pid = SafePid(x.Process), started = x.Started.ToString("o"),
-            alive = !SafeExited(x.Process), log = x.Log.ToArray()
-        });
-        return Util.Json(items);
+        var folder = Util.Safe(profileName).TrimEnd('.');
+        return Path.Combine(_instances, folder.Length == 0 ? "instance" : folder);
     }
-
-    private static int SafePid(Process process)
-    {
-        try { return process.Id; } catch { return 0; }
-    }
-    private static bool SafeExited(Process process)
-    {
-        try { return process.HasExited; } catch { return true; }
-    }
-
-    public string InstanceDir(string profileName) => Path.Combine(_instances, Util.Safe(profileName));
 
     public string ToggleMod(string profileName, string fileName, bool enabled)
     {
@@ -82,7 +53,35 @@ public sealed class MinecraftService
         return Util.Json(new { enabled, file = enabled ? Path.GetFileName(onPath) : Path.GetFileName(offPath) });
     }
 
-    public async Task<string> Launch(string profileJson, string activeAccountId)
+    // Explicit completion messages work on both the WebView2 COM bridge and the Mac bridge.
+    public string BeginGameLaunch(string profileJson, string activeAccountId, string request)
+    {
+        if (!Guid.TryParseExact(request, "N", out _))
+            return Util.Json(new { ok = false, message = "Invalid launch request." });
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var result = await Launch(profileJson, activeAccountId, request).ConfigureAwait(false);
+                _emit(Util.Json(new { type = "launch-result", instance = request, ok = true, result }));
+            }
+            catch (Exception ex)
+            {
+                _emit(Util.Json(new { type = "launch-result", instance = request, ok = false, message = ex.Message }));
+            }
+        });
+        return Util.Json(new { ok = true });
+    }
+
+    public async Task<string> Launch(string profileJson, string activeAccountId, string request = null)
+    {
+        // Only preparation is serialized: assets/libraries are shared, running JVMs are independent.
+        await _launchGate.WaitAsync().ConfigureAwait(false);
+        try { return await PrepareAndStart(profileJson, activeAccountId, request ?? Guid.NewGuid().ToString("N")).ConfigureAwait(false); }
+        finally { _launchGate.Release(); }
+    }
+
+    private async Task<string> PrepareAndStart(string profileJson, string activeAccountId, string instanceId)
     {
         using var pdoc = JsonDocument.Parse(profileJson);
         var p = pdoc.RootElement;
@@ -96,9 +95,8 @@ public sealed class MinecraftService
         var res = p.Str("res", "1920x1080");
         var accountId = string.IsNullOrEmpty(p.Str("accountId")) ? activeAccountId : p.Str("accountId");
         var dir = InstanceDir(name);
-        var instanceId = NextInstanceId(profileId);
         InstanceId.Value = instanceId;
-        InstanceName.Value = name;
+        using var reservation = _games.ReserveDirectory(dir, name);
         if (loader == "fabric")
         {
             var pendingModError = BundledLuxisMod.ApplyPendingUpdate(Path.Combine(dir, "mods"), version);
@@ -305,26 +303,9 @@ public sealed class MinecraftService
             CreateNoWindow = true
         };
         foreach (var a in args) psi.ArgumentList.Add(a);
-        var proc = Process.Start(psi) ?? throw new Exception("Java process did not start.");
-        var running = new RunningInstance
-        {
-            Id = instanceId, ProfileId = profileId, Name = name, Version = version,
-            Process = proc, Started = DateTime.UtcNow
-        };
-        _running[instanceId] = running;
-        proc.Exited += (_, _) =>
-        {
-            _running.TryRemove(instanceId, out _);
-            var tail = string.Join("\n", running.Log.TakeLast(14));
-            _emit(Util.Json(new { type = "crash", instance = instanceId, instanceName = name,
-                exitCode = SafeExitCode(proc), tail }));
-        };
-        _ = Task.Run(() => { InstanceId.Value = instanceId; InstanceName.Value = name; Tail(proc.StandardOutput); });
-        _ = Task.Run(() => { InstanceId.Value = instanceId; InstanceName.Value = name; Tail(proc.StandardError); });
-        Log($"[Luxis] {session.Username} launched {version} ? Java {major} ? {libCount} libraries");
-        Stage("Running", 100, "PID " + proc.Id);
-        _emit(Util.Json(new { type = "instance", action = "started", instance = instanceId }));
-        return Util.Json(new { ok = true, instanceId, profileId, pid = proc.Id, java, javaMajor = major, version, loader, mainClass });
+        var pid = _games.Start(psi, instanceId, profileId, name, version);
+        Stage("Running", 100, "PID " + pid);
+        return Util.Json(new { ok = true, instanceId, profileId, pid, javaMajor = major, version, loader });
     }
 
     public string Analyze(string profileName)
@@ -455,55 +436,6 @@ public sealed class MinecraftService
             catch { }
         }
         return Util.Json(new { deleted = false });
-    }
-
-    private string NextInstanceId(string profileId)
-    {
-        if (!_running.Values.Any(x => x.ProfileId == profileId)) return profileId;
-        var n = 2;
-        while (_running.ContainsKey(profileId + "#" + n)) n++;
-        return profileId + "#" + n;
-    }
-
-    private static int SafeExitCode(Process process)
-    {
-        try { return process.ExitCode; } catch { return -1; }
-    }
-
-    public string Stop(string idOrProfileId)
-    {
-        RunningInstance? running;
-        if (!_running.TryGetValue(idOrProfileId, out running))
-            running = _running.Values.FirstOrDefault(x => x.ProfileId == idOrProfileId);
-        if (running == null) return Util.Json(new { stopped = false });
-        _running.TryRemove(running.Id, out _);
-        Terminate(running.Process);
-        _emit(Util.Json(new { type = "instance", action = "stopped", instance = running.Id }));
-        return Util.Json(new { stopped = true, instance = running.Id });
-    }
-
-    public string StopAll()
-    {
-        var items = _running.Values.ToArray();
-        foreach (var item in items)
-        {
-            _running.TryRemove(item.Id, out _);
-            Terminate(item.Process);
-        }
-        _emit(Util.Json(new { type = "instance", action = "stopped-all", instances = items.Select(x => x.Id) }));
-        return Util.Json(new { stopped = items.Length });
-    }
-
-    private static void Terminate(Process process)
-    {
-        try { if (!process.HasExited) { process.CloseMainWindow(); if (!process.WaitForExit(4000)) process.Kill(true); } }
-        catch { }
-    }
-
-    private async Task Tail(StreamReader reader)
-    {
-        try { while (!reader.EndOfStream) { var line = await reader.ReadLineAsync(); if (!string.IsNullOrWhiteSpace(line)) Log(line); } }
-        catch { }
     }
 
     private static IEnumerable<string> GameArguments(JsonElement vj, Dictionary<string, string> dict)

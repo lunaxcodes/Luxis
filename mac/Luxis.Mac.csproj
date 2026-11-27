@@ -23,6 +23,7 @@
     <Compile Include="../src/BundledLuxisMod.cs" Link="Services/BundledLuxisMod.cs" />
     <Compile Include="../src/JavaInstaller.cs" Link="Services/JavaInstaller.cs" />
     <Compile Include="../src/MinecraftService.cs" Link="Services/MinecraftService.cs" />
+    <Compile Include="../src/GameProcesses.cs" Link="Services/GameProcesses.cs" />
     <Compile Include="../src/ModrinthService.cs" Link="Services/ModrinthService.cs" />
     <Compile Include="../src/MrpackService.cs" Link="Services/MrpackService.cs" />
     <Compile Include="../src/Textures.cs" Link="Services/Textures.cs" />

@@ -42,20 +42,26 @@ jobs:
         run: |
           $v = (Get-Content version.txt -Raw).Trim()
           $tag = "v$v"
-          $assets = @("installer/Luxis-Setup-$v.exe", "release/Luxis.exe", "release/version.json")
+          $assets = @("installer/Luxis-Setup-$v.exe", "release/Luxis.exe", "release/version.json",
+                      "LuxisClientMod.jar", "LuxisClientMod-1.21x.jar")
           Get-ChildItem 'dist/mac-release' -File | ForEach-Object { $assets += $_.FullName }
           $notes = @"
           ## Luxis v$v
 
-          **Multi-instance manager** — launch several profiles at once, monitor each with live logs, PID and uptime, and stop individual games or all of them from the new Instances tab. Multiple copies of the same profile are supported.
+          **Reliable multi-instance play** — Play always launches the selected profile. Running games appear in the Instances tab with PID, uptime, live logs, and independent Stop controls. Games are tracked across launcher restarts and each profile keeps its own folder.
 
-          **Windows:** installer, portable exe, and auto-update manifest.
+          **Drag & drop mods** — dropping .jar files onto a profile now opens the file picker for that profile. The Luxis Mod sidebar entry is highlighted so it is easy to find.
 
-          **macOS:** Apple Silicon and Intel `.app.zip` bundles, plus per-architecture update manifests. Open with Right-click → Open on first launch if Gatekeeper warns.
+          **In-game Luxis Mod v1.5.1** — bundled for Minecraft 26.3 and 1.21.11:
 
-          **In-game Luxis Mod v1.4.0** — 15 new PvP HUD readouts, adjustable window size, transitions, particles, and a 3D skin/cape viewer.
+          - Working Zoom (hold C by default, scroll to adjust), camera-only Freelook (hold V), and Fullbright
+          - Hold or Toggle keybind mode on every module
+          - Themed HUD panels with custom labels, text colors, opacity, and outlines
+          - Full-menu themes, Color Grading, and 29 new modules across Visual, HUD, Performance, and PvP
 
-          Update in-app from the Updates tab; use the Luxis Mod tab to install the new mod jar.
+          **Windows:** installer, portable exe, and auto-update manifest. **macOS:** Apple Silicon and Intel .app.zip bundles with per-architecture update manifests. Open with Right-click → Open on first launch if Gatekeeper warns.
+
+          Update in-app from the Updates tab. Install the matching mod jar from the Luxis Mod tab.
           "@
           if (gh release view $tag -R lunaxcodes/Luxis >$null 2>&1) {
             gh release upload $tag @assets -R lunaxcodes/Luxis --clobber

@@ -1,0 +1,7 @@
+{
+  "required": false,
+  "minVersion": "0.8",
+  "package": "com.luxis.mixin",
+  "client": ["CameraBlurMixin", "CrystalRenderMixin", "ExplosionParticleMixin", "HandViewMixin", "ReachRingMixin", "VisualUniformMixin", "VisualHudMixin", "ModuleKeyboardMixin", "ModuleMouseMixin", "ViewCameraMixin", "FullbrightMixin"],
+  "injectors": { "defaultRequire": 0 }
+}

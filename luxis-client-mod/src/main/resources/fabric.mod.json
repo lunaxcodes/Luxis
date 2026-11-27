@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "luxis",
+  "version": "${version}",
+  "name": "Luxis Client Mod",
+  "description": "Windowed mod menu, HUD layout editor, profile system and fair-play PvP/HUD/optimization modules for Luxis.",
+  "authors": [
+    "Luxis"
+  ],
+  "license": "MIT",
+  "environment": "client",
+  "mixins": ["luxis.client.mixins.json"],
+  "entrypoints": {
+    "client": [
+      "com.luxis.client.LuxisClientMod"
+    ]
+  },
+  "custom": {
+    "luxis": {
+      "defaultMenuKey": "key.luxis.open_menu",
+      "defaultMenuKeyCode": "RIGHT_SHIFT"
+    }
+  },
+  "depends": {
+    "fabricloader": ">=0.19.5",
+    "minecraft": "26.3",
+    "java": ">=25",
+    "fabric-api": ">=0.167.0"
+  }
+}

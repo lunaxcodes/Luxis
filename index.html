@@ -134,6 +134,20 @@ button:disabled{cursor:not-allowed;opacity:.45}
 .nav-item.active{color:var(--text);background:linear-gradient(90deg,rgba(var(--accent-rgb),.15),transparent)}
 .nav-item.active svg{color:var(--accent);filter:drop-shadow(0 0 6px rgba(var(--accent-rgb),.6))}
 .nav-item .nav-count{margin-left:auto;font-size:10px;color:var(--faint);background:rgba(255,255,255,.05);padding:2px 6px;border-radius:6px}
+/* Featured in-game mod entry */
+.nav-item.nav-featured{margin-top:5px;border:1px solid rgba(var(--accent-rgb),.42);
+  background:linear-gradient(105deg,rgba(var(--accent-rgb),.20),rgba(var(--accent-rgb),.05) 60%,rgba(255,255,255,.02));
+  box-shadow:0 6px 22px -12px rgba(var(--accent-rgb),.75),inset 0 1px 0 rgba(255,255,255,.06);
+  color:var(--text);overflow:hidden}
+.nav-item.nav-featured::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(110deg,transparent 25%,rgba(255,255,255,.14) 50%,transparent 75%);
+  transform:translateX(-120%);animation:navShine 4.5s ease-in-out infinite}
+.nav-item.nav-featured:hover{background:linear-gradient(105deg,rgba(var(--accent-rgb),.30),rgba(var(--accent-rgb),.09));transform:translateX(2px)}
+.nav-item.nav-featured svg{color:var(--accent);filter:drop-shadow(0 0 7px rgba(var(--accent-rgb),.85))}
+.nav-featured .mod-tag{margin-left:auto;font-size:8.5px;font-weight:850;letter-spacing:.09em;
+  padding:3px 7px;border-radius:7px;color:#fff;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));box-shadow:0 3px 12px -4px var(--accent)}
+@keyframes navShine{0%,60%{transform:translateX(-120%)}85%,100%{transform:translateX(120%)}}
 .sidebar-spacer{flex:1}
 .sys-card{padding:12px;border-radius:14px;background:rgba(255,255,255,.03);border:1px solid var(--border);display:flex;flex-direction:column;gap:9px}
 .sys-row{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--muted)}
@@ -328,7 +342,7 @@ button:disabled{cursor:not-allowed;opacity:.45}
 .launch-btn:hover:not(:disabled){transform:translateY(-2px) scale(1.015)}
 .launch-btn:active:not(:disabled){transform:scale(.97)}
 .launch-btn:disabled{filter:saturate(.55) brightness(.85)}
-.launch-btn.stop{background:linear-gradient(135deg,#ef4444,#b91c1c);box-shadow:0 10px 34px -10px rgba(239,68,68,.8)}
+#dockInstances[hidden]{display:none}
 .launch-progress{position:absolute;left:0;bottom:0;height:4px;background:rgba(255,255,255,.9);width:0;transition:width .3s linear;box-shadow:0 0 12px #fff}
 .launch-label{position:relative;z-index:1}
 .dock-status{position:absolute;left:17px;bottom:6px;font-size:9.5px;color:var(--faint);width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity var(--e2)}
@@ -557,7 +571,7 @@ button:disabled{cursor:not-allowed;opacity:.45}
       <button class="nav-item" data-view="modrinth" data-tip="Modrinth Hub - mods, packs &amp; shaders"><svg viewBox="0 0 24 24"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M3 7l9 5 9-5M12 12v10"/></svg><span>Modrinth Hub</span></button>
       <button class="nav-item" data-view="packs" data-tip="Installed resource &amp; shader packs"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M4 10h16M10 5v14"/></svg><span>Resource &amp; Shaders</span></button>
       <button class="nav-item" data-view="wardrobe" data-tip="Skins &amp; capes wardrobe"><svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg><span>Skins &amp; Capes</span></button>
-      <button class="nav-item" data-view="luxismod" data-tip="Luxis in-game mod - optional install"><svg viewBox="0 0 24 24"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M3 7l9 5 9-5M12 12v10"/></svg><span>Luxis Mod</span></button>
+      <button class="nav-item nav-featured" data-view="luxismod" data-tip="Luxis in-game mod - themes, visuals, camera &amp; HUD"><svg viewBox="0 0 24 24"><path d="M12 2l2.1 6.4L20 11l-5.9 2.6L12 20l-2.1-6.4L4 11l5.9-2.6z"/><path d="M19 2v4M17 4h4"/></svg><span>Luxis Mod</span><span class="mod-tag">NEW</span></button>
       <button class="nav-item" data-view="updates" data-tip="Updates - check and install new releases"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.6M20 4v7h-7"/></svg><span>Updates</span></button>
       <button class="nav-item" data-view="settings" data-tip="Settings, themes &amp; accounts"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1-2 2-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21h-3v-.1A1.6 1.6 0 0 0 11 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1-2-2 .1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H6v-3h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1 2-2 .1.1a1.6 1.6 0 0 0 1.8.3H11a1.6 1.6 0 0 0 1-1.5V6h3v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1 2 2-.1.1a1.6 1.6 0 0 0-.3 1.8V11h.1a1.6 1.6 0 0 0 1.5 1H21v3h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg><span>Settings &amp; Themes</span></button>
     </nav>
@@ -600,6 +614,7 @@ button:disabled{cursor:not-allowed;opacity:.45}
     <div class="dock-mid">
       <button class="dock-acct press" id="dockAccount"><img class="player-head" id="dockHead" alt=""><span id="dockName">—</span></button>
       <span class="tiny muted" id="dockHint">Profile isolated · mods synced</span>
+      <button class="btn sm ghost" id="dockInstances" data-act="navigate" data-v="instances" hidden></button>
     </div>
     <div class="launch-wrap">
       <button class="launch-btn press" id="launchBtn"><span class="launch-label" id="launchLabel">LAUNCH</span><span class="launch-progress" id="launchProgress"></span></button>
@@ -1028,7 +1043,7 @@ function openModal(html,wide=false,sticky=false){
 function modalHead(title,sub){return `<div class="modal-head"><div><h2>${title}</h2><p>${sub}</p></div><button class="btn icon ghost" data-act="closeOverlay">✕</button></div>`}
 
 /* ---------- view routing ---------- */
-const UI={view:'home',launching:false,running:false,runningProfile:'',instanceId:'',instances:[],instFilter:'mods',instSearch:'',edition:'java',luxisMenuGlobal:false};
+const UI={view:'home',launching:false,running:false,instanceId:'',instances:[],instancesLoaded:false,instanceError:'',instFilter:'mods',instSearch:'',edition:'java',luxisMenuGlobal:false};
 let leaveTimer=null,navOffsets=[];const MOD_UPDATES={};const VIEW_DIRTY=new Set(['home','profiles','instances','modrinth','packs','wardrobe','settings','instance','capes','luxismod','updates']);
 function refreshNavOffsets(){navOffsets=$$('.nav-item').map(x=>x.offsetTop)}
 const BEDROCK={checked:false,installed:false,version:'',wu:'Unknown',wuStart:'Unknown',ready:false};
@@ -1051,26 +1066,29 @@ function navigate(v){
   if(v==='wardrobe'){R.lastFrame=0}
   if(v==='modrinth'||v==='packs')$('#globalSearch').value=state.ui.mrSearch||'';
   if(v==='wardrobe'||v==='luxismod'||VIEW_DIRTY.has(v)){renderView(v);VIEW_DIRTY.delete(v)}
+  if(v==='instances'){renderInstances();syncInstances()}
   if(v==='modrinth')loadModrinth(true);
   if(v==='updates')ACTIONS.checkForUpdate();
+  renderHeaderState();
 }
 
 /* ---------- renderers ---------- */
 function renderHeaderState(){
-  const a=activeAccount(),p=activeProfile();
+  const a=activeAccount(),p=viewedProfile(),dockAccount=profileAccount(p);
   const be=$('#brandEdition');if(be)be.textContent=UI.edition==='bedrock'?'Bedrock Edition':'Java Edition';
   $$('.edition-switch button').forEach(b=>b.classList.toggle('on',b.dataset.v===UI.edition));
   $('#sideName').textContent=a.username;
   $('#sideType').textContent=a.type==='microsoft'?'Microsoft account':'Offline account';
   setHead($('#sideHead'),skinOf(a)?.src);
-  setHead($('#dockHead'),skinOf(a)?.src);
-  $('#dockName').textContent=a.username;
+  setHead($('#dockHead'),skinOf(dockAccount)?.src);
+  $('#dockName').textContent=dockAccount.username;
   const ver=VERSIONS.find(v=>v.id===p.version);
   $('#dockProfile').innerHTML=`<div class="dock-icon" style="background:${bannerStyle(p)}">${blockIcon(p)}</div><div class="dock-info"><b>${esc(p.name)}</b><span>${esc(p.version)} · <span style="color:${p.loader==='vanilla'?'var(--muted)':'var(--accent)'}">${p.loader==='vanilla'?'Vanilla':LOADERS[p.loader].name+' '+p.loaderVersion}</span></span></div>`;
   $('#ramLabel').textContent=`${p.ram.toFixed(1)} / 16 GB`;
   $('#ramMeter').style.width=(p.ram/16*100)+'%';
   $('#javaLabel').textContent=ver?.java||'Java 21';
   $('#profileCount').textContent=state.profiles.length;
+  updateLaunchButton();
 }
 function renderHome(){
   const a=activeAccount(),p=activeProfile(),totalMods=state.profiles.reduce((n,x)=>n+x.mods.filter(m=>m.on).length,0);
@@ -1117,7 +1135,7 @@ function renderProfiles(){
       <div class="profile-icon">${blockIcon(p)}</div>
       <div class="profile-body"><div class="profile-name">${esc(p.name)}${p.id===state.activeProfile?'<span class="active-dot"></span>':''}</div>
         <div class="profile-chips"><span class="chip accent">${esc(p.version)}</span><span class="chip">${p.loader==='vanilla'?'Vanilla':LOADERS[p.loader].name+' '+p.loaderVersion}</span><span class="chip">${p.ram} GB</span></div>
-        <div class="profile-foot"><span>▦ ${p.mods.filter(m=>m.on).length} mods</span><span>✦ ${p.shaders.length} shaders</span><button class="btn sm" data-act="setActiveProfile" data-id="${p.id}">${p.id===state.activeProfile?'Active':'Set active'}</button></div>
+         <div class="profile-foot"><span>▦ ${p.mods.filter(m=>m.on).length} mods</span><button class="btn sm" data-act="setActiveProfile" data-id="${p.id}">${p.id===state.activeProfile?'Active':'Set active'}</button><button class="btn sm primary" data-act="quickLaunch" data-id="${esc(p.id)}">Play</button></div>
       </div></div>`).join('')}</div>`;
 }
 function contentFilters(type){
@@ -1534,7 +1552,7 @@ function renderInstance(){
    <div class="inst-hero"><div class="inst-icon" style="background:${bannerStyle(p)}">${blockIcon(p)}</div>
      <div style="flex:1"><div class="inst-badge">INSTANCE</div><div class="inst-name">${esc(p.name)}</div>
        <div class="inst-chips"><span class="chip accent">▦ ${esc(p.version)}</span><span class="chip">◈ ${p.loader==='fabric'?'Fabric '+esc(p.loaderVersion):esc(p.loader)}</span><span class="chip">MODPACKS</span><span class="chip">${p.ram} GB RAM</span></div></div>
-     <div class="view-actions">${p.id!==state.activeProfile?`<button class="btn" data-act="setActiveProfile" data-id="${p.id}">Set active</button>`:''}<button class="btn primary" data-act="quickLaunch">▶ Play</button><button class="btn" data-act="restoreConfigs" data-id="${p.id}">Restore configs</button><button class="btn icon" data-act="profileSettings" data-id="${p.id}" title="Profile Settings">⚙</button></div></div>
+      <div class="view-actions">${p.id!==state.activeProfile?`<button class="btn" data-act="setActiveProfile" data-id="${p.id}">Set active</button>`:''}<button class="btn primary" data-act="quickLaunch" data-id="${esc(p.id)}">▶ Play</button><button class="btn" data-act="restoreConfigs" data-id="${p.id}">Restore configs</button><button class="btn icon" data-act="profileSettings" data-id="${p.id}" title="Profile Settings">⚙</button></div></div>
    <div class="inst-stats"><div class="stat-tile"><div class="lbl">◷ LAST PLAYED</div><div class="val">2 hours ago</div></div>
      <div class="stat-tile"><div class="lbl">◷ PLAYTIME</div><div class="val">6h 25m</div></div>
      <div class="stat-tile"><div class="lbl">▤ DISK</div><div class="val" id="instDisk">…</div></div></div>
@@ -1592,14 +1610,14 @@ async function renderLuxisMod(){
     <div class="view-head"><div><div class="view-title">Luxis <em>Mod</em></div><div class="view-desc">Manage the in-game mod for each Minecraft profile.</div></div>
       <div class="view-actions"><button class="btn" data-act="refreshLuxisMod">Refresh status</button>
         <button class="btn primary" id="luxisUpdateAll" data-act="updateAllLuxisMods" disabled>Update installed mods</button></div></div>
-    <div class="luxis-mod-hero"><div><div class="eyebrow">THE MOTION UPDATE</div><h2>A smoother, smaller Luxis menu</h2>
-      <div class="sub">Animated categories, adjustable window size, menu particles, and real rendering budgets.</div></div>
+    <div class="luxis-mod-hero"><div><div class="eyebrow">THE CAMERA &amp; HUD UPDATE</div><h2>Make your view your own</h2>
+      <div class="sub">Working Zoom and keybinds, camera-only Freelook, Fullbright, and customizable HUD panels.</div></div>
       <div class="luxis-mod-actions"><span class="chip" id="luxisBundledBadge">Bundled with Luxis</span><span class="chip accent">Right Shift in-game</span></div></div>
     <div class="luxis-mod-features">
-      <div class="luxis-mod-feature"><b>11 performance tools</b><small>Crystal and PvP Optimizers, FPS Booster, and independent rendering budgets. Frame Time and Memory Monitor are under HUD.</small></div>
-      <div class="luxis-mod-feature"><b>Window and motion controls</b><small>Set width and height separately. Pick Glide, Zoom, or Fade, or turn animations off.</small></div>
-      <div class="luxis-mod-feature"><b>Customize your atmosphere</b><small>Drift, Stars, or Comets with adjustable count, speed, and opacity. No Minecraft world particles are spawned.</small></div>
-      <div class="luxis-mod-feature"><b>New Visual tools</b><small>Hand viewmodel, directional motion blur, a display-only reach ring, and controls for camera, outlines, and glint.</small></div>
+      <div class="luxis-mod-feature"><b>Themed HUD panels</b><small>Edit readout labels, colors, box opacity, and outlines without moving your HUD layout.</small></div>
+      <div class="luxis-mod-feature"><b>Color Grading</b><small>Adjust brightness, saturation, contrast, warmth, hue, and more without tinting the HUD. World effects are skipped with Iris.</small></div>
+      <div class="luxis-mod-feature"><b>Hold or Toggle</b><small>Choose a keybind mode from any module's options. Zoom defaults to C and Freelook defaults to V.</small></div>
+      <div class="luxis-mod-feature"><b>Fullbright</b><small>Set the world brightness without changing your saved Minecraft options. Follow your server's rules.</small></div>
     </div>
     <div class="card set-card"><h3>Profile installations</h3>
       <div class="luxis-mod-summary">If Minecraft has the mod open, you can queue the update. Close the game, then use Play in Luxis to apply it before the next launch. Requires Fabric Loader 0.19.5+ and the matching Fabric API for 1.21.11 or 26.3.</div>
@@ -2051,12 +2069,16 @@ function updateLaunchOverlay(stage,progress,detail){
   });
   if((progress||0)>=100)hideLaunchOverlay();
 }
-function hideLaunchOverlay(){setTimeout(()=>$('#launchOverlay')?.remove(),900)}
+function hideLaunchOverlay(delay=900){const overlay=$('#launchOverlay');if(overlay)setTimeout(()=>overlay.remove(),delay)}
 async function importDroppedJars(files,profile){
   const jars=[...files].filter(f=>f.name.toLowerCase().endsWith('.jar'));
   if(!jars.length){toast('Use file picker','Choose .jar files from the dialog','!','warn');ACTIONS.pickMods();return}
   if(!api())return toast('Desktop launcher required','Run Luxis.exe to install files into instance folders','!','warn');
-  if(!jars.some(f=>f.path)){toast('Use file picker','WebView2 hides dropped file paths — choose the files instead','!','warn');ACTIONS.pickMods();return}
+  if(!jars.some(f=>f.path)){
+    // WebView2 hides dropped file paths. Open the native picker instead, with this
+    // profile preselected, so dropping a mod always leads to a working install.
+    return pickModsFor(profile);
+  }
   try{
     const r=JSON.parse(await api().importJarFiles(JSON.stringify(jars.map(f=>f.path||'').filter(Boolean)),profile.name));
     (r.files||[]).forEach(name=>{
@@ -2066,6 +2088,22 @@ async function importDroppedJars(files,profile){
     persist();renderAll();if(UI.view==='instance')renderInstance();
     if(api())enrichCustomMods(profile);
     toast('Mods installed',`${(r.files||[]).length} file(s) copied to mods/`,'OK','ok');
+    if((r.rejected||[]).length)toast('Invalid mod files',r.rejected.join(', ')+' - not a valid .jar','!','warn');
+  }catch(e){toast('Import failed',e.message||String(e),'!','warn')}
+}
+async function pickModsFor(profile){
+  if(!profile||!api())return toast('Desktop launcher required','Run Luxis to install mods','!','warn');
+  if(UI.launching||UI.running)return toast('Minecraft is running','Close the game before changing mods','!','warn');
+  try{
+    const r=JSON.parse(await api().pickJarFiles(profile.name));
+    const files=r.files||[];
+    files.forEach(name=>{
+      const id=name.replace(/\.jar$/i,'');
+      if(!profile.mods.some(m=>m.id===id))profile.mods.push({id,title:id,file:name,v:'local',on:true});
+    });
+    persist();renderAll();if(UI.view==='instance')renderInstance();
+    if(api())enrichCustomMods(profile);
+    if(files.length)toast('Mods installed',`${files.length} file(s) copied to ${profile.name}`,'OK','ok');
     if((r.rejected||[]).length)toast('Invalid mod files',r.rejected.join(', ')+' - not a valid .jar','!','warn');
   }catch(e){toast('Import failed',e.message||String(e),'!','warn')}
 }
@@ -2087,58 +2125,121 @@ function instanceUptime(started){
   return h?`${h}h ${m%60}m`:m?`${m}m ${s%60}s`:`${s}s`;
 }
 function updateLaunchButton(){
-  const count=(UI.instances||[]).length;UI.running=count>0;
+  const count=UI.instances.length;UI.running=count>0;
   const btn=$('#launchBtn'),label=$('#launchLabel');
-  if(btn)btn.classList.toggle('stop',UI.running);
-  if(label)label.textContent=UI.running?(count>1?count+' RUNNING':'INSTANCES'):'LAUNCH';
-  const hint=$('#dockHint');if(hint)hint.textContent=UI.running?`${count} game${count===1?'':'s'} running ? click to manage`:'Profile isolated ? mods synced';
+  if(btn)btn.disabled=UI.launching;
+  if(label&&!UI.launching)label.textContent=UI.edition==='bedrock'?'OPEN BEDROCK':'PLAY';
+  const hint=$('#dockHint');if(hint)hint.hidden=UI.running;
+  const link=$('#dockInstances');if(link){link.hidden=!UI.running;link.textContent=`${count} running · View instances`}
   const badge=$('#instanceCount');if(badge)badge.textContent=count;
 }
+let instanceFetch=0,instanceSnapshot='',launchRequest=null;
+const stoppingInstances=new Set();
 async function syncInstances(){
-  if(!native()?.listInstances)return;
-  try{UI.instances=JSON.parse(await native().listInstances())||[]}catch(e){UI.instances=[]}
+  const host=api();if(!host)return;
+  const seq=++instanceFetch;
+  const previous=UI.instanceError,loaded=UI.instancesLoaded;
+  let changed=false;
+  try{
+    const raw=await host.listInstances(),list=JSON.parse(raw);
+    if(seq!==instanceFetch)return;
+    if(!Array.isArray(list))throw new Error('Invalid instance list');
+    UI.instances=list.filter(x=>x.alive!==false);
+    UI.instancesLoaded=true;UI.instanceError='';
+    const snapshot=JSON.stringify(UI.instances.map(({log,...rest})=>rest));
+    changed=snapshot!==instanceSnapshot;instanceSnapshot=snapshot;
+  }catch(e){
+    if(seq!==instanceFetch)return;
+    UI.instanceError='Could not refresh running games. Try Refresh.';
+  }
   updateLaunchButton();
-  if(UI.view==='instances')renderInstances();
+  if(UI.view==='instances'){
+    if(changed||loaded!==UI.instancesLoaded||previous!==UI.instanceError)renderInstances();
+    else updateInstanceDetails();
+  }
+}
+function updateInstanceDetails(){
+  for(const x of UI.instances){
+    const pre=document.getElementById('log-'+x.id);
+    const time=document.getElementById('uptime-'+x.id);
+    if(time)time.textContent=instanceUptime(x.started);
+    const output=(x.log||[]).join('\n')||'No live output in this launcher session.';
+    if(pre&&pre.textContent!==output){
+      const follow=pre.scrollHeight-pre.scrollTop-pre.clientHeight<8;
+      pre.textContent=output;if(follow)pre.scrollTop=pre.scrollHeight;
+    }
+  }
 }
 function renderInstances(){
   const host=$('#view-instances');if(!host)return;
-  const list=UI.instances||[];
+  const list=UI.instances;
+  const empty=!api()?'Open the desktop launcher to manage running Minecraft games.':UI.instanceError?'Running games could not be loaded.':UI.instancesLoaded?'No Minecraft instances are running. Play a profile to see it here.':'Checking for running games…';
   host.innerHTML=`
-   <div class="view-head"><div><div class="view-title">Running <em>Instances</em></div><div class="view-desc">Launch as many profiles as you like and close only the one you want.</div></div>
-     <div class="view-actions"><button class="btn" data-act="newInstance">? Launch another</button><button class="btn danger ghost" data-act="stopAllInstances" ${list.length?'':'disabled'}>Stop all</button></div></div>
-   ${!list.length?`<div class="card set-card"><div class="empty">No Minecraft instances are running. Launch a profile to see it here.</div></div>`:`<div class="inst-run-grid">${list.map(x=>`
-     <div class="inst-run-card"><div class="inst-run-top"><div><div class="inst-run-title">${esc(x.name)}</div><div class="inst-run-sub">${esc(x.version)} ? PID ${x.pid} ? ${instanceUptime(x.started)}</div></div><span class="inst-run-dot"></span></div>
-       <div class="inst-run-meta"><span class="chip">${esc(x.id)}</span><span class="chip">Java process</span></div>
-       <pre class="inst-run-log" id="log-${esc(x.id)}">${esc((x.log||[]).join('\n'))||'Waiting for output?'}</pre>
-       <div class="inst-run-actions"><button class="btn sm danger" data-act="stopInstance" data-id="${esc(x.id)}">Stop this instance</button><button class="btn sm ghost" data-act="instanceFolder" data-name="${esc(x.name)}">Open folder</button></div></div>`).join('')}</div>`}`;
-  const pre=host.querySelector('.inst-run-log');if(pre)pre.scrollTop=pre.scrollHeight;
+   <div class="view-head"><div><div class="view-title">Running <em>Instances</em></div><div class="view-desc">Play a different profile to run another game. Close each game independently below.</div></div>
+     <div class="view-actions"><button class="btn" data-act="refreshInstances">Refresh</button><button class="btn primary" data-act="newInstance">Launch another</button></div></div>
+   ${UI.instanceError?`<p class="tiny muted" role="status">${esc(UI.instanceError)}</p>`:''}
+   ${!list.length?`<div class="card set-card"><div class="empty">${empty}</div></div>`:`<div class="inst-run-grid">${list.map(x=>{
+     const busy=x.stopping||stoppingInstances.has(x.id);
+     return `<div class="inst-run-card"><div class="inst-run-top"><div><div class="inst-run-title">${esc(x.name)}</div><div class="inst-run-sub">${esc(x.version)} · PID ${esc(x.pid)} · <span id="uptime-${esc(x.id)}">${instanceUptime(x.started)}</span></div></div><span class="inst-run-dot"></span></div>
+       <pre class="inst-run-log" id="log-${esc(x.id)}">${esc((x.log||[]).join('\n'))||'No live output in this launcher session.'}</pre>
+       <div class="inst-run-actions"><button class="btn sm danger" data-act="stopInstance" data-id="${esc(x.id)}" ${busy||UI.instanceError?'disabled':''}>${busy?'Closing…':'Stop this instance'}</button><button class="btn sm ghost" data-act="instanceFolder" data-name="${esc(x.name)}">Open folder</button></div></div>`;
+   }).join('')}</div>`}`;
+  host.querySelectorAll('.inst-run-log').forEach(pre=>pre.scrollTop=pre.scrollHeight);
 }
 async function stopOneInstance(id){
-  if(!api())return;
-  try{const r=JSON.parse(await api().stopInstance(id));if(r.stopped)toast('Instance closed',id,'?','ok')}
+  const host=api(),instance=UI.instances.find(x=>x.id===id);
+  if(!host||!instance||stoppingInstances.has(id))return;
+  stoppingInstances.add(id);renderInstances();
+  try{
+    const r=JSON.parse(await host.stopInstance(id));
+    if(r.stopped)toast('Instance closed',instance.name,'■','ok');
+    else if(!r.missing)toast('Could not close instance','Use Quit Game in '+instance.name,'!','warn');
+  }
   catch(e){toast('Stop failed',e.message||String(e),'!','warn')}
-  syncInstances();
+  finally{
+    stoppingInstances.delete(id);
+    await syncInstances();
+    if(UI.view==='instances')renderInstances();
+  }
 }
-async function stopEveryInstance(){
-  if(!api())return;
-  try{const r=JSON.parse(await api().stopAllInstances());toast('Instances closed',`${r.stopped} game(s) stopped`,'?','ok')}
-  catch(e){toast('Stop failed',e.message||String(e),'!','warn')}
-  syncInstances();
+async function startNativeGame(host,p){
+  const id=crypto.randomUUID().replaceAll('-','');
+  let timer;
+  const outcome=new Promise((resolve,reject)=>{
+    launchRequest={id,resolve,reject,exited:false};
+    timer=setTimeout(()=>reject(new Error('Launch did not respond. Check the Instances tab before retrying.')),15*60*1000);
+  });
+  void Promise.resolve().then(()=>host.beginGameLaunch(JSON.stringify(p),state.activeAccount,id))
+    .then(raw=>{const ack=JSON.parse(raw);if(!ack.ok)throw new Error(ack.message||'Could not start launch')})
+    .catch(launchRequest.reject);
+  try{return await outcome}
+  finally{clearTimeout(timer);launchRequest=null}
 }
-async function doLaunch(){
+async function doLaunch(profileId){
   if(UI.launching)return;
-  if(UI.edition==='bedrock'){
-    if(!native())return toast('Desktop launcher required','Run Luxis.exe to launch Bedrock','!','warn');
-    try{native().launchBedrock();toast('Bedrock launcher opened','Choose Bedrock in the Minecraft Launcher','OK','ok')}
+  const host=api();
+  if(!profileId&&UI.edition==='bedrock'){
+    if(!host)return toast('Desktop launcher required','Run Luxis to launch Bedrock','!','warn');
+    try{
+      const r=JSON.parse(await host.launchBedrock());
+      if(!r.ok)throw new Error(r.message||'Launch failed');
+      toast('Bedrock launcher opened','Choose Bedrock in the Minecraft Launcher','OK','ok');
+    }
     catch(e){toast('Launch failed',e.message||String(e),'!','warn')}
     return;
   }
-  const p=UI.view==='instance'&&UI.instanceId?(state.profiles.find(x=>x.id===UI.instanceId)||activeProfile()):activeProfile();
+  const p=profileId?state.profiles.find(x=>x.id===profileId):viewedProfile();
+  if(!p)return;
+  if(UI.instances.some(x=>x.profileId===p.id)){
+    toast('Profile already running','Choose a different profile to open another game.','i');
+    navigate('instances');
+    return;
+  }
   const acc=profileAccount(p);
   const btn=$('#launchBtn'),prog=$('#launchProgress'),label=$('#launchLabel'),status=$('#dockStatus');
   btn.disabled=true;prog.style.width='6%';status.classList.add('show');status.textContent='Preparing…';
   UI.launching=true;showLaunchOverlay(p,acc);updateLaunchOverlay('Authenticating Session',6,'Signing in…');
-  if(!api()){
+  if(!host){
     let i=0;
     const next=()=>{
       if(i>=STAGES.length){label.textContent='RUNNING';status.textContent=`${acc.username} - ${p.name}`;prog.style.width='100%';updateLaunchOverlay('Running',100,'Preview mode');toast('Preview launch','Install Luxis.exe for the real game','i');setTimeout(resetLaunch,2600);return}
@@ -2148,19 +2249,18 @@ async function doLaunch(){
   }
   label.textContent='PREPARING';
   try{
-    const raw=await api().launchProfile(JSON.stringify(p),state.activeAccount);
-    const r=JSON.parse(raw);
+    const r=await startNativeGame(host,p);
     if(!r.ok)throw new Error(r.message||'Launch failed');
-    label.textContent='INSTANCES';prog.style.width='100%';status.textContent=`${p.version} ? Java ${r.javaMajor} ? PID ${r.pid}`;
+    prog.style.width='100%';status.textContent=`${p.version} · Java ${r.javaMajor} · PID ${r.pid}`;
     updateLaunchOverlay('Running',100,'PID '+r.pid);
-    UI.running=true;UI.runningProfile=p.id;UI.instanceId=r.instanceId||p.id;btn.disabled=false;btn.classList.add('stop');
-    state.launched++;persist();renderAll();syncInstances();
-    toast('Minecraft launched',`${p.name} ? ${p.version} ? PID ${r.pid}`,'PLAY','ok');
+    state.launched++;persist();renderAll();
+    toast('Minecraft launched',`${p.name} · ${p.version} · PID ${r.pid}`,'PLAY','ok');
+    resetLaunch();
   }catch(e){
-    label.textContent='LAUNCH';prog.style.width='0%';status.textContent='Launch failed';
+    label.textContent='LAUNCH FAILED';prog.style.width='0%';status.textContent='Launch failed';
     const msg=e.message||String(e),err=$('#launchError');
     if(err){
-      const ver=activeProfile().version;
+      const ver=p.version;
       const major=ver.startsWith('26.')?25:ver.startsWith('1.21')?21:ver.startsWith('1.20')?17:8;
       err.innerHTML=esc(msg.slice(0,260))+(/java/i.test(msg)?` <button class="btn sm primary" data-act="autoInstallJava" data-major="${major}" style="margin-left:8px">Install Java ${major} automatically</button>`:'');
     }
@@ -2171,36 +2271,35 @@ function resetLaunch(){
   UI.launching=false;
   const p=$('#launchProgress');if(p)p.style.width='0%';
   const s=$('#dockStatus');if(s)s.classList.remove('show');hideLaunchOverlay();
+  updateLaunchButton();
   syncInstances();
-}
-async function doStop(){
-  if(!UI.running)return;
-  await stopEveryInstance();
-  const s=$('#dockStatus');if(s)s.textContent='All games stopped';
-  resetLaunch();
 }
 function onNativeMessage(e){
   const d=e.data;if(!d)return;
-  if(d.type==='instance'){syncInstances();return}
-  if(d.type==='log'&&d.instance){
-    const pre=document.getElementById('log-'+d.instance);
-    if(pre){pre.textContent+=((pre.textContent&&pre.textContent!=='Waiting for output?')?'\n':'')+d.line;pre.scrollTop=pre.scrollHeight}
+  if(d.type==='launch-result'){
+    if(d.instance!==launchRequest?.id)return;
+    if(!d.ok||launchRequest.exited){launchRequest.reject(new Error(d.message||'Minecraft exited during launch.'));return}
+    try{launchRequest.resolve(JSON.parse(d.result))}
+    catch{launchRequest.reject(new Error('Invalid response from the launcher.'))}
     return;
   }
+  if(d.type==='instance'){
+    if(d.action==='exited'&&launchRequest?.id===d.instance)launchRequest.exited=true;
+    syncInstances();return;
+  }
   if(d.type==='crash'){
+    if(launchRequest?.id===d.instance)launchRequest.exited=true;
     syncInstances();
-    if(d.exitCode===0){const s=$('#dockStatus');if(s)s.textContent='Game closed';return}
-    const el=$('#launchError');const msg='Game exited (code '+d.exitCode+'). '+(d.tail||'').split('\n').slice(-3).join(' ');
-    if(el)el.textContent=msg.slice(0,400);
-    toast('Game exited',msg.slice(0,120),'!','warn');
-    if(d.instanceName)showDiagnostics(d.instanceName);
+    const msg='Exit code '+d.exitCode+'. '+(d.tail||'').split('\n').slice(-2).join(' ');
+    toast((d.instanceName||'Minecraft')+' exited',msg.slice(0,160),'!','warn');
+    return;
   }
   if(d.type==='java'){
     const st=$('#launchStage');if(st)st.textContent=d.stage||'';
     const pct=$('#launchPct');if(pct&&typeof d.progress==='number')pct.textContent=Math.round(d.progress)+'%';
     updateLaunchOverlay(d.stage,d.progress,'');return;
   }
-  if(d.type!=='launch')return;
+  if(d.type!=='launch'||!UI.launching||d.instance!==launchRequest?.id)return;
   const l=$('#launchLabel'),s=$('#dockStatus'),p=$('#launchProgress');
   if(l&&d.stage)l.textContent=String(d.stage).toUpperCase();
   if(s&&d.detail!==undefined)s.textContent=d.detail||d.stage||'';
@@ -2436,7 +2535,7 @@ const ACTIONS={
  removeLuxisMod:el=>changeLuxisMod(el,'remove'),
  downloadFabricApi,
   stopInstance:el=>stopOneInstance(el.dataset.id),
-  stopAllInstances:()=>stopEveryInstance(),
+  refreshInstances:()=>syncInstances(),
   instanceFolder:el=>{const p=state.profiles.find(x=>x.name===el.dataset.name);if(p&&native()?.openFolder)native().openFolder('',p.name)},
   newInstance:()=>navigate('profiles'),
   refreshLuxisMod:()=>renderLuxisMod(),
@@ -2453,18 +2552,7 @@ const ACTIONS={
  navigate:el=>navigate(el.dataset.v),
  goWardrobe:()=>navigate('wardrobe'),
  goSettings:()=>navigate('settings'),
- quickLaunch:()=>{
-   if(UI.edition==='bedrock'){
-     if(!native())return toast('Desktop launcher required','Run Luxis.exe to open Bedrock','!','warn');
-     try{
-       const r=JSON.parse(native().launchBedrock());
-       if(!r.ok)return toast('Could not open Bedrock',r.message||'Launch failed','!','warn');
-       toast('Bedrock launcher opened',r.via||'Minecraft Launcher','OK','ok');
-     }catch(e){toast('Launch failed',e.message||String(e),'!','warn')}
-     return;
-   }
-   return UI.running?doStop():doLaunch();
- },
+  quickLaunch:el=>doLaunch(el.dataset.id),
  fixWindowsUpdate:async()=>{
    if(!native()?.fixWindowsUpdate)return toast('Desktop launcher required','Run Luxis.exe','!','warn');
    try{
@@ -2486,66 +2574,7 @@ const ACTIONS={
 
  instBack:()=>navigate('profiles'),
  diagnose:()=>showDiagnostics(viewedProfile().name),
- pickMods:async()=>{
-   if(!api())return toast('Desktop launcher required','Run Luxis.exe to install files','!','warn');
-   const p=viewedProfile();try{const r=JSON.parse(await api().pickJarFiles(p.name));
-     (r.files||[]).forEach(name=>{const id=name.replace(/\.jar$/i,'');if(!p.mods.some(m=>m.id===id))p.mods.push({id,title:id,file:name,v:'local',on:true})});
-     persist();renderAll();if(UI.view==='instance')renderInstance();toast('Mods installed',`${(r.files||[]).length} file(s) copied to mods/`,'OK','ok');if((r.rejected||[]).length)toast('Invalid mod files',r.rejected.join(', ')+' - not a valid .jar','!','warn')}
-   catch(e){toast('Import failed',e.message||String(e),'!','warn')}
- },
- diagnoseRetry:()=>{closeOverlay();doLaunch()},
- instFilter:el=>{UI.instFilter=el.dataset.v;UI.instSearch='';renderInstance()},
- filterReset:()=>{UI.instSearch='';const i=$('#instSearch');if(i)i.value='';renderInstance()},
- setActiveProfile:el=>{state.activeProfile=el.dataset.id;persist();renderAll();toast('Profile activated',activeProfile().name,'✓','ok')},
- newProfile:newProfileModal,
- createProfile:()=>{
-   const name=$('#npName').value.trim()||'New instance',icon=$('#npIcon').value.trim()||'✦';
-   const p={id:uid('p'),name,icon,banner:'linear-gradient(135deg,#6d28d9,#c864ff)',version:$('#npVer').value,loader:$('#npLoader').value,loaderVersion:$('#npLoaderVer').value,ram:6,jvm:'default',res:'1920x1080',accountId:$('#npAccount').value,mods:[],packs:[],shaders:[],created:'today'};
-   state.profiles.push(p);state.activeProfile=p.id;persist();closeOverlay();renderAll();toast('Profile created',name,'⬡','ok');
- },
- dupProfile:el=>{const p=state.profiles.find(x=>x.id===el.dataset.id);if(!p)return;const c=structuredClone(p);c.id=uid('p');c.name=p.name+' (copy)';state.profiles.push(c);persist();openDrawer(c.id);renderAll();toast('Profile duplicated',c.name,'⧉','ok')},
- deleteProfile:el=>{
-   const p=state.profiles.find(x=>x.id===el.dataset.id);if(!p)return;
-   if(state.profiles.length===1)return toast('Cannot delete','At least one profile is required','⚠','warn');
-   openModal(`${modalHead('Delete profile?',`This removes the local instance entry for ${p.name}. The prototype does not delete real files.`)}<div class="modal-foot"><button class="btn" data-act="closeOverlay">Cancel</button><button class="btn danger" data-act="confirmDeleteProfile" data-id="${p.id}">Delete permanently</button></div>`);
- },
- psBlock:el=>{
-  const b=el.dataset.v;if(!PS_DRAFT)return;
-  PS_DRAFT.block=b;
-  $$('.pms .block-opt').forEach(x=>x.classList.toggle('on',x.dataset.v===b));
-  const img=$('#psIconPreview');if(img)img.src='textures/'+b+'.png';
- },
- psDelete:el=>{
-  if(el.dataset.confirm!=='1'){el.dataset.confirm='1';el.textContent='Click again to confirm deletion';return}
-  const id=el.dataset.id,i=state.profiles.findIndex(x=>x.id===id);if(i<0)return;
-  const name=state.profiles[i].name;state.profiles.splice(i,1);
-  if(state.activeProfile===id)state.activeProfile=state.profiles[0]?.id||'';
-  if(UI.instanceId===id)UI.instanceId='';
-  PS_DRAFT=null;persist();closeOverlay();renderAll();toast('Profile deleted',name,'✕');
- },
- confirmDeleteProfile:el=>{state.profiles=state.profiles.filter(x=>x.id!==el.dataset.id);if(state.activeProfile===el.dataset.id)state.activeProfile=state.profiles[0].id;persist();closeOverlay();renderAll();toast('Profile deleted','Instance removed from library','✕')},
- exportProfile:el=>{const p=state.profiles.find(x=>x.id===el.dataset.id);if(!p)return;const blob=new Blob([JSON.stringify({format:'mrpack-lite',profile:p},null,2)],{type:'application/zip'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=p.name.replace(/\s+/g,'-')+'.mrpack';a.click();toast('Export started',p.name+'.mrpack','⇪','ok')},
- importMrpack:async()=>{
-   if(!api()){$('#mrpackInput').click();return}
-   try{
-     const r=JSON.parse(await api().pickMrpack());if(r.cancelled)return;
-     const mods=(r.files||[]).filter(f=>f.path.startsWith('mods/')&&f.path.toLowerCase().endsWith('.jar')).map(f=>{const file=f.path.split('/').pop();return {id:file.replace(/\.jar$/i,''),title:file.replace(/\.jar$/i,''),file,v:'mrpack',on:true}});
-     const packs=(r.files||[]).filter(f=>f.path.startsWith('resourcepacks/')).map(f=>({id:f.path.split('/').pop(),title:f.path.split('/').pop(),file:f.path}));
-     const shaders=(r.files||[]).filter(f=>f.path.startsWith('shaderpacks/')).map(f=>({id:f.path.split('/').pop(),title:f.path.split('/').pop(),file:f.path}));
-     const p={id:uid('p'),name:r.name,icon:'⬡',banner:'linear-gradient(135deg,#0d9488,#38bdf8)',version:r.version,loader:r.loader||'fabric',loaderVersion:r.loaderVersion||'0.19.5',ram:6,jvm:'default',res:'1920x1080',accountId:'',mods,packs,shaders,created:'mrpack',block:'diamond_block',bannerBlock:'emerald_block'};
-     state.profiles.push(p);state.activeProfile=p.id;persist();renderAll();
-     toast('Modpack imported',`${r.name} · ${mods.length} mods · ${r.overrides||0} overrides`,'OK','ok');
-   }catch(e){toast('Import failed',e.message||String(e),'!','warn')}
- },
- profileField:el=>{const p=state.profiles.find(x=>x.id===el.dataset.id);if(!p)return;p[el.dataset.k]=el.value;persist();renderAll();openDrawer(p.id)},
- profileRange:el=>{const p=state.profiles.find(x=>x.id===el.dataset.id);if(!p)return;p[el.dataset.k]=Number(el.value);persist();renderHeaderState();const b=el.closest('.form-field')?.querySelector('b');if(b)b.textContent=p.ram+' GB'},
-  toggleMod:el=>{
-    const p=state.profiles.find(x=>x.id===el.dataset.pid),m=p?.mods.find(x=>x.id===el.dataset.id);if(!m)return;
-    m.on=!m.on;el.classList.toggle('on',m.on);el.closest('.mod-row')?.classList.toggle('off',!m.on);
-    const file=resolveModFile(p,m);
-    if(file&&native()?.toggleModFile){m.file=file;native().toggleModFile(p.name,file,m.on)}
-    persist();toast(m.on?'Mod enabled':'Mod disabled',(m.title||m.id)+(file?'':' - no jar file found'),m.on?'OK':'OFF');renderAll()
-  },
+  pickMods:()=>pickModsFor(viewedProfile()),
   deleteMod:el=>{
     if(el.dataset.confirm!=='1'){el.dataset.confirm='1';el.textContent='Confirm';return}
     const p=viewedProfile(),m=p.mods.find(x=>x.id===el.dataset.id);if(!m)return;
@@ -2798,7 +2827,7 @@ $('.topbar').addEventListener('pointerdown',e=>{
   if(e.target.closest('button,input'))return;
   bridge()?.drag?.();
 });
-$('#launchBtn').addEventListener('click',()=>UI.running?doStop():doLaunch());
+$('#launchBtn').addEventListener('click',()=>doLaunch());
 $('#quickWardrobe').addEventListener('click',()=>navigate('wardrobe'));
 $('#quickTheme').addEventListener('click',()=>navigate('settings'));
 
@@ -2808,6 +2837,8 @@ refreshNavOffsets();window.addEventListener('resize',refreshNavOffsets);
 persist();
 renderAll();
 syncInstances();
+setInterval(()=>{if(api()&&!document.hidden)syncInstances()},3000);
+window.addEventListener('focus',()=>syncInstances());
 refreshMojangCapes().then(()=>{if(UI.view==='capes'||UI.view==='wardrobe')renderView(UI.view)});
 refreshBedrock().then(()=>{if(UI.view==='home')renderHome()});
 const navItems=$$('.nav-item'),cur=navItems.findIndex(x=>x.dataset.view===UI.view);

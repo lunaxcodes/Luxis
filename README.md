@@ -2,6 +2,19 @@
 
 A real Windows launcher: a self-contained native desktop app with a live Modrinth browser, real Microsoft login, and a working Minecraft launch pipeline.
 
+## Multi-instance play
+
+Use **Play** on any profile, including a second copy, to run several Minecraft games at once.
+Pressing Play never closes a running game. The **Instances** tab lists every game Luxis started,
+with its PID, uptime, live log tail, and an independent **Stop this instance** button. Games are
+tracked across launcher restarts, and the launcher refuses to reuse a profile folder that is
+already in use.
+
+## Mod installation
+
+Dragging `.jar` files onto a profile opens the native file picker for that profile (WebView2 does
+not expose dropped paths). The Luxis Mod sidebar entry highlights the optional in-game mod.
+
 ## Run
 
 Double-click **`Luxis.exe`** or the **Luxis** shortcut on your Desktop (created with the Luxis icon). No install, Node, Python, or .NET runtime is needed (the app is self-contained). Requirements: Windows 10/11 with the WebView2 runtime, which ships with current Microsoft Edge.
@@ -28,14 +41,13 @@ The window is frameless: drag the top bar to move it, and use `─ □ ×` in th
 - **Instance detail view** — opening a profile shows a full instance page: header and chips, last-played/playtime/disk stats, mod search and grid with toggles, a Content/World sidebar with real folder shortcuts, and a direct Play button.
 - **Interface customization** — large icon-only sidebar with hover tooltips, ambient particle density, glow intensity, sidebar icon size/height, tooltip toggle, six theme presets and a custom theme studio.
 - **Mod installation** — `Add Mods` opens a native file picker that copies selected `.jar` files into the profile's real `mods/` folder. Dropping files on the instance page also works where WebView2 exposes file paths; otherwise Luxis falls back to the picker.
-- **Multi-instance manager** — launch multiple profiles at once (including multiple copies of one profile) and monitor them all from the **Instances** tab. Each card shows its instance ID, PID, uptime and live log tail, with independent Stop and Open Folder controls plus Stop All.
 - **Launch feedback** — a full-screen animated launch overlay with progress ring, stage checklist and visible errors, in addition to the dock progress bar. Quick Play flags from modern version manifests are correctly filtered, so 26.x/Fabric instances no longer crash with "Only one quick play option can be specified". If the game exits early, the launcher shows the exit code and the last log lines.
 - **Native folder actions** — instance directory buttons open real Explorer windows.
 - **Java auto-detection & installer** — finds official Minecraft launcher runtimes plus common vendor JDKs, with a one-click Temurin download if none is found. Fixes Java 21 installs on other machines.
 - **Config backups** — every launch backs up `config/` and `options.txt`; each instance page has a Restore button.
 - **Updates tab** — a dedicated sidebar page checks GitHub releases on open and on startup, verifies SHA-256, and replaces the exe on restart.
 - **Skins & capes** — accurate 64×64 front/back character rendering (including slim arms), real cape artwork in the library, and equip buttons for capes your Microsoft account actually owns. Preset skins are no longer added automatically.
-- **Luxis Mod** — the in-game Fabric mod menu is bundled for both Minecraft 1.21.11 and 26.3. Add it from the Luxis Mod sidebar section with one click; the launcher installs the matching jar or downloads Fabric API for you. It includes a themed glass UI with adjustable size, transitions and particles, per-module settings, profiles, saved layout presets, local waypoints, and a free-form HUD layout editor. Fair-play modules cover HUD, visuals, performance, and 15 new PvP readouts; no automation or reach changes.
+- **Luxis Mod** — the in-game Fabric mod menu is bundled for both Minecraft 1.21.x and 26.x. Add it from the Luxis Mod sidebar section with one click; the launcher installs the matching jar and requires Fabric API. It includes themed rounded UI, 31 fair-play modules, per-module settings, profiles and a free-form HUD layout editor.
 - **Profile controls** — delete a profile from its settings (with confirmation), and pick from 115 real Minecraft block textures for its icon.
 - **Launch & stop** — the Launch button turns into Stop while the game runs, and the launch overlay closes automatically at 100%.
 - **Modrinth matching** — shaders and resource packs fall back from exact version to major version to any version, so packs that omit loader metadata still install.

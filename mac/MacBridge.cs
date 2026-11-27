@@ -110,7 +110,8 @@ public sealed class MacBridge
     public Task<string> getAccountTexture(string id, string kind) => _auth.GetTexture(id, kind);
 
     public Task<string> launchProfile(string profileJson, string activeAccountId) => _minecraft.Launch(profileJson, activeAccountId);
-    public string stopProfile(string profileId) => _minecraft.Stop(profileId);
+    public string beginGameLaunch(string profileJson, string activeAccountId, string request) => _minecraft.BeginGameLaunch(profileJson, activeAccountId, request);
+    public string stopProfile(string profileId) => _minecraft.StopProfile(profileId);
     public string listInstances() => _minecraft.ListInstances();
     public string stopInstance(string instanceId) => _minecraft.Stop(instanceId);
     public string stopAllInstances() => _minecraft.StopAll();

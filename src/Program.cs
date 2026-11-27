@@ -78,7 +78,12 @@ public sealed class MainForm : Form
 
     private void Post(string json)
     {
-        try { if (_web.CoreWebView2 != null) _web.CoreWebView2.PostWebMessageAsJson(json); }
+        try
+        {
+            if (!IsHandleCreated || IsDisposed) return;
+            if (InvokeRequired) { BeginInvoke(() => Post(json)); return; }
+            _web.CoreWebView2?.PostWebMessageAsJson(json);
+        }
         catch { /* window closed mid-operation */ }
     }
 
@@ -251,7 +256,8 @@ public sealed class Bridge
 
     // ---- game ----
     public Task<string> launchProfile(string profileJson, string activeAccountId) => _minecraft.Launch(profileJson, activeAccountId);
-    public string stopProfile(string profileId) => _minecraft.Stop(profileId);
+    public string beginGameLaunch(string profileJson, string activeAccountId, string request) => _minecraft.BeginGameLaunch(profileJson, activeAccountId, request);
+    public string stopProfile(string profileId) => _minecraft.StopProfile(profileId);
     public string listInstances() => _minecraft.ListInstances();
     public string stopInstance(string instanceId) => _minecraft.Stop(instanceId);
     public string stopAllInstances() => _minecraft.StopAll();
