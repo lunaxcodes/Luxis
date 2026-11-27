@@ -1002,10 +1002,10 @@ function modalHead(title,sub){return `<div class="modal-head"><div><h2>${title}<
 const UI={view:'home',launching:false,running:false,runningProfile:'',instanceId:'',instFilter:'mods',instSearch:'',edition:'java',luxisMenuGlobal:false};
 let leaveTimer=null,navOffsets=[];const MOD_UPDATES={};const VIEW_DIRTY=new Set(['home','profiles','modrinth','packs','wardrobe','settings','instance','capes','luxismod','updates']);
 function refreshNavOffsets(){navOffsets=$$('.nav-item').map(x=>x.offsetTop)}
-const BEDROCK={checked:false,installed:false,version:''};
+const BEDROCK={checked:false,installed:false,version:'',wu:'Unknown',wuStart:'Unknown',ready:false};
 async function refreshBedrock(){
   if(!native())return;
-  try{const r=JSON.parse(native().bedrockStatus());BEDROCK.checked=true;BEDROCK.installed=!!r.installed;BEDROCK.version=r.version||''}
+  try{const r=JSON.parse(native().bedrockStatus());BEDROCK.checked=true;BEDROCK.installed=!!r.installed;BEDROCK.version=r.version||'';BEDROCK.wu=r.wu||'Unknown';BEDROCK.wuStart=r.wuStart||'Unknown';BEDROCK.ready=!!r.ready}
   catch(e){BEDROCK.checked=true}
 }
 const VIEW_LABEL={home:'Home',profiles:'Profiles',modrinth:'Modrinth Hub',packs:'Resource & Shader Packs',wardrobe:'Skins & Capes',settings:'Settings & Themes',instance:'Instance',capes:'Cape Library',luxismod:'Luxis Mod',updates:'Updates'};
@@ -1052,7 +1052,8 @@ function renderHome(){
      <div class="hero"><div class="bedrock-card"><div><div class="eyebrow">Game edition</div><h1>Minecraft <em>Bedrock</em></h1>
        <p class="muted" style="margin-top:11px;line-height:1.6">${BEDROCK.installed?`Detected Bedrock ${esc(BEDROCK.version)}. Launching opens the Minecraft Launcher, where you can play Bedrock with your Microsoft account.`:'Bedrock was not detected. Install it from the Microsoft Store to launch it here.'}</p>
        <div class="bedrock-tags"><span class="chip accent">Bedrock</span><span class="chip">${esc(a.username)}</span><span class="chip">Microsoft Store</span></div></div>
-       <div class="view-actions" style="margin-top:20px">${BEDROCK.installed?'<button class="btn primary" data-act="quickLaunch">▶ Open Bedrock Launcher</button>':'<button class="btn primary" data-act="openBedrockStore">Open Microsoft Store</button>'}<button class="btn" data-act="setEdition" data-v="java">Back to Java</button></div></div>
+       <div class="view-actions" style="margin-top:20px">${BEDROCK.installed?'<button class="btn primary" data-act="quickLaunch">▶ Open Bedrock Launcher</button>':'<button class="btn primary" data-act="openBedrockStore">Open Microsoft Store</button>'}<button class="btn" data-act="setEdition" data-v="java">Back to Java</button></div>
+       ${BEDROCK.checked&&BEDROCK.installed&&BEDROCK.wu!=='Running'?`<div class="card" style="margin-top:14px;border-color:var(--warn);padding:13px"><div style="font-weight:780;color:var(--warn)">Windows Update service is ${esc(BEDROCK.wu)}</div><div class="muted tiny" style="margin-top:5px;line-height:1.6">Minecraft for Windows cannot install or start while Windows Update is disabled. Luxis can enable it for you — this needs Windows administrator approval.</div><div class="view-actions" style="margin-top:9px"><button class="btn primary" data-act="fixWindowsUpdate">Enable Windows Update</button><button class="btn" data-act="openBedrockStore">Open Store</button></div></div>`:''}</div>
        <div class="hero-side"><div class="card stat-card lift"><div class="stat-ico">▣</div><div><div class="stat-v">${BEDROCK.installed?'Ready':'Missing'}</div><div class="stat-l">Bedrock status</div></div></div>
        <div class="card stat-card lift"><div class="stat-ico">◈</div><div><div class="stat-v">${esc(a.username)}</div><div class="stat-l">Microsoft account</div></div></div></div></div>
      <div class="card" style="padding:18px"><div class="eyebrow">Note</div><div class="tiny muted" style="margin-top:8px;line-height:1.7">Bedrock is a separate Store app. It cannot use Java mods, Fabric, or .mrpack files, and its world saves are stored by the game itself. Your Java profiles remain untouched.</div></div>`;
@@ -2216,7 +2217,26 @@ const ACTIONS={
  navigate:el=>navigate(el.dataset.v),
  goWardrobe:()=>navigate('wardrobe'),
  goSettings:()=>navigate('settings'),
- quickLaunch:()=>UI.running?doStop():doLaunch(),
+ quickLaunch:()=>{
+   if(UI.edition==='bedrock'){
+     if(!native())return toast('Desktop launcher required','Run Luxis.exe to open Bedrock','!','warn');
+     try{
+       const r=JSON.parse(native().launchBedrock());
+       if(!r.ok)return toast('Could not open Bedrock',r.message||'Launch failed','!','warn');
+       toast('Bedrock launcher opened',r.via||'Minecraft Launcher','OK','ok');
+     }catch(e){toast('Launch failed',e.message||String(e),'!','warn')}
+     return;
+   }
+   return UI.running?doStop():doLaunch();
+ },
+ fixWindowsUpdate:async()=>{
+   if(!native()?.fixWindowsUpdate)return toast('Desktop launcher required','Run Luxis.exe','!','warn');
+   try{
+     const r=JSON.parse(native().fixWindowsUpdate());
+     toast(r.ok?'UAC prompt opened':'Could not enable',r.message||'','!','warn');
+     setTimeout(()=>refreshBedrock().then(()=>{if(UI.view==='home')renderHome()}),4000);
+   }catch(e){toast('Failed',e.message||String(e),'!','warn')}
+ },
  setEdition:el=>{UI.edition=el.dataset.v;persist();renderHeaderState();renderHome();toast('Edition switched',UI.edition==='bedrock'?'Bedrock Edition':'Java Edition','OK','ok')},
  openBedrockStore:()=>{const u='ms-windows-store://pdp/?ProductId=9NBLGGH2JHXJ';if(native()?.openUrl)native().openUrl(u);else window.open('https://www.minecraft.net/en-us/download','_blank')},
  openDrawer:el=>openInstance(el.dataset.id),

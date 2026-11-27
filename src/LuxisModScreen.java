@@ -51,7 +51,7 @@ public final class LuxisModScreen extends Screen {
         Draw.glow(g, px, py, sw, sh, 24, AnimationUtil.lerpColor(th.accent, th.accent2, pulse));
         int borderA = (int) (60 + 50 * pulse);
         Draw.softBorder(g, px, py, sw, sh, 24, (borderA << 24) | (th.accent & 0xFFFFFF));
-        Draw.rounded(g, px, py, sw, sh, 26, th.bg);
+        Draw.glass(g, px, py, sw, sh, 26, th.bg, th.accent);
                 Draw.rounded(g, px + 1, py + 1, sw - 2, 2, 1, AnimationUtil.lerpColor(th.accent, th.accent2, pulse));
 
         regions.clear();
@@ -76,18 +76,19 @@ public final class LuxisModScreen extends Screen {
         label(g, title, px + 32, py + 40, th.text);
 
         int sx = px + w - 340;
-        Draw.rounded(g, sx, py + 30, 306, 34, 14, 0x22FFFFFF);
+        Draw.glass(g, sx, py + 30, 306, 34, 14, 0x1A141F, th.accent);
         Draw.softBorder(g, sx, py + 30, 306, 34, 14, (0x44 << 24) | (th.accent & 0xFFFFFF));
-        bigLabel(g, "⌕", sx + 10, py + 30, th.accent, 2.3F);
+        bigLabel(g, "⌕", sx + 10, py + 30, th.accent, 1.7F);
         label(g, "Search effects", sx + 52, py + 39, th.muted);
         regions.add(new ClickRegion(sx, py + 30, 306, 34, "search", ""));
 
         int tx = px + 34, ty = py + 88;
+        float indDt = AnimationUtil.deltaSeconds();
         for (String t : TABS) {
             int tw = t.length() * 8 + 28;
             boolean on = t.equals(tab);
             if (on) {
-                float ind = AnimationUtil.approach("tab_ind", tx, 12F, AnimationUtil.deltaSeconds());
+                float ind = AnimationUtil.approach("tab_ind", tx, 12F, indDt);
                 Draw.rounded(g, (int) ind + 8, ty + 24, tw - 16, 2, 1, AnimationUtil.lerpColor(th.accent, th.accent2, pulse));
             }
             label(g, t, tx + 10, ty + 4, on ? th.text : th.muted);
@@ -102,7 +103,7 @@ public final class LuxisModScreen extends Screen {
         int fx = cx, fy = cy;
         for (String f : FILTERS) {
             int fw = f.length() * 7 + 24, on = f.equals(filter) ? 1 : 0;
-            Draw.rounded(g, fx, fy, fw, 22, 10, on == 1 ? AnimationUtil.lerpColor(th.accent, th.accent2, 0.35F) : 0x14FFFFFF);
+            Draw.glass(g, fx, fy, fw, 22, 10, on == 1 ? AnimationUtil.lerpColor(th.accent, th.accent2, 0.35F) : 0x12101A, th.accent);
             Draw.softBorder(g, fx, fy, fw, 22, 10, on == 1 ? (0x77 << 24) | (th.accent & 0xFFFFFF) : 0x22FFFFFF);
             label(g, f, fx + 9, fy + 5, on == 1 ? 0xFFFFFFFF : th.muted);
             regions.add(new ClickRegion(fx, fy, fw, 22, "filter", f));
@@ -148,11 +149,9 @@ public final class LuxisModScreen extends Screen {
         float hv = Math.max(0F, Math.min(1F, AnimationUtil.spring("hover_" + m.id, hover ? 1F : 0F, dt, 210F)));
         int dw = (int) (w * (0.94F + 0.06F * stagger)), dh = (int) (h * (0.94F + 0.06F * stagger));
         int dx = x + (w - dw) / 2, dy = y + (h - dh) / 2 - (int) (3 * hv);
-        Draw.shadow(g, dx, dy, dw, dh, 14);
-        Draw.rounded(g, dx, dy, dw, dh, 14,
-                AnimationUtil.lerpColor(0x10FFFFFF, th.accent, 0.14F * hv));
-        Draw.softBorder(g, dx, dy, dw, dh, 14,
-                (((int) (40 + 90 * hv)) << 24) | (th.accent & 0xFFFFFF));
+        Draw.rounded(g, dx + 3, dy + 3, dw, dh, 14, 0x2A000000);
+        Draw.glass(g, dx, dy, dw, dh, 14,
+                AnimationUtil.lerpColor(0x0C1018, th.accent, 0.10F * hv), th.accent);
                 String name = m.name.length() > 22 ? m.name.substring(0, 21) + "..." : m.name;
         String desc = m.description.length() > 30 ? m.description.substring(0, 29) + "..." : m.description;
         label(g, name, dx + 14, dy + 10, th.text);

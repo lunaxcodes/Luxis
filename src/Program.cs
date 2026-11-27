@@ -436,31 +436,95 @@ public sealed class Bridge
     public string restoreConfigs(string profileName) => _minecraft.RestoreConfigs(profileName);
     public string deleteModFile(string profileName, string fileName) => _minecraft.DeleteModFile(profileName, fileName);
 
-    public string bedrockStatus()
+    private static string RunPs(string command)
     {
         try
         {
             var psi = new ProcessStartInfo("powershell",
-                "-NoProfile -Command \"(Get-AppxPackage -Name Microsoft.MinecraftUWP | Select-Object -First 1 -ExpandProperty Version)\"")
+                "-NoProfile -ExecutionPolicy Bypass -Command \"" + command + "\"")
             { RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true };
             using var proc = Process.Start(psi)!;
-            var version = proc.StandardOutput.ReadToEnd().Trim();
-            proc.WaitForExit(5000);
-            return Util.Json(new { installed = !string.IsNullOrEmpty(version), version });
+            var output = proc.StandardOutput.ReadToEnd().Trim();
+            proc.WaitForExit(6000);
+            return output;
         }
-        catch { return Util.Json(new { installed = false, version = "" }); }
+        catch { return ""; }
+    }
+
+    public string bedrockStatus()
+    {
+        try
+        {
+            var version = RunPs("(Get-AppxPackage -Name Microsoft.MinecraftUWP | Select-Object -First 1 -ExpandProperty Version)");
+            var wu = RunPs("(Get-Service -Name wuauserv | Select-Object -First 1 -ExpandProperty Status)");
+            var wuStart = RunPs("(Get-Service -Name wuauserv | Select-Object -First 1 -ExpandProperty StartType)");
+            return Util.Json(new
+            {
+                installed = !string.IsNullOrEmpty(version),
+                version,
+                wu = string.IsNullOrEmpty(wu) ? "Unknown" : wu,
+                wuStart = string.IsNullOrEmpty(wuStart) ? "Unknown" : wuStart,
+                ready = !string.IsNullOrEmpty(version) && wu == "Running"
+            });
+        }
+        catch { return Util.Json(new { installed = false, version = "", wu = "Unknown", wuStart = "Unknown", ready = false }); }
+    }
+
+    public string fixWindowsUpdate()
+    {
+        try
+        {
+            var command = "Set-Service -Name wuauserv -StartupType Manual; "
+                        + "Start-Service -Name wuauserv -ErrorAction SilentlyContinue; "
+                        + "Start-Service -Name bits -ErrorAction SilentlyContinue; "
+                        + "Start-Service -Name cryptsvc -ErrorAction SilentlyContinue; "
+                        + "Write-Output ((Get-Service -Name wuauserv).Status)";
+            var psi = new ProcessStartInfo("powershell",
+                "-NoProfile -ExecutionPolicy Bypass -Command \"" + command + "\"")
+            { UseShellExecute = true, Verb = "runas", CreateNoWindow = true };
+            Process.Start(psi);
+            return Util.Json(new { started = true, ok = true, message = "Approve the Windows UAC prompt to enable Windows Update." });
+        }
+        catch (Exception ex)
+        {
+            return Util.Json(new { started = false, ok = false, message = ex.Message });
+        }
     }
 
     public string launchBedrock()
     {
-        using var status = JsonDocument.Parse(bedrockStatus());
-        if (!status.RootElement.GetProperty("installed").GetBoolean())
-            throw new Exception("Minecraft Bedrock is not installed on this PC.");
-        // Windows UWP activation is brittle when invoked from another process. Opening the
-        // Minecraft Launcher (same Microsoft account) is the reliable way to reach Bedrock.
-        Process.Start(new ProcessStartInfo("explorer.exe", @"shell:AppsFolder\Microsoft.4297127D64EC6_8wekyb3d8bbwe!Minecraft")
-        { UseShellExecute = true });
-        return Util.Json(new { ok = true, edition = "bedrock", via = "Minecraft Launcher" });
+        using var doc = JsonDocument.Parse(bedrockStatus());
+        if (!doc.RootElement.GetProperty("installed").GetBoolean())
+            return Util.Json(new { ok = false, code = "missing", message = "Minecraft Bedrock is not installed on this PC." });
+        var wu = doc.RootElement.GetProperty("wu").GetString();
+        if (wu != "Running")
+            return Util.Json(new { ok = false, code = "wu", message = "Windows Update is " + (wu ?? "disabled") + ". Click Fix Windows Update, then launch again." });
+
+        const string app = @"shell:AppsFolder\Microsoft.4297127D64EC6_8wekyb3d8bbwe!Minecraft";
+        var attempts = new List<string>();
+        try
+        {
+            Process.Start(new ProcessStartInfo("explorer.exe", app) { UseShellExecute = true });
+            return Util.Json(new { ok = true, via = "Minecraft Launcher", method = "appsfolder" });
+        }
+        catch (Exception ex) { attempts.Add("AppsFolder: " + ex.Message); }
+
+        try
+        {
+            Process.Start(new ProcessStartInfo("cmd.exe", "/c start \"\" \"" + app + "\"")
+            { UseShellExecute = false, CreateNoWindow = true });
+            return Util.Json(new { ok = true, via = "Minecraft Launcher", method = "cmd-start" });
+        }
+        catch (Exception ex) { attempts.Add("cmd start: " + ex.Message); }
+
+        try
+        {
+            Process.Start(new ProcessStartInfo("ms-windows-store://pdp/?ProductId=9NBLGGH2JHXJ") { UseShellExecute = true });
+            return Util.Json(new { ok = true, via = "Microsoft Store", method = "store" });
+        }
+        catch (Exception ex) { attempts.Add("Store: " + ex.Message); }
+
+        return Util.Json(new { ok = false, code = "launch", message = "All launch methods failed. " + string.Join(" | ", attempts) });
     }
 
     public Task<string> importMrpack(string path) => _mrpack.Import(path);
