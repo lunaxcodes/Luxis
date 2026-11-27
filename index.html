@@ -1488,7 +1488,7 @@ function renderInstance(){
   const worldLinks=[['saves','WORLDS','◈'],['screenshots','SCREENSHOTS','▣'],['logs','LOGS','≡'],['config','CONFIG','⚙']];
   const tiles=filter==='mods'?mods.map(m=>{const c=catalog(m.id);const title=m.title||c?.title||m.id;
     return `<div class="mod-tile ${m.on?'':'off'}"><div class="mi">${m.icon?`<img src="${esc(m.icon)}" style="width:100%;height:100%;object-fit:cover;border-radius:9px" onerror="this.style.display='none'">`:c?.icon||'▦'}</div><div class="mt"><b>${esc(title)}</b><small>${esc(m.v||c?.cats[0]||'local')}${m.file?' · '+esc(m.file):''}</small></div>
-      ${MOD_UPDATES[m.id]?'<button class="btn sm ghost" data-act="updateOne" data-id="'+esc(m.id)+'" title="Update available" style="color:var(--ok)">⇅</button>':''}<button class="btn sm ghost" data-act="checkUpdate" data-id="${m.id}">↻</button><button class="switch ${m.on?'on':''}" data-act="toggleMod" data-id="${m.id}" data-pid="${p.id}"></button></div>`}).join('')
+      ${MOD_UPDATES[m.id]?'<button class="btn sm ghost" data-act="updateOne" data-id="'+esc(m.id)+'" title="Update available" style="color:var(--ok)">⇅</button>':''}<button class="btn sm ghost" data-act="checkUpdate" data-id="${m.id}">↻</button><button class="btn sm danger ghost" data-act="deleteMod" data-id="${m.id}" title="Delete mod">✕</button><button class="switch ${m.on?'on':''}" data-act="toggleMod" data-id="${m.id}" data-pid="${p.id}"></button></div>`}).join('')
     :filter==='resourcepacks'?packs.map((x,i)=>`<div class="mod-tile"><div class="mi">❖</div><div class="mt"><b>${esc(x.title||x.id)}</b><small>${esc(x.file||'')}</small></div><button class="btn sm danger ghost" data-act="uninstallPack" data-i="${i}">✕</button></div>`).join('')
     :shaders.map((x,i)=>`<div class="mod-tile"><div class="mi">✦</div><div class="mt"><b>${esc(x.title||x.id)}</b><small>${esc(x.file||'')}</small></div><button class="btn sm danger ghost" data-act="uninstallShader" data-i="${i}">✕</button></div>`).join('');
   $('#view-instance').innerHTML=`
@@ -2175,6 +2175,16 @@ async function updateMods(onlyIds){
   toast('Update complete',`${done} of ${outdated.length} mod(s) updated`,'✓','ok');
 }
 
+function resolveModFile(p,m){
+  if(m.file) return String(m.file).replace(/\.disabled$/i,'');
+  const names=JSON.parse(native()?.listModFiles?.(p.name)||'[]');
+  const key=(m.title||m.id||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+  if(!key)return '';
+  const norm=f=>f.toLowerCase().replace(/\.disabled$/i,'').replace(/\.jar$/i,'').replace(/[^a-z0-9]/g,'');
+  const hit=names.find(f=>norm(f).startsWith(key))||names.find(f=>norm(f).includes(key));
+  return hit?hit.replace(/\.disabled$/i,''):'';
+}
+
 const ACTIONS={
  addLuxisMod:async el=>{
   state.luxisModProfiles=state.luxisModProfiles||{};
@@ -2273,7 +2283,20 @@ const ACTIONS={
  },
  profileField:el=>{const p=state.profiles.find(x=>x.id===el.dataset.id);if(!p)return;p[el.dataset.k]=el.value;persist();renderAll();openDrawer(p.id)},
  profileRange:el=>{const p=state.profiles.find(x=>x.id===el.dataset.id);if(!p)return;p[el.dataset.k]=Number(el.value);persist();renderHeaderState();const b=el.closest('.form-field')?.querySelector('b');if(b)b.textContent=p.ram+' GB'},
-  toggleMod:el=>{const p=state.profiles.find(x=>x.id===el.dataset.pid),m=p?.mods.find(x=>x.id===el.dataset.id);if(!m)return;m.on=!m.on;el.classList.toggle('on',m.on);el.closest('.mod-row').classList.toggle('off',!m.on);if(m.file&&native()?.toggleModFile)native().toggleModFile(p.name,m.file,m.on);persist();toast(m.on?'Mod enabled':'Mod disabled',(m.title||m.id)+(m.on?'':' - .jar.disabled'),m.on?'OK':'OFF');renderAll()},
+  toggleMod:el=>{
+    const p=state.profiles.find(x=>x.id===el.dataset.pid),m=p?.mods.find(x=>x.id===el.dataset.id);if(!m)return;
+    m.on=!m.on;el.classList.toggle('on',m.on);el.closest('.mod-row')?.classList.toggle('off',!m.on);
+    const file=resolveModFile(p,m);
+    if(file&&native()?.toggleModFile){m.file=file;native().toggleModFile(p.name,file,m.on)}
+    persist();toast(m.on?'Mod enabled':'Mod disabled',(m.title||m.id)+(file?'':' - no jar file found'),m.on?'OK':'OFF');renderAll()
+  },
+  deleteMod:el=>{
+    if(el.dataset.confirm!=='1'){el.dataset.confirm='1';el.textContent='Confirm';return}
+    const p=viewedProfile(),m=p.mods.find(x=>x.id===el.dataset.id);if(!m)return;
+    const file=resolveModFile(p,m);
+    if(file&&native()?.deleteModFile)native().deleteModFile(p.name,file);
+    p.mods=p.mods.filter(x=>x!==m);persist();renderAll();toast('Mod deleted',m.title||m.id,'X');
+  },
   checkUpdate:async el=>{
     const p=viewedProfile(),m=p.mods.find(x=>x.id===el.dataset.id);
     if(!api()||!m?.sha512)return toast('Update check','Use the Modrinth Hub for live version checks','v');

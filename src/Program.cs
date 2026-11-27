@@ -255,7 +255,17 @@ public sealed class Bridge
     public string analyzeInstance(string profileName) => _minecraft.Analyze(profileName);
     public string toggleModFile(string profileName, string file, bool enabled) => _minecraft.ToggleMod(profileName, file, enabled);
 
-    // ---- bundled in-game Luxis mod ----
+    public string listModFiles(string profileName)
+    {
+        var dir = Path.Combine(_minecraft.InstanceDir(profileName), "mods");
+        if (!Directory.Exists(dir)) return "[]";
+        var names = Directory.GetFiles(dir)
+            .Select(Path.GetFileName)
+            .Where(n => n != null && (n.EndsWith(".jar", StringComparison.OrdinalIgnoreCase) || n.EndsWith(".jar.disabled", StringComparison.OrdinalIgnoreCase)))
+            .ToArray();
+        return Util.Json(names);
+    }
+
     private static int[] Parts(string version)
     {
         return (version ?? "").Split('.').Take(2).Select(x => int.TryParse(x, out var v) ? v : 0).ToArray();
