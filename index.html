@@ -1050,7 +1050,7 @@ function openModal(html,wide=false,sticky=false){
 function modalHead(title,sub){return `<div class="modal-head"><div><h2>${title}</h2><p>${sub}</p></div><button class="btn icon ghost" data-act="closeOverlay">✕</button></div>`}
 
 /* ---------- view routing ---------- */
-const UI={view:'home',launching:false,running:false,instanceId:'',instances:[],instancesLoaded:false,instanceError:'',instFilter:'mods',instSearch:'',edition:'java',luxisMenuGlobal:false};
+const UI={view:'home',launching:false,running:false,instanceId:'',instances:[],instancesLoaded:false,instanceError:'',instFilter:'mods',instSearch:'',edition:'java',luxisMenuGlobal:false,profileSearch:'',installTargetId:''};
 let leaveTimer=null,navOffsets=[];const MOD_UPDATES={};const VIEW_DIRTY=new Set(['home','profiles','instances','modrinth','packs','wardrobe','settings','instance','capes','luxismod','updates']);
 function refreshNavOffsets(){navOffsets=$$('.nav-item').map(x=>x.offsetTop)}
 const BEDROCK={checked:false,installed:false,version:'',wu:'Unknown',wuStart:'Unknown',ready:false};
@@ -1062,6 +1062,7 @@ async function refreshBedrock(){
 const VIEW_LABEL={home:'Home',profiles:'Profiles',instances:'Running Instances',modrinth:'Modrinth Hub',packs:'Resource & Shader Packs',wardrobe:'Skins & Capes',settings:'Settings & Themes',instance:'Instance',capes:'Cape Library',luxismod:'Luxis Mod',updates:'Updates'};
 function navigate(v){
   if(!VIEW_LABEL[v]||v===UI.view)return;
+  if(v==='modrinth'&&UI.view!=='instance')UI.installTargetId='';
   const old=$('.view.active');if(old){old.classList.add('leaving');old.classList.remove('active')}
   clearTimeout(leaveTimer);leaveTimer=setTimeout(()=>$$('.view').forEach(x=>x.classList.remove('leaving')),260/state.theme.speed);
   const next=$(`#view-${v}`);next.classList.add('active');
@@ -1133,10 +1134,12 @@ function renderHome(){
       <div class="card home-card lift" data-act="navigate" data-v="modrinth"><div class="thumb" style="background:linear-gradient(135deg,${m.color}66,rgba(20,16,35,.6))"><span style="font-size:22px;bottom:14px;left:14px">${m.icon}</span></div><h4>${esc(m.title)}</h4><p>${fmt(m.downloads)} downloads · ${m.cats[0]}</p></div>`).join('')}</div>`;
 }
 function renderProfiles(){
+  const q=(UI.profileSearch||'').toLowerCase();
+  const shown=state.profiles.filter(p=>!q||(p.name+' '+p.version+' '+(p.mods||[]).map(m=>m.title||m.id).join(' ')).toLowerCase().includes(q));
   $('#view-profiles').innerHTML=`
    <div class="view-head"><div><div class="view-title">Instance <em>library</em></div><div class="view-desc">Fully isolated profiles — each with its own mods, packs, shaders, config and saves.</div></div>
    <div class="view-actions"><button class="btn" data-act="importMrpack">Import .mrpack</button><button class="btn primary" data-act="newProfile">＋ New profile</button></div></div>
-   <div class="profile-grid">${state.profiles.map((p,i)=>`
+   <div class="profile-grid">${shown.map((p,i)=>`
     <div class="card profile-card lift" data-act="openDrawer" data-id="${p.id}" style="animation-delay:${i*55}ms">
       <div class="profile-banner" style="background:${bannerStyle(p)}">${p.id===state.activeProfile?'<span class="ribbon">ACTIVE</span>':''}</div>
       <div class="profile-icon">${blockIcon(p)}</div>
@@ -1278,7 +1281,7 @@ async function showLiveVersions(id,title){
   }catch(e){$('#versionList').innerHTML=`<div class="empty">${esc(e.message||e)}</div>`}
 }
 async function installLive(id,title,type){
-  const p=activeProfile();
+  const p=installTarget();
   if(!api()){if(type==='mod'&&!p.mods.some(m=>m.id===id))p.mods.push({id,title,v:'browser',on:true});else if(type==='resourcepack'&&!p.packs.some(x=>x.id===id))p.packs.push({id,title});else if(type==='shader'&&!p.shaders.some(x=>x.id===id))p.shaders.push({id,title});persist();renderAll();return toast('Preview install',title+' added to profile state (files need Luxis.exe)','OK','ok')}
   toast('Installing from Modrinth',title+' → '+p.name,'↓');
   try{
@@ -1487,7 +1490,8 @@ function animateWardrobe(){
 }
 let CAPE_DATA={};
 function viewedProfile(){return (UI.view==='instance'&&UI.instanceId)?(state.profiles.find(x=>x.id===UI.instanceId)||activeProfile()):activeProfile()}
-function openInstance(id){UI.instanceId=id;UI.instFilter='mods';UI.instSearch='';closeOverlay();navigate('instance');renderInstance()}
+const installTarget=()=>state.profiles.find(x=>x.id===UI.installTargetId)||viewedProfile();
+function openInstance(id){UI.instanceId=id;UI.instFilter='mods';UI.instSearch='';UI.installTargetId=id;closeOverlay();navigate('instance');renderInstance()}
 let PROFILE_TAB='general',PS_DRAFT=null;
 const PROFILE_TABS=[['general','General','⚙'],['installation','Installation','⇪'],['java','Java & Memory','☕'],['window','Window','▣'],['nrc','NRC','✉'],['symlinks','Symlinks','⧉']];
 function capturePS(){
@@ -1545,7 +1549,8 @@ function profileSettings(id){
 function renderInstance(){
   const p=state.profiles.find(x=>x.id===UI.instanceId)||activeProfile();
   const filter=UI.instFilter||'mods';
-  const mods=(p.mods||[]).filter(m=>(m.title||m.id||'').toLowerCase().includes((UI.instSearch||'').toLowerCase()));
+  const q=(UI.instSearch||'').toLowerCase();
+  const mods=(p.mods||[]).filter(m=>([m.title,m.id,m.file,m.v,catalog(m.id)?.cats?.join(' ')].filter(Boolean).join(' ')).toLowerCase().includes(q));
   const packs=p.packs||[],shaders=p.shaders||[];
   const contentLinks=[['mods','MODS','▦',mods.length],['resourcepacks','RESOURCE PACKS','❖',packs.length],['shaderpacks','SHADER PACKS','✦',shaders.length]];
   const worldLinks=[['saves','WORLDS','◈'],['screenshots','SCREENSHOTS','▣'],['logs','LOGS','≡'],['config','CONFIG','⚙']];
@@ -2338,11 +2343,11 @@ window.chrome?.webview?.addEventListener('message',onNativeMessage);
 
 /* ---------- content installing ---------- */
 function needsDeps(item){
-  const p=activeProfile();
+  const p=installTarget();
   return (item.deps||[]).filter(d=>!p.mods.some(m=>m.id===d));
 }
 function installNow(item,withDeps){
-  const p=activeProfile();
+  const p=installTarget();
   if(item.type==='mod'){
     if(withDeps)(item.deps||[]).forEach(d=>{if(!p.mods.some(m=>m.id===d))p.mods.push({id:d,on:true,v:latestVersion(catalog(d))})});
     if(p.mods.some(m=>m.id===item.id)){toast('Already installed',item.title,'✓');return}
@@ -2360,7 +2365,7 @@ function installNow(item,withDeps){
 function latestVersion(item){return item?.versions?.[0]||'1.0.0'}
 function installContent(id){
   const item=catalog(id);if(!item)return;
-  const p=activeProfile(),missing=needsDeps(item);
+  const p=installTarget(),missing=needsDeps(item);
   if(item.type==='shader'&&!p.mods.some(m=>m.id==='iris'&&m.on)){
     openModal(`${modalHead('Iris Shaders is required',`${item.title} needs Iris to run in ${p.version}.`) }
      <div class="dep-item"><div class="m-ico" style="font-size:20px;color:#b98cff">✦</div><div style="flex:1"><b style="font-size:12.5px">Iris Shaders</b><div class="tiny muted">Latest compatible: 1.9.2 · Fabric ${p.loaderVersion}</div></div><span class="chip accent">Required</span></div>
@@ -2633,7 +2638,7 @@ const ACTIONS={
   updateAllMods:async()=>updateMods(),
   openFolder:el=>{const p=viewedProfile();bridge()?.openFolder?.(el.dataset.v,p.name);toast('Opening folder',el.dataset.v+'/ Â· '+p.name,'folder','ok')},
   mrTab:el=>{state.ui.mrTab=el.dataset.v;state.ui.mrCat='All';state.ui.mrLoader='All';state.ui.mrVer='All';MR.items=[];MR.offset=0;persist();renderModrinth();loadModrinth(true)},
-  openMrTab:el=>{state.ui.mrTab=el.dataset.v;state.ui.mrCat='All';state.ui.mrLoader='All';state.ui.mrVer='All';persist();closeOverlay();navigate('modrinth');loadModrinth(true)},
+  openMrTab:el=>{const target=viewedProfile();state.ui.mrTab=el.dataset.v;state.ui.mrCat='All';state.ui.mrLoader='All';state.ui.mrVer='All';persist();closeOverlay();navigate('modrinth');UI.installTargetId=target.id;loadModrinth(true)},
   filter:el=>{state.ui[el.dataset.key]=el.dataset.v;persist();renderModrinth();loadModrinth(true)},
   loadMore:()=>loadModrinth(false),
   liveVersions:el=>showLiveVersions(el.dataset.id,el.dataset.title),
@@ -2641,7 +2646,7 @@ const ACTIONS={
  installContent:el=>installContent(el.dataset.id),
  installWithDeps:el=>{const c=catalog(el.dataset.id);closeOverlay();installNow(c,true)},
  installNoDeps:el=>{const c=catalog(el.dataset.id);closeOverlay();installNow(c,false)},
- installIrisThen:el=>{const c=catalog(el.dataset.id),p=activeProfile();if(!p.mods.some(m=>m.id==='iris'))p.mods.push({id:'iris',on:true,v:'1.9.2'});closeOverlay();installNow(c,false);toast('Iris installed','Shader compatibility resolved','✦','ok')},
+ installIrisThen:el=>{const c=catalog(el.dataset.id),p=installTarget();if(!p.mods.some(m=>m.id==='iris'))p.mods.push({id:'iris',on:true,v:'1.9.2'});closeOverlay();installNow(c,false);toast('Iris installed','Shader compatibility resolved','✦','ok')},
  installFromHistory:el=>{closeOverlay();installNow(catalog(el.dataset.id),false)},
  versionHistory:el=>versionHistory(el.dataset.id),
   uninstallPack:el=>{const p=viewedProfile();p.packs.splice(Number(el.dataset.i||0),1);persist();renderAll();toast('Pack removed','Removed from resourcepacks/','X')},
@@ -2799,12 +2804,17 @@ function queueSearch(value){
   state.ui.mrSearch=value;persist();
   clearTimeout(searchTimer);searchTimer=setTimeout(()=>loadModrinth(true),320);
 }
-$('#globalSearch').addEventListener('input',e=>{queueSearch(e.target.value);if(UI.view==='modrinth'){const mr=$('#mrSearch');if(mr)mr.value=e.target.value}});
+$('#globalSearch').addEventListener('input',e=>{
+  queueSearch(e.target.value);
+  if(UI.view==='modrinth'){const mr=$('#mrSearch');if(mr)mr.value=e.target.value}
+  else if(UI.view==='instance'){UI.instSearch=e.target.value;rebuildSearch(renderInstance,'#instSearch')}
+  else if(UI.view==='profiles'){UI.profileSearch=e.target.value;rebuildSearch(renderProfiles,null)}
+});
 $('#globalSearch').addEventListener('keydown',e=>{if(e.key==='Enter'){navigate('modrinth');loadModrinth(true)}});
 let rebuildTimer=null;
 function rebuildSearch(fn,id){
   clearTimeout(rebuildTimer);
-  rebuildTimer=setTimeout(()=>{const old=$(id),caret=old?.selectionStart;fn();const el=$(id);if(el){el.focus();if(caret!=null)el.setSelectionRange(caret,caret)}},90);
+  rebuildTimer=setTimeout(()=>{const old=id?$(id):null,caret=old?.selectionStart;fn();if(id){const el=$(id);if(el){el.focus();if(caret!=null)el.setSelectionRange(caret,caret)}}},90);
 }
 document.addEventListener('input',e=>{if(e.target.id==='mrSearch'){$('#globalSearch').value=e.target.value;queueSearch(e.target.value)}
 if(e.target.id==='capeSearch'){CAPE_SEARCH=e.target.value;rebuildSearch(renderCapes,'#capeSearch')}
