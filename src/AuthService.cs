@@ -151,7 +151,19 @@ public sealed class AuthService
         try
         {
             File.WriteAllText(_accountFile, JsonSerializer.Serialize(_accounts));
-            File.WriteAllText(_settingsFile, JsonSerializer.Serialize(new { msClientId = ClientId, activeAccount = ActiveId, tenant = Tenant }));
+            // Preserve unrelated settings (update URL, CurseForge key) written by other services.
+            var map = new Dictionary<string, object>();
+            try
+            {
+                using var doc = JsonDocument.Parse(File.ReadAllText(_settingsFile));
+                if (doc.RootElement.ValueKind == JsonValueKind.Object)
+                    foreach (var property in doc.RootElement.EnumerateObject()) map[property.Name] = property.Value.Clone();
+            }
+            catch { }
+            map["msClientId"] = ClientId;
+            map["activeAccount"] = ActiveId;
+            map["tenant"] = Tenant;
+            File.WriteAllText(_settingsFile, JsonSerializer.Serialize(map));
         }
         catch (Exception ex) { Console.WriteLine("Save accounts failed: " + ex.Message); }
     }

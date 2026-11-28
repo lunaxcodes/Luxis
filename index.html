@@ -509,6 +509,54 @@ button:disabled{cursor:not-allowed;opacity:.45}
 .side-link:hover{background:rgba(var(--accent-rgb),.1);color:var(--text);transform:translateX(3px)}
 .side-link.on{background:rgba(var(--accent-rgb),.13);color:var(--text)}
 .side-link .cnt{margin-left:auto;font-size:9.5px;color:var(--faint)}
+
+/* Instance content workspace — table layout, Luxis palette. */
+.inst-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 14px;padding:5px;border-radius:14px;background:rgba(255,255,255,.03);border:1px solid var(--border)}
+.inst-tab{display:flex;align-items:center;gap:7px;padding:9px 14px;border-radius:10px;font-size:11.5px;font-weight:720;color:var(--muted);transition:all var(--e2)}
+.inst-tab:hover{background:rgba(var(--accent-rgb),.09);color:var(--text)}
+.inst-tab.on{background:rgba(var(--accent-rgb),.16);color:var(--text);box-shadow:inset 0 0 0 1px rgba(var(--accent-rgb),.28)}
+.inst-tab .cnt{font-size:9px;color:var(--faint)}
+.content-bar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:12px}
+.content-search{flex:1 1 250px;display:flex;align-items:center;gap:9px;padding:0 12px;height:38px;border-radius:11px;background:rgba(255,255,255,.04);border:1px solid var(--border)}
+.content-search:focus-within{border-color:var(--border-strong)}
+.content-search svg{width:15px;height:15px;fill:none;stroke:var(--faint);stroke-width:2;flex:none}
+.content-search input{flex:1;min-width:0;background:none;border:0;outline:none;color:var(--text);font-size:12px}
+.content-search input::placeholder{color:var(--faint)}
+.content-tools{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:12px}
+.content-tools select{padding:7px 10px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);font-size:10.5px;outline:none}
+.cat-chips{display:flex;gap:6px;flex-wrap:wrap;margin-right:auto}
+.cat-chip{padding:7px 12px;border-radius:9px;font-size:10.5px;font-weight:700;color:var(--muted);border:1px solid var(--border);transition:all var(--e2)}
+.cat-chip:hover{color:var(--text);border-color:var(--border-strong)}
+.cat-chip.on{background:rgba(var(--accent-rgb),.17);border-color:rgba(var(--accent-rgb),.4);color:var(--text)}
+.proj-table{border:1px solid var(--border);border-radius:14px;overflow:hidden;background:rgba(255,255,255,.018)}
+.proj-row{display:grid;grid-template-columns:30px minmax(180px,1.5fr) minmax(130px,1fr) 158px;align-items:center;gap:8px;padding:11px 14px;border-bottom:1px solid rgba(255,255,255,.05);transition:background var(--e2)}
+.proj-row:last-child{border-bottom:0}
+.proj-row:not(.proj-head):hover{background:rgba(var(--accent-rgb),.055)}
+.proj-row.off{opacity:.5}
+.proj-row.selected{background:rgba(var(--accent-rgb),.10)}
+.proj-head{font-size:9px;font-weight:850;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);background:rgba(0,0,0,.18)}
+.proj-row input[type=checkbox]{accent-color:var(--accent);width:13px;height:13px;cursor:pointer}
+.col-project,.col-version{display:flex;align-items:center;gap:11px;min-width:0}
+.proj-ico{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;flex:none;background:rgba(var(--accent-rgb),.1);color:var(--accent);font-size:16px;overflow:hidden}
+.proj-ico img{width:100%;height:100%;object-fit:cover;border-radius:inherit;image-rendering:pixelated}
+.col-project b,.col-version b{display:block;font-size:11.5px;font-weight:720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.col-project small,.col-version small{display:block;font-size:9.5px;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.col-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px}
+.col-actions .switch{flex:none}
+.bulk-bar{display:flex;align-items:center;gap:9px;margin-top:10px;padding:8px 12px;border-radius:11px;border:1px solid rgba(var(--accent-rgb),.28);background:rgba(var(--accent-rgb),.08);font-size:11px}
+.folder-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.folder-card{display:flex;align-items:center;gap:11px;padding:14px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,.03);text-align:left;transition:all var(--e2)}
+.folder-card:hover{border-color:var(--border-strong);transform:translateY(-2px)}
+.folder-card .fi{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:rgba(var(--accent-rgb),.11);color:var(--accent);flex:none}
+.folder-card b{display:block;font-size:11.5px}
+.folder-card small{display:block;font-size:9.5px;color:var(--faint);margin-top:2px}
+.add-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.add-card{padding:15px;border-radius:13px;border:1px solid var(--border);background:rgba(255,255,255,.03);text-align:left;transition:all var(--e2)}
+.add-card:hover{border-color:rgba(var(--accent-rgb),.45);background:rgba(var(--accent-rgb),.08);transform:translateY(-2px)}
+.add-card .ai{font-size:21px;color:var(--accent)}
+.add-card b{display:block;font-size:12px;margin-top:9px}
+.add-card small{display:block;font-size:10px;color:var(--faint);margin-top:4px;line-height:1.5}
+@media(max-width:760px){.proj-row{grid-template-columns:26px minmax(140px,1fr) 120px}.col-version{display:none}}
 .launch-overlay{position:fixed;inset:0;z-index:120;display:grid;place-items:center;background:rgba(4,3,9,.74);backdrop-filter:blur(12px);animation:fadeIn var(--e2)}
 .launch-panel{width:min(520px,92vw);padding:30px;border-radius:24px;background:var(--glass-3);border:1px solid var(--border);box-shadow:0 40px 100px -20px #000;text-align:center;animation:modalIn var(--e3) var(--spring)}
 .launch-panel h2{font-size:19px;font-weight:820;letter-spacing:-.03em}
@@ -578,7 +626,7 @@ button:disabled{cursor:not-allowed;opacity:.45}
       <button class="nav-item" data-view="modrinth" data-tip="Modrinth Hub - mods, packs &amp; shaders"><svg viewBox="0 0 24 24"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M3 7l9 5 9-5M12 12v10"/></svg><span>Modrinth Hub</span></button>
       <button class="nav-item" data-view="packs" data-tip="Installed resource &amp; shader packs"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M4 10h16M10 5v14"/></svg><span>Resource &amp; Shaders</span></button>
       <button class="nav-item" data-view="wardrobe" data-tip="Skins &amp; capes wardrobe"><svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg><span>Skins &amp; Capes</span></button>
-      <button class="nav-item nav-featured" data-view="luxismod" data-tip="Luxis in-game mod - themes, visuals, camera &amp; HUD"><svg viewBox="0 0 24 24"><path d="M12 2l2.1 6.4L20 11l-5.9 2.6L12 20l-2.1-6.4L4 11l5.9-2.6z"/><path d="M19 2v4M17 4h4"/></svg><span>Luxis Mod</span><span class="mod-tag">NEW</span></button>
+      <button class="nav-item nav-featured" data-view="luxismod" data-tip="Luxis in-game mod - cosmetics, skies, performance &amp; more"><svg viewBox="0 0 24 24"><path d="M12 2l2.1 6.4L20 11l-5.9 2.6L12 20l-2.1-6.4L4 11l5.9-2.6z"/><path d="M19 2v4M17 4h4"/></svg><span>Luxis Mod</span><span class="mod-tag">NEW</span></button>
       <button class="nav-item" data-view="updates" data-tip="Updates - check and install new releases"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.6M20 4v7h-7"/></svg><span>Updates</span></button>
       <button class="nav-item" data-view="settings" data-tip="Settings, themes &amp; accounts"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1-2 2-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21h-3v-.1A1.6 1.6 0 0 0 11 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1-2-2 .1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H6v-3h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1 2-2 .1.1a1.6 1.6 0 0 0 1.8.3H11a1.6 1.6 0 0 0 1-1.5V6h3v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1 2 2-.1.1a1.6 1.6 0 0 0-.3 1.8V11h.1a1.6 1.6 0 0 0 1.5 1H21v3h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg><span>Settings &amp; Themes</span></button>
     </nav>
@@ -882,12 +930,13 @@ function defaultState(){
     ],
     activeProfile:'p1',
     launched:12,
-    ui:{mrTab:'mods',mrCat:'All',mrLoader:'All',mrVer:'All',mrSearch:''}
+    ui:{mrTab:'mods',mrCat:'All',mrLoader:'All',mrVer:'All',mrSearch:'',mrSource:'modrinth'}
   };
 }
 let state;
 try{const raw=localStorage.getItem(KEY)||localStorage.getItem('lunacher.state.v1');state=raw?JSON.parse(raw):defaultState();}catch(e){state=defaultState()}
 if(!state||!state.accounts||!state.profiles)state=defaultState();
+if(!state.ui)state.ui={};if(!state.ui.mrSource)state.ui.mrSource='modrinth';if(!state.ui.mrTab)state.ui.mrTab='mods';
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){console.warn('persist failed',e)}}
 const activeAccount=()=>state.accounts.find(a=>a.id===state.activeAccount)||state.accounts[0];
 const activeProfile=()=>state.profiles.find(p=>p.id===state.activeProfile)||state.profiles[0];
@@ -1050,7 +1099,7 @@ function openModal(html,wide=false,sticky=false){
 function modalHead(title,sub){return `<div class="modal-head"><div><h2>${title}</h2><p>${sub}</p></div><button class="btn icon ghost" data-act="closeOverlay">✕</button></div>`}
 
 /* ---------- view routing ---------- */
-const UI={view:'home',launching:false,running:false,instanceId:'',instances:[],instancesLoaded:false,instanceError:'',instFilter:'mods',instSearch:'',edition:'java',luxisMenuGlobal:false,profileSearch:'',installTargetId:''};
+const UI={view:'home',launching:false,running:false,instanceId:'',instances:[],instancesLoaded:false,instanceError:'',instFilter:'mods',instSearch:'',edition:'java',luxisMenuGlobal:false,profileSearch:'',installTargetId:'',instTab:'content',instSort:'name',instSelected:[]};
 let leaveTimer=null,navOffsets=[];const MOD_UPDATES={};const VIEW_DIRTY=new Set(['home','profiles','instances','modrinth','packs','wardrobe','settings','instance','capes','luxismod','updates']);
 function refreshNavOffsets(){navOffsets=$$('.nav-item').map(x=>x.offsetTop)}
 const BEDROCK={checked:false,installed:false,version:'',wu:'Unknown',wuStart:'Unknown',ready:false};
@@ -1187,7 +1236,7 @@ function blockIcon(p){return `<img src="textures/${blockFor(p)}.png" alt="" oner
 function bannerStyle(p){return `linear-gradient(180deg,rgba(8,6,14,.24),rgba(8,6,14,.82)),url('textures/${bannerFor(p)}.png') center/cover,${p.banner||'linear-gradient(135deg,#7c3aed,#c864ff)'}`}
 const MR_TYPE={mods:'mod',packs:'resourcepack',shaders:'shader'};
 function liveInstalled(c){
-  const p=activeProfile(),type=c.projectType||MR_TYPE[state.ui.mrTab];
+  const p=installTarget(),type=c.projectType||MR_TYPE[state.ui.mrTab];
   if(type==='mod')return p.mods.some(m=>m.id===c.id||m.projectId===c.id);
   if(type==='resourcepack')return p.packs.some(x=>x.id===c.id||x.projectId===c.id);
   return p.shaders.some(x=>x.id===c.id||x.projectId===c.id);
@@ -1228,13 +1277,17 @@ async function browserSearch(query,type,loader,version,category,offset){
 }
 async function loadModrinth(reset=true){
   const a=api(),u=state.ui;
+
   if(reset){MR.items=[];MR.offset=0}
   if(MR.loading)return;MR.loading=true;MR.error='';renderModrinth();
+  if(u.mrSource==='curseforge'&&!a){MR.items=[];MR.total=0;MR.loading=false;MR.error='CurseForge search needs Luxis.exe and your API key in Settings.';renderModrinth();return}
   try{
     let r;
     if(a){
-      const raw=await a.searchModrinth(u.mrSearch||'',MR_TYPE[u.mrTab],u.mrLoader,u.mrVer,u.mrCat,MR.offset);
+      const args=[u.mrSearch||'',MR_TYPE[u.mrTab],u.mrLoader,u.mrVer,u.mrCat,MR.offset];
+      const raw=u.mrSource==='curseforge'?await a.searchCurseForge(...args):await a.searchModrinth(...args);
       r=JSON.parse(raw);
+      if(r.error)throw new Error(r.error);
     }else{
       r=await browserSearch(u.mrSearch||'',MR_TYPE[u.mrTab],u.mrLoader,u.mrVer,u.mrCat,MR.offset);
     }
@@ -1247,14 +1300,14 @@ function renderModrinth(){
   const u=state.ui,tabs=[['mods','Mods','▦'],['packs','Texture Packs','❖'],['shaders','Shaders','✦']];
   const type=MR_TYPE[u.mrTab],p=activeProfile();
   $('#view-modrinth').innerHTML=`
-   <div class="view-head"><div><div class="view-title">Modrinth <em>Hub</em></div><div class="view-desc">Live from api.modrinth.com · installing into <b>${esc(p.name)}</b> (${esc(p.version)}, ${esc(p.loader)}).</div></div>
-   <div class="view-actions"><span class="chip accent">◈ ${esc(p.version)}</span><span class="chip">${p.loader==='fabric'?'Fabric '+p.loaderVersion:esc(p.loader)}</span>${u.mrTab==='mods'?'<button class="btn" data-act="updateAllMods">↓ Update all</button>':''}</div></div>
+   <div class="view-head"><div><div class="view-title">${u.mrSource==='curseforge'?'CurseForge':'Modrinth'} <em>Hub</em></div><div class="view-desc">Live from ${u.mrSource==='curseforge'?'CurseForge':'api.modrinth.com'} · installing into <b>${esc(p.name)}</b> (${esc(p.version)}, ${esc(p.loader)}).</div></div>
+   <div class="view-actions"><span class="chip accent">◈ ${esc(p.version)}</span><span class="chip">${p.loader==='fabric'?'Fabric '+p.loaderVersion:esc(p.loader)}</span><div class="cat-chips" style="margin:0"><button class="cat-chip ${u.mrSource==='modrinth'?'on':''}" data-act="mrSource" data-v="modrinth">◈ Modrinth</button><button class="cat-chip ${u.mrSource==='curseforge'?'on':''}" data-act="mrSource" data-v="curseforge">✦ CurseForge</button></div>${u.mrTab==='mods'?'<button class="btn" data-act="updateAllMods">↓ Update all</button>':''}</div></div>
    <div class="mr-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
-     <input id="mrSearch" placeholder="Search ${u.mrTab==='mods'?'mods':u.mrTab==='packs'?'resource packs':'shader packs'} on Modrinth…" value="${esc(u.mrSearch||'')}" autocomplete="off">
+     <input id="mrSearch" placeholder="Search ${u.mrTab==='mods'?'mods':u.mrTab==='packs'?'resource packs':'shader packs'} on ${u.mrSource==='curseforge'?'CurseForge':'Modrinth'}…" value="${esc(u.mrSearch||'')}" autocomplete="off">
      '<span class="chip ok">● LIVE</span>'</div>
    <div class="tabs">${tabs.map(([k,l,ic])=>`<button class="tab ${u.mrTab===k?'active':''}" data-act="mrTab" data-v="${k}">${ic} ${l}</button>`).join('')}</div>
    <div class="filter-bar">${contentFilters(type).map(([label,opts,key])=>`<div class="filter-group"><span class="filter-label">${label}</span>${opts.map(o=>`<button class="filter-chip ${u[key]===o?'on':''}" data-act="filter" data-key="${key}" data-v="${esc(o)}">${esc(o)}</button>`).join('')}</div>`).join('')}</div>
-   <div class="tiny muted" style="margin-bottom:13px">${MR.loading?'Searching Modrinth…':MR.error?`<span style="color:var(--danger)">${esc(MR.error)}</span>`:`${MR.total} results · newest compatible release selected for ${esc(p.version)}`}</div>
+   <div class="tiny muted" style="margin-bottom:13px">${MR.loading?'Searching '+(u.mrSource==='curseforge'?'CurseForge':'Modrinth')+'…':MR.error?`<span style="color:var(--danger)">${esc(MR.error)}</span>`:`${MR.total} results · newest compatible release selected for ${esc(p.version)}`}</div>
    <div class="content-grid">${MR.items.length?MR.items.map(liveCard).join(''):MR.loading?'<div class="empty"><span class="spin">◌</span> Loading…</div>':'<div class="empty">No results. Try another search or clear a filter.</div>'}</div>
    ${MR.items.length<MR.total&&!MR.loading?`<div style="display:flex;justify-content:center;margin-top:20px"><button class="btn" data-act="loadMore">Load more results ↓</button></div>`:''}`;
 }
@@ -1270,7 +1323,7 @@ async function showLiveVersions(id,title){
   try{
     let vs;
     const type=MR_TYPE[state.ui.mrTab];
-    if(api())vs=JSON.parse(await api().modrinthVersions(id,p.version,type==='mod'?p.loader:'',type!=='mod'));
+    if(api())vs=JSON.parse(state.ui.mrSource==='curseforge'?await api().curseForgeVersions(id,p.version,type==='mod'?p.loader:'',type!=='mod'):await api().modrinthVersions(id,p.version,type==='mod'?p.loader:'',type!=='mod'));
     else{
       const loaders=encodeURIComponent(JSON.stringify(p.loader==='fabric'?['fabric']:[]));
       const res=await fetch(`https://api.modrinth.com/v2/project/${encodeURIComponent(id)}/version?loaders=${loaders}&game_versions=${encodeURIComponent(JSON.stringify([p.version]))}`);
@@ -1283,12 +1336,14 @@ async function showLiveVersions(id,title){
 async function installLive(id,title,type){
   const p=installTarget();
   if(!api()){if(type==='mod'&&!p.mods.some(m=>m.id===id))p.mods.push({id,title,v:'browser',on:true});else if(type==='resourcepack'&&!p.packs.some(x=>x.id===id))p.packs.push({id,title});else if(type==='shader'&&!p.shaders.some(x=>x.id===id))p.shaders.push({id,title});persist();renderAll();return toast('Preview install',title+' added to profile state (files need Luxis.exe)','OK','ok')}
-  toast('Installing from Modrinth',title+' → '+p.name,'↓');
+  const source=state.ui.mrSource||'modrinth';
+  toast('Installing from '+(source==='curseforge'?'CurseForge':'Modrinth'),title+' → '+p.name,'↓');
   try{
-    const raw=await api().installModrinth(JSON.stringify({id,title,projectType:type}),JSON.stringify(p));
+    const payload=JSON.stringify({id,title,projectType:type});
+    const raw=source==='curseforge'?await api().installCurseForge(payload,JSON.stringify(p)):await api().installModrinth(payload,JSON.stringify(p));
     const r=JSON.parse(raw);
     (r.installed||[]).forEach(item=>{
-      if(item.type==='mods'){if(!p.mods.some(m=>m.id===item.projectId))p.mods.push({id:item.projectId,title:item.title,file:item.file,v:item.version,on:true,sha512:item.sha512,icon:item.icon})}
+      if(item.type==='mods'){if(!p.mods.some(m=>m.id===item.projectId))p.mods.push({id:item.projectId,title:item.title,file:item.file,v:item.version,on:true,sha512:item.sha512,icon:item.icon,source:item.source||source,cfFileId:item.cfFileId,projectId:item.projectId})}
       else if(item.type==='resourcepacks'){if(!p.packs.some(x=>x.id===item.projectId))p.packs.push(item)}
       else if(!p.shaders.some(x=>x.id===item.projectId))p.shaders.push(item);
     });
@@ -1546,36 +1601,103 @@ function profileSettings(id){
    <div class="pms-foot"><button class="btn" data-act="closeOverlay">Cancel</button><button class="btn primary" data-act="psSave" data-id="${p.id}">Save Changes</button></div></div></div>`,true);
 }
 
+function instEntries(p,q){
+  const entries=[];
+  (p.mods||[]).forEach((m,index)=>{
+    const c=catalog(m.id);
+    entries.push({key:'mods:'+index,kind:'mods',item:m,index,
+      title:m.title||c?.title||m.id,author:m.author||m.projectId||c?.author||'Uploaded',
+      version:m.v||c?.versions?.[0]||'Unknown',file:m.file||'',on:!!m.on,
+      icon:m.icon||c?.icon||'',source:m.source||(m.projectId?'hub':'local')});
+  });
+  (p.packs||[]).forEach((raw,index)=>{const x=typeof raw==='string'?{id:raw}:raw;entries.push({key:'resourcepacks:'+index,kind:'resourcepacks',item:raw,index,
+    title:x.title||x.id||'Resource pack',author:x.author||'Uploaded',version:x.v||'Unknown',file:x.file||'',on:true,icon:x.icon||'',source:x.source||'local'})});
+  (p.shaders||[]).forEach((raw,index)=>{const x=typeof raw==='string'?{id:raw}:raw;entries.push({key:'shaderpacks:'+index,kind:'shaderpacks',item:raw,index,
+    title:x.title||x.id||'Shader pack',author:x.author||'Uploaded',version:x.v||'Unknown',file:x.file||'',on:true,icon:x.icon||'',source:x.source||'local'})});
+  const needle=(q||'').toLowerCase();
+  const filtered=entries.filter(e=>!needle||[e.title,e.author,e.version,e.file,e.kind].join(' ').toLowerCase().includes(needle))
+    .filter(e=>UI.instFilter==='all'||e.kind===UI.instFilter);
+  const s=UI.instSort;
+  filtered.sort((a,b)=>s==='name-desc'?b.title.localeCompare(a.title):
+    s==='enabled'?Number(b.on)-Number(a.on)||a.title.localeCompare(b.title):
+    s==='kind'?a.kind.localeCompare(b.kind)||a.title.localeCompare(b.title):
+    a.title.localeCompare(b.title));
+  return filtered;
+}
+function updateBulkBar(){
+  const bar=$('#bulkBar');if(!bar)return;
+  const n=UI.instSelected.length;
+  bar.innerHTML=n?`<b>${n} selected</b><span class="tiny muted">Ready for bulk actions</span><button class="btn sm danger" data-act="bulkRemove">Remove selected</button><button class="btn sm ghost" data-act="filterReset">Clear selection</button>`:'';
+}
+function openAddContent(){
+  openModal(`${modalHead('Add content','Choose where to find your next mod, pack or shader')}
+   <div class="add-grid">
+     <button class="add-card" data-act="openMrTab" data-v="mods"><span class="ai">◈</span><b>Browse Modrinth</b><small>Search thousands of mods, texture packs and shaders with automatic version targeting.</small></button>
+     <button class="add-card" data-act="openCfTab" data-v="mods"><span class="ai">✦</span><b>Browse CurseForge</b><small>Search CurseForge projects with your API key. Installs straight into this profile.</small></button>
+     <button class="add-card" data-act="pickMods"><span class="ai">⇪</span><b>Upload files</b><small>Choose .jar files from your computer. They are copied into this profile's mods folder.</small></button>
+     <button class="add-card" data-act="importMrpack"><span class="ai">▤</span><b>Import .mrpack</b><small>Install a modpack manifest and download every file it references.</small></button>
+   </div><div class="modal-foot"><button class="btn" data-act="closeOverlay">Close</button></div>`);
+}
+function instFolderPanel(kind,p){
+  const folders=kind==='files'?['mods','resourcepacks','shaderpacks','config','saves','screenshots','crash-reports','logs']
+    :kind==='worlds'?['saves','screenshots']:kind==='logs'?['logs','crash-reports']:[];
+  if(kind==='share')return `<div class="card set-card"><h3>Share this profile</h3><div class="sub">Export the profile layout without touching your worlds or Minecraft settings.</div>
+    <div class="view-actions" style="margin-top:12px"><button class="btn primary" data-act="exportProfile" data-id="${esc(p.id)}">Export profile</button><button class="btn" data-act="dupProfile" data-id="${esc(p.id)}">Duplicate</button><button class="btn" data-act="copyText" data-v="${esc(p.name)}">Copy profile name</button></div></div>`;
+  return `<div class="folder-list">${folders.map(f=>`<button class="folder-card" data-act="openFolder" data-v="${f}"><span class="fi">▤</span><span><b>${f}/</b><small>Open in File Explorer</small></span></button>`).join('')}</div>
+    <div class="view-actions" style="margin-top:14px">${kind==='logs'?`<button class="btn" data-act="diagnose">Diagnose launch</button>`:''}${kind==='files'?`<button class="btn primary" data-act="pickMods">Upload files</button><button class="btn" data-act="importMrpack">Import .mrpack</button>`:''}</div>`;
+}
 function renderInstance(){
   const p=state.profiles.find(x=>x.id===UI.instanceId)||activeProfile();
-  const filter=UI.instFilter||'mods';
+  const tabs=[['content','Content','▦'],['files','Files','▤'],['worlds','Worlds','◈'],['logs','Logs','≡'],['share','Share','⧉']];
+  const tab=UI.instTab||'content';
   const q=(UI.instSearch||'').toLowerCase();
-  const mods=(p.mods||[]).filter(m=>([m.title,m.id,m.file,m.v,catalog(m.id)?.cats?.join(' ')].filter(Boolean).join(' ')).toLowerCase().includes(q));
-  const packs=p.packs||[],shaders=p.shaders||[];
-  const contentLinks=[['mods','MODS','▦',mods.length],['resourcepacks','RESOURCE PACKS','❖',packs.length],['shaderpacks','SHADER PACKS','✦',shaders.length]];
-  const worldLinks=[['saves','WORLDS','◈'],['screenshots','SCREENSHOTS','▣'],['logs','LOGS','≡'],['config','CONFIG','⚙']];
-  const tiles=filter==='mods'?mods.map(m=>{const c=catalog(m.id);const title=m.title||c?.title||m.id;
-    return `<div class="mod-tile ${m.on?'':'off'}"><div class="mi">${m.icon?`<img src="${esc(m.icon)}" style="width:100%;height:100%;object-fit:cover;border-radius:9px" onerror="this.style.display='none'">`:c?.icon||'▦'}</div><div class="mt"><b>${esc(title)}</b><small>${esc(m.v||c?.cats[0]||'local')}${m.file?' · '+esc(m.file):''}</small></div>
-      ${MOD_UPDATES[m.id]?'<button class="btn sm ghost" data-act="updateOne" data-id="'+esc(m.id)+'" title="Update available" style="color:var(--ok)">⇅</button>':''}<button class="btn sm ghost" data-act="checkUpdate" data-id="${m.id}">↻</button><button class="btn sm danger ghost" data-act="deleteMod" data-id="${m.id}" title="Delete mod">✕</button><button class="switch ${m.on?'on':''}" data-act="toggleMod" data-id="${m.id}" data-pid="${p.id}"></button></div>`}).join('')
-    :filter==='resourcepacks'?packs.map((x,i)=>`<div class="mod-tile"><div class="mi">❖</div><div class="mt"><b>${esc(x.title||x.id)}</b><small>${esc(x.file||'')}</small></div><button class="btn sm danger ghost" data-act="uninstallPack" data-i="${i}">✕</button></div>`).join('')
-    :shaders.map((x,i)=>`<div class="mod-tile"><div class="mi">✦</div><div class="mt"><b>${esc(x.title||x.id)}</b><small>${esc(x.file||'')}</small></div><button class="btn sm danger ghost" data-act="uninstallShader" data-i="${i}">✕</button></div>`).join('');
+  const entries=instEntries(p,q);
+  const all=instEntries(p,'');
+  const cats=[['all','All',all.length],['mods','Mods',all.filter(e=>e.kind==='mods').length],
+    ['resourcepacks','Resource Packs',all.filter(e=>e.kind==='resourcepacks').length],
+    ['shaderpacks','Shaders',all.filter(e=>e.kind==='shaderpacks').length]];
+  const rows=entries.map(e=>{
+    const mod=e.kind==='mods',up=mod&&!!MOD_UPDATES[e.item.id];
+    return `<div class="proj-row ${e.on?'':'off'} ${UI.instSelected.includes(e.key)?'selected':''}" data-key="${esc(e.key)}">
+      <span><input type="checkbox" data-act="rowCheck" data-key="${esc(e.key)}" ${UI.instSelected.includes(e.key)?'checked':''} aria-label="Select ${esc(e.title)}"></span>
+      <span class="col-project"><span class="proj-ico">${e.icon&&/^(https?:|data:|textures\/|.*\.(png|jpg|webp)$)/i.test(e.icon)?`<img src="${esc(e.icon)}" alt="" onerror="this.style.display='none'">`:e.icon||(e.kind==='mods'?'▦':e.kind==='resourcepacks'?'❖':'✦')}</span>
+        <span><b>${esc(e.title)}</b><small>${esc(e.author||'Uploaded')}${e.source==='curseforge'?' · CurseForge':e.source==='modrinth'?' · Modrinth':''}</small></span></span>
+      <span class="col-version"><span><b>${esc(e.version)}</b><small>${esc(e.file||'—')}</small></span></span>
+      <span class="col-actions">
+        ${up?`<button class="btn sm ghost" data-act="updateOne" data-id="${esc(e.item.id)}" title="Update available" style="color:var(--ok)">⇅</button>`:''}
+        ${mod?`<button class="btn sm ghost" data-act="checkUpdate" data-id="${esc(e.item.id)}" title="Check for updates">↻</button><button class="switch ${e.on?'on':''}" data-act="toggleMod" data-id="${esc(e.item.id)}" data-pid="${esc(p.id)}" title="Enable or disable"></button>`:''}
+        <button class="btn sm danger ghost" data-act="${mod?'deleteMod':e.kind==='resourcepacks'?'uninstallPack':'uninstallShader'}" ${mod?`data-id="${esc(e.item.id)}"`:`data-i="${e.index}"`} title="Remove">✕</button>
+        <button class="btn sm ghost" data-act="rowMenu" data-key="${esc(e.key)}" title="More actions">⋮</button>
+      </span></div>`;
+  }).join('');
   $('#view-instance').innerHTML=`
    <div class="inst-head"><button data-act="instBack">← BACK</button><span>/</span><span>${esc(p.name)}</span></div>
    <div class="inst-hero"><div class="inst-icon" style="background:${bannerStyle(p)}">${blockIcon(p)}</div>
      <div style="flex:1"><div class="inst-badge">INSTANCE</div><div class="inst-name">${esc(p.name)}</div>
-       <div class="inst-chips"><span class="chip accent">▦ ${esc(p.version)}</span><span class="chip">◈ ${p.loader==='fabric'?'Fabric '+esc(p.loaderVersion):esc(p.loader)}</span><span class="chip">MODPACKS</span><span class="chip">${p.ram} GB RAM</span></div></div>
-      <div class="view-actions">${p.id!==state.activeProfile?`<button class="btn" data-act="setActiveProfile" data-id="${p.id}">Set active</button>`:''}<button class="btn primary" data-act="quickLaunch" data-id="${esc(p.id)}">▶ Play</button><button class="btn" data-act="restoreConfigs" data-id="${p.id}">Restore configs</button><button class="btn icon" data-act="profileSettings" data-id="${p.id}" title="Profile Settings">⚙</button></div></div>
-   <div class="inst-stats"><div class="stat-tile"><div class="lbl">◷ LAST PLAYED</div><div class="val">2 hours ago</div></div>
-     <div class="stat-tile"><div class="lbl">◷ PLAYTIME</div><div class="val">6h 25m</div></div>
+       <div class="inst-chips"><span class="chip accent">▦ ${esc(p.version)}</span><span class="chip">◈ ${p.loader==='fabric'?'Fabric '+esc(p.loaderVersion):esc(p.loader)}</span><span class="chip">${esc(p.group||'MODPACKS')}</span><span class="chip">${p.ram} GB RAM</span></div></div>
+     <div class="view-actions">${p.id!==state.activeProfile?`<button class="btn" data-act="setActiveProfile" data-id="${p.id}">Set active</button>`:''}<button class="btn primary" data-act="quickLaunch" data-id="${esc(p.id)}">▶ Play</button><button class="btn" data-act="restoreConfigs" data-id="${p.id}">Restore configs</button><button class="btn icon" data-act="profileSettings" data-id="${p.id}" title="Profile Settings">⚙</button></div></div>
+   <div class="inst-stats"><div class="stat-tile"><div class="lbl">◷ LAST PLAYED</div><div class="val">${esc(p.lastPlayed||'Recent')}</div></div>
+     <div class="stat-tile"><div class="lbl">▦ INSTALLED</div><div class="val">${all.length} projects</div></div>
      <div class="stat-tile"><div class="lbl">▤ DISK</div><div class="val" id="instDisk">…</div></div></div>
-   <div class="inst-layout"><div>
-     <div class="inst-toolbar"><input id="instSearch" placeholder="Search ${filter==='mods'?'mods':filter==='resourcepacks'?'resource packs':'shaders'}…" value="${esc(UI.instSearch||'')}">
-       <button class="btn icon" data-act="filterReset" title="Clear">⌫</button><button class="btn icon" data-act="diagnose" title="Diagnose launch">!</button><button class="btn" data-act="pickMods">＋ Add Mods</button><button class="btn" data-act="findIcons">Find icons</button><button class="btn" data-act="updateAllMods">↓ Update all</button><button class="btn ghost" data-act="openMrTab" data-v="${filter==='mods'?'mods':filter==='resourcepacks'?'packs':'shaders'}">Modrinth</button></div>
-     <div class="mod-grid">${tiles||'<div class="empty">Nothing here yet. Add content from Modrinth.</div>'}</div>
-   </div><div class="card inst-side">
-     <div class="side-group"><h4>Content</h4>${contentLinks.map(([k,l,ic,n])=>`<button class="side-link ${filter===k?'on':''}" data-act="instFilter" data-v="${k}">${ic} ${l}<span class="cnt">${n}</span></button>`).join('')}</div>
-     <div class="side-group"><h4>World</h4>${worldLinks.map(([k,l,ic])=>`<button class="side-link" data-act="openFolder" data-v="${k}">${ic} ${l}</button>`).join('')}</div>
-   </div></div>`;
+   <div class="inst-tabs">${tabs.map(([k,l,ic])=>`<button class="inst-tab ${tab===k?'on':''}" data-act="instTab" data-v="${k}">${ic} ${l}${k==='content'?`<span class="cnt">${all.length}</span>`:''}</button>`).join('')}</div>
+   ${tab==='content'?`
+    <div class="content-bar"><div class="content-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+      <input id="instSearch" placeholder="Search ${all.length} projects…" value="${esc(UI.instSearch||'')}" autocomplete="off"></div>
+      <button class="btn primary" data-act="addContent">＋ Add Content</button>
+      <button class="btn" data-act="pickMods">⇪ Upload files</button>
+      <button class="btn" data-act="browseContent">◈ Browse content</button></div>
+    <div class="content-tools"><select id="instSort" data-act="instSort">
+      ${[['name','Name (A-Z)'],['name-desc','Name (Z-A)'],['enabled','Enabled first'],['kind','Content type']].map(([v,l])=>`<option value="${v}" ${UI.instSort===v?'selected':''}>${l}</option>`).join('')}</select>
+      <div class="cat-chips">${cats.map(([v,l,n])=>`<button class="cat-chip ${(UI.instFilter||'mods')===v?'on':''}" data-act="instFilter" data-v="${v}">${l}<span class="cnt" style="margin-left:6px;color:var(--faint)">${n}</span></button>`).join('')}</div>
+      <button class="btn sm ghost" data-act="findIcons" title="Find missing icons">✦ Icons</button>
+      <button class="btn sm ghost" data-act="diagnose" title="Diagnose launch">! Diagnose</button>
+      <button class="btn sm ghost" data-act="updateAllMods">↓ Update all</button>
+      <button class="btn sm ghost" data-act="refreshContent">↻ Refresh</button></div>
+    <div class="proj-table"><div class="proj-row proj-head"><span><input type="checkbox" data-act="selectAll" ${entries.length&&UI.instSelected.length===entries.length?'checked':''} aria-label="Select all"></span><span>Project</span><span>Version</span><span>Actions</span></div>
+      ${rows||'<div class="empty" style="padding:24px">Nothing here yet. Use Add Content to get started.</div>'}</div>
+    <div id="bulkBar" class="bulk-bar" ${UI.instSelected.length?'':'hidden'}></div>`
+   :instFolderPanel(tab,p)}`;
+  updateBulkBar();
   if(native()?.instanceStats){try{const s=JSON.parse(native().instanceStats(p.name));const el=$('#instDisk');if(el)el.textContent=(s.bytes/1048576).toFixed(0)+' MB'}catch(e){}}
   if(api()&&!ENRICHED.has(p.id)){ENRICHED.add(p.id);enrichCustomMods(p)}
 }
@@ -1622,14 +1744,14 @@ async function renderLuxisMod(){
     <div class="view-head"><div><div class="view-title">Luxis <em>Mod</em></div><div class="view-desc">Manage the in-game mod for each Minecraft profile.</div></div>
       <div class="view-actions"><button class="btn" data-act="refreshLuxisMod">Refresh status</button>
         <button class="btn primary" id="luxisUpdateAll" data-act="updateAllLuxisMods" disabled>Update installed mods</button></div></div>
-    <div class="luxis-mod-hero"><div><div class="eyebrow">THE LUXIS UPDATE</div><h2>Smoother controls. Less clutter.</h2>
-       <div class="sub">An animated in-game menu with screen-resolution text, clean matte panels, and a dedicated Performance tab.</div></div>
+    <div class="luxis-mod-hero"><div><div class="eyebrow">THE WARDROBE UPDATE</div><h2>Make it yours.</h2>
+       <div class="sub">Try on 12 waving capes, 4 wing designs, and 8 hats in the Wardrobe Studio. Only you can see them in-game.</div></div>
       <div class="luxis-mod-actions"><span class="chip" id="luxisBundledBadge">Bundled with Luxis</span><span class="chip accent">Right Shift in-game</span></div></div>
     <div class="luxis-mod-features">
-       <div class="luxis-mod-feature"><b>Luxis menu</b><small>PvP, Performance, Visuals, HUD, Camera, Interface and Settings. Search across categories or pin the modules you use most.</small></div>
+       <div class="luxis-mod-feature"><b>Cosmetics</b><small>Open Right Shift → Cosmetics to try Luxis Signature, layered Aurora wings, Mooncat Ears, and more. Scroll the list, drag the preview, then click Equip.</small></div>
        <div class="luxis-mod-feature"><b>Performance &amp; PvP visuals</b><small>Find FPS, weather and render budgets together with Crystal Optimizer, Totem Optimizer and Combat Particle Budget. No automated gameplay.</small></div>
        <div class="luxis-mod-feature"><b>Motion &amp; themes</b><small>Animated tabs, switches, sliders and panels. In Settings → Motion, choose Full, Reduced or Off, or tune speed and particles.</small></div>
-       <div class="luxis-mod-feature"><b>Loading &amp; skies</b><small>Luxis-branded loading bars, a fully styled title screen, and optional colors that affect only the Overworld sky.</small></div>
+       <div class="luxis-mod-feature"><b>Custom Sky</b><small>Find tinted skies and drifting particles under Visuals → Custom Sky. Terrain and the HUD stay unchanged.</small></div>
        <div class="luxis-mod-feature"><b>Opt-in HUD panels</b><small>Turn on only the readouts you want. Each has smooth text, a translucent black background, and a themed outline.</small></div>
        <div class="luxis-mod-feature"><b>Hold or Toggle</b><small>Bind a module and choose whether its key toggles it or activates it only while held. Right Shift opens the Luxis menu.</small></div>
       <div class="luxis-mod-feature"><b>Distinct game icon</b><small>Minecraft gets its own teal moon-and-star icon, different from the purple launcher.</small></div>
@@ -1713,8 +1835,14 @@ function renderSettings(){
       <div class="view-actions" style="margin-top:10px"><button class="btn primary" data-act="msLogin">Sign in with Microsoft</button><button class="btn" data-act="addAccount">Add offline / dev account</button></div>
       <div class="form-field" style="margin-top:14px;max-width:520px"><label>Microsoft client ID (optional override)</label><input id="msClientId" placeholder="Azure app client ID - leave blank for public default" value="${esc(clientIdPreview())}"><div class="tiny muted" style="margin-top:5px">Use your own Azure app registration for production. Stored in local app data, never in the browser.</div><button class="btn sm" style="margin-top:7px" data-act="saveClientId">Save client ID</button></div><div class="form-field" style="margin-top:10px;max-width:520px"><label>Microsoft sign-in audience</label><select data-act="saveTenant"><option value="consumers" ${clientTenant()==='consumers'?'selected':''}>consumers - personal accounts</option><option value="common" ${clientTenant()==='common'?'selected':''}>common - personal + work/school</option><option value="organizations" ${clientTenant()==='organizations'?'selected':''}>organizations - work/school only</option></select><div class="tiny muted" style="margin-top:4px">Must match your Azure app's Supported account types.</div></div>
    </div>
+   <div class="card set-card" style="grid-column:1/-1"><h3>Content sources</h3><div class="sub">Modrinth works without setup. CurseForge needs a free personal API key from the CurseForge for Studios developer console. It is DPAPI-encrypted under %LOCALAPPDATA%\Luxis and never leaves this computer.</div>
+      <div class="tiny muted" id="cfStatus" style="margin-top:10px">Checking CurseForge…</div>
+      <div class="form-field" style="margin-top:10px;max-width:520px"><label>CurseForge API key</label><input id="cfApiKey" type="password" placeholder="Paste your CurseForge API key" autocomplete="off"><button class="btn sm primary" style="margin-top:7px" data-act="saveCurseForgeKey">Save key</button><button class="btn sm ghost" style="margin-top:7px" data-act="clearCurseForgeKey">Clear</button></div>
+      <div class="tiny muted" style="margin-top:8px">Need a key? Open the developer console in your browser. Luxis only sends it to api.curseforge.com.</div>
+   </div>
   </div>`;
   refreshHeads();
+  setTimeout(()=>{try{const r=JSON.parse(native()?.curseForgeStatus?.()||'{}');const b=$('#cfStatus');if(b)b.textContent=r.message||'CurseForge status unavailable'}catch(e){}},0);
    const box=$('#javaStatus');if(box)box.textContent='Checking Java installations…';
    setTimeout(()=>{try{native()?.javaStatus?.()}catch(e){}},0);
 }
@@ -2439,14 +2567,15 @@ async function enrichCustomMods(p,force=false){
 }
 async function updateMods(onlyIds){
   if(!api())return toast('Desktop launcher required','Run Luxis.exe to update mods','!','warn');
-  const p=viewedProfile(),candidates=(p.mods||[]).filter(m=>m.id&&m.sha512!=='browser'&&(!onlyIds||onlyIds.includes(m.id)));
+  const p=installTarget(),candidates=(p.mods||[]).filter(m=>m.id&&m.sha512!=='browser'&&(!onlyIds||onlyIds.includes(m.id)));
   if(!candidates.length)return toast('Nothing to update','No mods found in this instance','i');
   toast('Checking for updates',`${candidates.length} mod(s)…`,'↻');
   const outdated=[];
   for(const m of candidates){
     try{
       let update=false;
-      if(m.sha512){const r=JSON.parse(await api().checkModrinthUpdate(m.sha512,m.id));update=!!r.update}
+      if(m.source==='curseforge'){const r=JSON.parse(await api().checkCurseForgeUpdate(m.cfFileId||'',m.id));update=!!r.update}
+       else if(m.sha512){const r=JSON.parse(await api().checkModrinthUpdate(m.sha512,m.id));update=!!r.update}
       else{
         const proj=await findModProject(m);
         if(proj){
@@ -2465,11 +2594,12 @@ async function updateMods(onlyIds){
     try{
       const proj=m.projectId||await findModProject(m);
       if(!proj)continue;
-      const raw=await api().installModrinth(JSON.stringify({id:proj.id,title:m.title||m.id,projectType:'mod'}),JSON.stringify(p));
+      const payload=JSON.stringify({id:proj.id||m.id,title:m.title||m.id,projectType:'mod'});
+       const raw=m.source==='curseforge'?await api().installCurseForge(payload,JSON.stringify(p)):await api().installModrinth(payload,JSON.stringify(p));
       const r=JSON.parse(raw),item=(r.installed||[])[0];
       if(item){
         if(m.file&&m.file!==item.file&&native()?.deleteModFile)native().deleteModFile(p.name,m.file);
-        const i=p.mods.indexOf(m);if(i>=0)p.mods[i]={...m,file:item.file,v:item.version,sha512:item.sha512,on:m.on};
+        const i=p.mods.indexOf(m);if(i>=0)p.mods[i]={...m,file:item.file,v:item.version,sha512:item.sha512||'',cfFileId:item.cfFileId||'',source:item.source||m.source||'modrinth',on:m.on};
         MOD_UPDATES[m.id]=false;done++;
       }
     }catch(e){}
@@ -2561,6 +2691,37 @@ async function downloadFabricApi(el){
   finally{el.disabled=false}
 }
 
+
+/* Profile actions that used to be referenced without a handler. */
+function setActiveProfile(id){
+  const p=state.profiles.find(x=>x.id===id);if(!p)return;
+  state.activeProfile=id;persist();renderAll();toast('Profile activated',p.name,'✓','ok');
+}
+function createProfileFromModal(){
+  const v=id=>$(`#${id}`)?.value??'';
+  const name=(v('npName')||'New instance').trim()||'New instance';
+  const profile={id:uid('p'),name,icon:(v('npIcon')||'✦').slice(0,2),banner:'linear-gradient(135deg,#7c3aed,#22d3ee)',
+    version:v('npVer')||'26.3',loader:v('npLoader')||'fabric',loaderVersion:v('npLoaderVer')||'0.19.5',
+    ram:6,jvm:'aikar',res:'1920x1080',accountId:v('npAccount'),mods:[],packs:[],shaders:[],created:new Date().toISOString().slice(0,10)};
+  state.profiles.push(profile);state.activeProfile=profile.id;persist();closeOverlay();renderAll();
+  toast('Profile created',profile.name+' · '+profile.version,'✓','ok');
+}
+function deleteProfileById(id,force=false){
+  const p=state.profiles.find(x=>x.id===id);if(!p)return;
+  if(!force)return openModal(`${modalHead('Delete '+p.name+'?','This only removes the profile entry from Luxis. Its instance folder is left on disk.')}<div class="modal-foot"><button class="btn" data-act="closeOverlay">Cancel</button><button class="btn danger" data-act="confirmDeleteProfile" data-id="${esc(id)}">Delete profile</button></div>`);
+  if(state.profiles.length===1)return toast('Cannot delete','Keep at least one profile','!','warn');
+  state.profiles=state.profiles.filter(x=>x.id!==id);
+  if(state.activeProfile===id)state.activeProfile=state.profiles[0].id;
+  if(UI.instanceId===id)UI.instanceId='';
+  persist();closeOverlay();UI.view==='instance'?navigate('profiles'):renderAll();toast('Profile deleted',p.name,'X','ok');
+}
+function exportProfileById(id){
+  const p=state.profiles.find(x=>x.id===id);if(!p)return;
+  const blob=new Blob([JSON.stringify(p,null,2)],{type:'application/json'}),a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download=p.name.replace(/[^a-z0-9]+/gi,'-')+'.luxisprofile.json';a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast('Profile exported',a.download,'↓','ok');
+}
+
 const ACTIONS={
  addLuxisMod:el=>changeLuxisMod(el,'install'),
  updateLuxisMod:el=>changeLuxisMod(el,'update'),
@@ -2604,9 +2765,26 @@ const ACTIONS={
  psSymlink:el=>{PS_DRAFT.symlinks=PS_DRAFT.symlinks||[];const f=el.dataset.v;PS_DRAFT.symlinks=PS_DRAFT.symlinks.includes(f)?PS_DRAFT.symlinks.filter(x=>x!==f):PS_DRAFT.symlinks.concat(f);el.classList.toggle('on',PS_DRAFT.symlinks.includes(f))},
  psSave:async el=>{capturePS();const i=state.profiles.findIndex(x=>x.id===PS_DRAFT.id);if(i>=0)state.profiles[i]={...state.profiles[i],...PS_DRAFT};persist();closeOverlay();PS_DRAFT=null;renderAll();if(UI.view==='instance')renderInstance();toast('Profile settings saved',state.profiles[i]?.name||'','OK','ok')},
 
- instBack:()=>navigate('profiles'),
- diagnose:()=>showDiagnostics(viewedProfile().name),
-  pickMods:()=>pickModsFor(viewedProfile()),
+  instBack:()=>navigate('profiles'),
+  instTab:el=>{UI.instTab=el.dataset.v;renderInstance()},
+  instSort:el=>{UI.instSort=['name','name-desc','enabled','kind'].includes(el.value)?el.value:'name';renderInstance()},
+  instFilter:el=>{UI.instFilter=el.dataset.v;renderInstance()},
+  filterReset:()=>{UI.instSearch='';UI.instFilter='all';renderInstance()},
+  refreshContent:()=>{const p=viewedProfile();renderInstance();if(api()&&!ENRICHED.has(p.id)){ENRICHED.add(p.id);enrichCustomMods(p)}syncInstances();toast('Content refreshed',p.name,'↻','ok')},
+  addContent:()=>openAddContent(),
+  browseContent:()=>{const f=UI.instFilter==='resourcepacks'?'packs':UI.instFilter==='shaderpacks'?'shaders':'mods';ACTIONS.openMrTab({dataset:{v:f}})},
+  selectAll:el=>{const p=viewedProfile();const on=el.checked;UI.instSelected=on?instEntries(p,'').map(e=>e.key):[];renderInstance()},
+  rowCheck:el=>{const k=el.dataset.key;UI.instSelected=el.checked?UI.instSelected.concat([k]).filter((v,i,a)=>a.indexOf(v)===i):UI.instSelected.filter(x=>x!==k);el.closest('.proj-row')?.classList.toggle('selected',el.checked);updateBulkBar()},
+  bulkRemove:()=>{const p=viewedProfile(),keys=UI.instSelected.slice();if(!keys.length)return;openModal(`${modalHead('Remove '+keys.length+' items?','Only the selected project entries are removed from this profile.')}<div class="modal-foot"><button class="btn" data-act="closeOverlay">Cancel</button><button class="btn danger" data-act="confirmBulkRemove">Remove selected</button></div>`)},
+  confirmBulkRemove:()=>{const p=viewedProfile();let removed=0;instEntries(p,'').filter(e=>UI.instSelected.includes(e.key)).forEach(e=>{if(e.kind==='mods'){const file=resolveModFile(p,e.item);if(file&&native()?.deleteModFile){try{const r=JSON.parse(native().deleteModFile(p.name,file)||'{}');if(!r.deleted)return}catch(err){return}}p.mods=p.mods.filter(x=>x!==e.item);removed++}else if(e.kind==='resourcepacks'){p.packs.splice(e.index,1);removed++}else{p.shaders.splice(e.index,1);removed++}});UI.instSelected=[];persist();closeOverlay();renderAll();toast('Items removed',String(removed),'X','ok')},
+  rowMenu:el=>{const p=viewedProfile(),e=instEntries(p,'').find(x=>x.key===el.dataset.key);if(!e)return;const mod=e.kind==='mods';openModal(`${modalHead(e.title,e.version+' · '+e.file)}<div class="view-actions" style="flex-wrap:wrap">
+     ${mod?`<button class="btn" data-act="checkUpdate" data-id="${esc(e.item.id)}">Check for update</button><button class="btn" data-act="liveVersions" data-id="${esc(e.item.projectId||e.item.id)}" data-title="${esc(e.title)}">Browse versions</button>`:''}
+     <button class="btn" data-act="openFolder" data-v="${e.kind}">Open folder</button>
+     <button class="btn" data-act="copyText" data-v="${esc(e.file)}">Copy filename</button>
+     <button class="btn danger" data-act="${mod?'deleteMod':e.kind==='resourcepacks'?'uninstallPack':'uninstallShader'}" ${mod?`data-id="${esc(e.item.id)}"`:`data-i="${e.index}"`}>Remove</button></div><div class="modal-foot"><button class="btn" data-act="closeOverlay">Close</button></div>`)},
+  copyText:el=>{navigator.clipboard?.writeText(el.dataset.v||'').then(()=>toast('Copied',el.dataset.v,'⧉','ok')).catch(()=>toast('Copy blocked','Select and copy the text manually','!','warn'))},
+  diagnose:()=>showDiagnostics(viewedProfile().name),
+   pickMods:()=>pickModsFor(viewedProfile()),
   deleteMod:el=>{
     const p=viewedProfile(),m=p.mods.find(x=>x.id===el.dataset.id);if(!m)return;
     const file=resolveModFile(p,m);
@@ -2629,8 +2807,8 @@ const ACTIONS={
   },
   checkUpdate:async el=>{
     const p=viewedProfile(),m=p.mods.find(x=>x.id===el.dataset.id);
-    if(!api()||!m?.sha512)return toast('Update check','Use the Modrinth Hub for live version checks','v');
-    try{const r=JSON.parse(await api().checkModrinthUpdate(m.sha512,m.id));MOD_UPDATES[m.id]=!!r.update;if(UI.view==='instance')renderInstance();toast(r.update?'Update available':'Up to date',r.update?`${m.title||m.id} -> ${r.version}`:`${m.title||m.id} is current`,r.update?'v':'OK',r.update?'warn':'ok')}
+    if(!api()||(!m?.sha512&&m?.source!=='curseforge'))return toast('Update check','Use the content hub for live version checks','v');
+    try{const r=JSON.parse(m?.source==='curseforge'?await api().checkCurseForgeUpdate(m.cfFileId||'',m.id):await api().checkModrinthUpdate(m.sha512,m.id));MOD_UPDATES[m.id]=!!r.update;if(UI.view==='instance')renderInstance();toast(r.update?'Update available':'Up to date',r.update?`${m.title||m.id} -> ${r.version}`:`${m.title||m.id} is current`,r.update?'v':'OK',r.update?'warn':'ok')}
     catch(e){toast('Update check failed',e.message,'!','warn')}
   },
   findIcons:()=>enrichCustomMods(viewedProfile(),true),
@@ -2775,7 +2953,24 @@ const ACTIONS={
  },
  saveClientId:()=>{const v=$('#msClientId')?.value.trim();native()?.setMsClientId?.(v||'');toast('Client ID saved',v?v.slice(0,18)+'…':'Using public default','OK','ok')},
  themeRange:el=>{const k=el.dataset.k;state.theme[k]=k==='dim'||k==='glass'?Number(el.value)/100:Number(el.value);persist();applyTheme();const b=el.closest('.field')?.querySelector('.mono');if(b)b.textContent=k==='blur'?state.theme.blur+'px':k==='radius'?state.theme.radius+'px':Math.round(state.theme[k]*100)+'%'},
- themeSelect:el=>{state.theme[el.dataset.k]=Number(el.value);persist();applyTheme()}
+  themeSelect:el=>{state.theme[el.dataset.k]=Number(el.value);persist();applyTheme()},
+  mrSource:el=>{state.ui.mrSource=el.dataset.v;MR.items=[];MR.offset=0;MR.error='';persist();loadModrinth(true);toast('Source switched',el.dataset.v==='curseforge'?'CurseForge':'Modrinth','◈','ok')},
+  openCfTab:el=>{const target=viewedProfile();state.ui.mrSource='curseforge';state.ui.mrTab=el.dataset.v||'mods';state.ui.mrCat='All';state.ui.mrLoader='All';state.ui.mrVer='All';persist();UI.installTargetId=target.id;closeOverlay();navigate('modrinth');loadModrinth(true)},
+  saveCurseForgeKey:()=>{const v=$('#cfApiKey')?.value.trim();if(!v)return toast('Key required','Paste your CurseForge API key first','!','warn');try{const r=JSON.parse(native()?.setCurseForgeKey?.(v)||'{}');if(!r.ok)throw new Error(r.message||'Could not save');$('#cfApiKey').value='';toast('CurseForge ready','Your key is encrypted on this computer','✓','ok');renderSettings()}catch(e){toast('Could not save key',e.message||String(e),'!','warn')}},
+  clearCurseForgeKey:()=>{try{native()?.setCurseForgeKey?.('');toast('Key removed','CurseForge search is disabled','X','ok');renderSettings()}catch(e){toast('Could not clear key',e.message||String(e),'!','warn')}},
+  newProfile:()=>newProfileModal(),
+  createProfile:()=>createProfileFromModal(),
+  importMrpack:()=>{const i=$('#mrpackInput');if(!i)return toast('Desktop launcher required','Run Luxis.exe to import modpacks','!','warn');i.click()},
+  setActiveProfile:el=>setActiveProfile(el.dataset.id),
+  dupProfile:el=>{const p=state.profiles.find(x=>x.id===el.dataset.id);if(!p)return;const c={...p,id:uid('p'),name:p.name+' copy',mods:(p.mods||[]).map(m=>({...m})),packs:(p.packs||[]).slice(),shaders:(p.shaders||[]).slice()};state.profiles.push(c);persist();closeOverlay();renderAll();toast('Profile duplicated',c.name,'⧉','ok')},
+  exportProfile:el=>exportProfileById(el.dataset.id),
+  deleteProfile:el=>deleteProfileById(el.dataset.id),
+  confirmDeleteProfile:el=>deleteProfileById(el.dataset.id,true),
+  psDelete:el=>deleteProfileById(el.dataset.id),
+  psBlock:el=>{capturePS();const b=el.dataset.v;PS_DRAFT.icon=b;const img=$('#psIconPreview');if(img)img.src='textures/'+b+'.png';$$('[data-act="psBlock"]').forEach(x=>x.classList.toggle('on',x===el))},
+  profileField:el=>{const p=state.profiles.find(x=>x.id===el.dataset.id);if(!p)return;p[el.dataset.k]=el.value;persist();toast('Profile updated',el.dataset.k,'OK','ok')},
+  profileRange:el=>{const p=state.profiles.find(x=>x.id===el.dataset.id);if(!p)return;p[el.dataset.k]=Number(el.value);const label=el.closest('.form-field')?.querySelector('b');if(label)label.textContent=p[el.dataset.k]+' GB';persist()},
+  diagnoseRetry:()=>{closeOverlay();const p=viewedProfile();doLaunch(p.id)}
 };
 /* ---------- global event wiring ---------- */
 document.addEventListener('click',e=>{
@@ -2790,7 +2985,7 @@ document.addEventListener('click',e=>{
   const pop=$('.popover');
   if(pop&&!e.target.closest('.popover'))closeOverlay();
 });
-document.addEventListener('change',e=>{const el=e.target.closest('[data-act]');if(el&&['themeColor','themeSelect','profileField','acctTab','saveTenant'].includes(el.dataset.act))ACTIONS[el.dataset.act](el)});
+document.addEventListener('change',e=>{const el=e.target.closest('[data-act]');if(el&&['themeColor','themeSelect','profileField','acctTab','saveTenant','instSort','rowCheck'].includes(el.dataset.act))ACTIONS[el.dataset.act](el)});
 document.addEventListener('input',e=>{const el=e.target.closest('[data-act]');if(el&&['themeRange','themeRange2','profileRange'].includes(el.dataset.act))ACTIONS[el.dataset.act](el)});
 let hoverRAF=0,hoverCard=null,hoverX=0,hoverY=0;
 document.addEventListener('mousemove',e=>{

@@ -27,6 +27,7 @@ public sealed class MainForm : Form
     private readonly AuthService _auth;
     private readonly MinecraftService _minecraft;
     private readonly ModrinthService _modrinth;
+    private readonly CurseForgeService _curseforge;
     private readonly MrpackService _mrpack;
     private readonly UpdateService _updates;
     private readonly JavaInstaller _java;
@@ -38,6 +39,7 @@ public sealed class MainForm : Form
         _auth = new AuthService(_root);
         _minecraft = new MinecraftService(_root, _auth, Post);
         _modrinth = new ModrinthService(_minecraft);
+        _curseforge = new CurseForgeService(_minecraft, _root);
         _mrpack = new MrpackService(_minecraft);
         _updates = new UpdateService(_root, Post);
         _java = new JavaInstaller(_root, Post);
@@ -112,7 +114,7 @@ public sealed class MainForm : Form
             _web.CoreWebView2.SetVirtualHostNameToFolderMapping("luxis.local", appFiles, CoreWebView2HostResourceAccessKind.Allow);
             _web.CoreWebView2.SetVirtualHostNameToFolderMapping("lunax.local", appFiles, CoreWebView2HostResourceAccessKind.Allow);
             await MigrateLocalStorageAsync();
-            _web.CoreWebView2.AddHostObjectToScript("bridge", new Bridge(this, _auth, _minecraft, _modrinth, _mrpack, _updates, _java, _root));
+            _web.CoreWebView2.AddHostObjectToScript("bridge", new Bridge(this, _auth, _minecraft, _modrinth, _curseforge, _mrpack, _updates, _java, _root));
             await _web.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(
                 "window.__luxis = window.chrome?.webview?.hostObjects?.bridge || null;" +
                 "window.__luxisSync = window.chrome?.webview?.hostObjects?.sync?.bridge || window.__luxis || null;");
@@ -185,14 +187,15 @@ public sealed class Bridge
     private readonly AuthService _auth;
     private readonly MinecraftService _minecraft;
     private readonly ModrinthService _modrinth;
+    private readonly CurseForgeService _curseforge;
     private readonly MrpackService _mrpack;
     private readonly UpdateService _updates;
     private readonly JavaInstaller _java;
     private readonly string _root;
     private bool _javaScanStarted;
 
-    public Bridge(MainForm form, AuthService auth, MinecraftService minecraft, ModrinthService modrinth, MrpackService mrpack, UpdateService updates, JavaInstaller java, string root)
-    { _form = form; _auth = auth; _minecraft = minecraft; _modrinth = modrinth; _mrpack = mrpack; _updates = updates; _java = java; _root = root; }
+    public Bridge(MainForm form, AuthService auth, MinecraftService minecraft, ModrinthService modrinth, CurseForgeService curseforge, MrpackService mrpack, UpdateService updates, JavaInstaller java, string root)
+    { _form = form; _auth = auth; _minecraft = minecraft; _modrinth = modrinth; _curseforge = curseforge; _mrpack = mrpack; _updates = updates; _java = java; _root = root; }
 
     // ---- native window ----
     public void minimize() => _form.MinimizeWindow();
@@ -376,6 +379,19 @@ public sealed class Bridge
     public Task<string> checkModrinthUpdate(string sha512, string projectId)
         => _modrinth.CheckUpdate(sha512, projectId);
     public Task<string> getProjectIcon(string projectId) => _modrinth.GetProjectIcon(projectId);
+
+    // ---- curseforge ----
+    public string curseForgeStatus() => _curseforge.Status();
+    public string setCurseForgeKey(string key) => _curseforge.SetKey(key);
+    public Task<string> searchCurseForge(string query, string type, string loader, string version, string category, int offset)
+        => _curseforge.Search(query, type, loader, version, category, offset);
+    public Task<string> curseForgeVersions(string projectId, string version, string loader, bool relaxed = false)
+        => _curseforge.Versions(projectId, version, loader, relaxed);
+    public Task<string> installCurseForge(string projectJson, string profileJson)
+        => _curseforge.Install(projectJson, profileJson);
+    public Task<string> checkCurseForgeUpdate(string fileId, string projectId)
+        => _curseforge.CheckUpdate(fileId, projectId);
+    public Task<string> curseForgeIcon(string projectId) => _curseforge.GetProjectIcon(projectId);
 
     public string restoreConfigs(string profileName) => _minecraft.RestoreConfigs(profileName);
     public string deleteModFile(string profileName, string fileName) => _minecraft.DeleteModFile(profileName, fileName);
