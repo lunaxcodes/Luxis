@@ -611,66 +611,12 @@ public sealed class AuthService
 
     private static string Encrypt(string value, string id)
     {
-#if MAC
-        KeychainStore(id, value);
-        return "keychain:" + id;
-#else
         return Convert.ToBase64String(ProtectedData.Protect(Encoding.UTF8.GetBytes(value), null, DataProtectionScope.CurrentUser));
-#endif
     }
 
     private static string Decrypt(string value, string id)
     {
-#if MAC
-        return KeychainRead(id) ?? "";
-#else
         return Encoding.UTF8.GetString(ProtectedData.Unprotect(Convert.FromBase64String(value), null, DataProtectionScope.CurrentUser));
-#endif
     }
 
-#if MAC
-    private const string KeychainService = "Luxis.RefreshTokens";
-    private static System.Text.Json.JsonElement KeychainDocument()
-    {
-        try
-        {
-            var psi = new System.Diagnostics.ProcessStartInfo("/usr/bin/security", "find-generic-password -a luxis -s " + KeychainService + " -w")
-            { RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true };
-            using var proc = System.Diagnostics.Process.Start(psi)!;
-            var text = proc.StandardOutput.ReadToEnd().Trim();
-            proc.WaitForExit(3000);
-            using var parsed = System.Text.Json.JsonDocument.Parse(string.IsNullOrEmpty(text) ? "{}" : text);
-            return parsed.RootElement.Clone();
-        }
-        catch { using var empty = System.Text.Json.JsonDocument.Parse("{}"); return empty.RootElement.Clone(); }
-    }
-    private static string KeychainRead(string id)
-    {
-        try
-        {
-            var doc = KeychainDocument();
-            return doc.TryGetProperty(id, out var value) ? value.GetString() : null;
-        }
-        catch { return null; }
-    }
-    private static void KeychainStore(string id, string token)
-    {
-        try
-        {
-            var map = new Dictionary<string, string>();
-            var doc = KeychainDocument();
-            if (doc.ValueKind == System.Text.Json.JsonValueKind.Object)
-                foreach (var p in doc.EnumerateObject()) map[p.Name] = p.Value.GetString();
-            map[id] = token;
-            var json = Util.Json(map);
-            var psi = new System.Diagnostics.ProcessStartInfo("/usr/bin/security", "add-generic-password -a luxis -s " + KeychainService + " -w")
-            { RedirectStandardInput = true, UseShellExecute = false, CreateNoWindow = true };
-            using var proc = System.Diagnostics.Process.Start(psi)!;
-            proc.StandardInput.Write(json);
-            proc.StandardInput.Close();
-            proc.WaitForExit(3000);
-        }
-        catch { }
-    }
-#endif
 }

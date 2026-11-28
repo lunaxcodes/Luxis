@@ -39,7 +39,7 @@ public sealed class MainForm : Form
         _minecraft = new MinecraftService(_root, _auth, Post);
         _modrinth = new ModrinthService(_minecraft);
         _mrpack = new MrpackService(_minecraft);
-        _updates = new UpdateService(_root);
+        _updates = new UpdateService(_root, Post);
         _java = new JavaInstaller(_root, Post);
 
         Text = "Luxis";

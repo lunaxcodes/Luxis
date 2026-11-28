@@ -28,3 +28,11 @@ desktop.ini
 
 dist/Luxis.exe
 
+
+# Launcher-only mod: never publish the private in-game build
+LuxisClientMod*.jar
+luxis-client-mod*/
+luxis-mod-shared/
+luxis-ui-resources/
+mac/
+dist/mac-*

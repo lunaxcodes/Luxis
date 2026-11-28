@@ -547,6 +547,13 @@ button:disabled{cursor:not-allowed;opacity:.45}
 .inst-run-log{font:10.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;word-break:break-word;height:108px;overflow:auto;padding:9px;border-radius:10px;background:rgba(0,0,0,.28);color:var(--muted);border:1px solid var(--border)}
 .inst-run-actions{display:flex;gap:7px;flex-wrap:wrap}
 .inst-run-meta{display:flex;gap:6px;flex-wrap:wrap}
+
+/* Update download progress */
+.update-progress{margin-top:14px;padding:12px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,.035)}
+.update-progress[hidden]{display:none}
+.update-progress .track{height:8px;border-radius:8px;background:rgba(255,255,255,.09);overflow:hidden}
+.update-progress .track i{display:block;height:100%;width:0%;border-radius:8px;background:linear-gradient(90deg,var(--accent),var(--accent-2));transition:width .2s linear}
+.update-progress .caption{display:flex;justify-content:space-between;gap:10px;margin-bottom:8px;font-size:11px;font-weight:700}
 </style>
 </head>
 <body>
@@ -1660,6 +1667,8 @@ function renderUpdates(){
     <div class="form-field" style="max-width:620px"><label>Update manifest URL</label><input id="updateUrl" value="${esc(updateUrlPreview())}" placeholder="https://github.com/.../version.json"><div class="tiny muted" style="margin-top:4px">Leave blank to disable update checks.</div><button class="btn sm" style="margin-top:7px" data-act="saveUpdateUrl">Save URL</button></div>
     <div class="view-actions" style="margin-top:12px"><button class="btn primary" data-act="checkForUpdate">Check for updates</button></div>
     <div data-update-result class="tiny muted" style="margin-top:14px;line-height:1.8"></div>
+    <div id="updateProgress" class="update-progress" hidden><div class="caption"><span id="updateStage">Downloading…</span><span id="updatePercent">0%</span></div>
+      <div class="track"><i id="updateProgressBar"></i></div><div class="tiny muted" id="updateBytes" style="margin-top:7px"></div></div>
   </div>`;
 }
 function renderSettings(){
@@ -2299,6 +2308,16 @@ function onNativeMessage(e){
     const pct=$('#launchPct');if(pct&&typeof d.progress==='number')pct.textContent=Math.round(d.progress)+'%';
     updateLaunchOverlay(d.stage,d.progress,'');return;
   }
+  if(d.type==='update-progress'){
+    const box=$('#updateProgress');if(box){
+      box.hidden=false;
+      const stage=$('#updateStage');if(stage)stage.textContent=d.stage==='Verifying'?'Verifying download…':d.stage==='Installing'?'Installing update…':'Downloading update…';
+      const bar=$('#updateProgressBar');if(bar)bar.style.width=Math.max(0,Math.min(100,d.percent||0))+'%';
+      const pct=$('#updatePercent');if(pct)pct.textContent=Math.round(d.percent||0)+'%';
+      const bytes=$('#updateBytes');if(bytes&&d.total)bytes.textContent=`${fmt(d.downloaded||0)} / ${fmt(d.total)}`;
+    }
+    return;
+  }
   if(d.type!=='launch'||!UI.launching||d.instance!==launchRequest?.id)return;
   const l=$('#launchLabel'),s=$('#dockStatus'),p=$('#launchProgress');
   if(l&&d.stage)l.textContent=String(d.stage).toUpperCase();
@@ -2718,8 +2737,15 @@ const ACTIONS={
    }catch(e){box.textContent=e.message||String(e)}
  },
  installUpdate:async el=>{
-   try{const r=JSON.parse(await api().installUpdate(el.dataset.manifest));if(r.started){toast('Update downloaded','Luxis will restart to finish installing','OK','ok');setTimeout(()=>closeOverlay(true),600)}}
-   catch(e){toast('Update failed',e.message||String(e),'!','warn')}
+   try{
+     const r=JSON.parse(await api().installUpdate(el.dataset.manifest));
+     if(r.started){
+       toast('Update downloaded','Luxis is restarting to finish installing','OK','ok');
+       el.disabled=true;el.textContent='Installing…';
+       // The updater cannot replace Luxis.exe while this process holds it open.
+       setTimeout(()=>bridge()?.close?.(),900);
+     }
+   }catch(e){toast('Update failed',e.message||String(e),'!','warn')}
  },
  saveClientId:()=>{const v=$('#msClientId')?.value.trim();native()?.setMsClientId?.(v||'');toast('Client ID saved',v?v.slice(0,18)+'…':'Using public default','OK','ok')},
  themeRange:el=>{const k=el.dataset.k;state.theme[k]=k==='dim'||k==='glass'?Number(el.value)/100:Number(el.value);persist();applyTheme();const b=el.closest('.field')?.querySelector('.mono');if(b)b.textContent=k==='blur'?state.theme.blur+'px':k==='radius'?state.theme.radius+'px':Math.round(state.theme[k]*100)+'%'},

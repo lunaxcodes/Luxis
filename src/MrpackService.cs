@@ -11,11 +11,7 @@ public sealed class MrpackService
 
     private static void D(string message)
     {
-#if MAC
-        var root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "Application Support", "Luxis");
-#else
         var root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Luxis");
-#endif
         try { File.AppendAllText(Path.Combine(root, "mrpack-debug.log"), $"[{DateTime.UtcNow:O}] {message}\n"); }
         catch { }
     }

@@ -46,13 +46,9 @@ if (-not $isc) { throw 'Inno Setup compiler not found. Install Inno Setup 6.' }
 & $isc "/DMyAppVersion=$version" 'installer.iss' | Out-Host
 if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed with exit code $LASTEXITCODE" }
 
-# 4. Build macOS bundles and update manifests for the same version.
-& (Join-Path $PSScriptRoot 'mac\build-mac.ps1')
-if ($LASTEXITCODE -ne 0) { throw 'macOS build failed.' }
 
 Write-Host ''
 Write-Host 'DONE.' -ForegroundColor Green
 Write-Host "Exe:       $((Resolve-Path 'Luxis.exe').Path)"
 Write-Host "Manifest:  $((Resolve-Path 'release\version.json').Path)"
 Write-Host "Installer: $((Resolve-Path "installer\Luxis-Setup-$version.exe").Path)"
-Write-Host "macOS:     $((Resolve-Path 'dist\mac-release').Path)"

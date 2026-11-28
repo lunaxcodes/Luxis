@@ -111,28 +111,50 @@ internal static class Util
 
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var tmp = path + ".part";
-        using (var res = await Http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead))
+        Exception failure = null;
+        // A dropped mobile connection should not make the user start over from scratch.
+        for (var attempt = 1; attempt <= 3; attempt++)
         {
-            if (!res.IsSuccessStatusCode)
-                throw new Exception($"Download failed ({(int)res.StatusCode}) {url}");
-            var total = res.Content.Headers.ContentLength ?? 0;
-            await using var src = await res.Content.ReadAsStreamAsync();
-            await using var dst = new FileStream(tmp, FileMode.Create, FileAccess.Write, FileShare.None, 81920, true);
-            var buffer = new byte[81920];
-            long done = 0;
-            int read;
-            while ((read = await src.ReadAsync(buffer)) > 0)
+            try
             {
-                await dst.WriteAsync(buffer.AsMemory(0, read));
-                done += read;
-                progress?.Invoke(done, total);
+                TryDelete(tmp);
+                using (var res = await Http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead))
+                {
+                    if (!res.IsSuccessStatusCode)
+                        throw new Exception($"Download failed ({(int)res.StatusCode}) {url}");
+                    var total = res.Content.Headers.ContentLength ?? 0;
+                    await using var src = await res.Content.ReadAsStreamAsync();
+                    await using var dst = new FileStream(tmp, FileMode.Create, FileAccess.Write, FileShare.None, 131072, true);
+                    var buffer = new byte[131072];
+                    long done = 0;
+                    int read;
+                    while ((read = await src.ReadAsync(buffer)) > 0)
+                    {
+                        await dst.WriteAsync(buffer.AsMemory(0, read));
+                        done += read;
+                        progress?.Invoke(done, total);
+                    }
+                }
+                if (!string.IsNullOrEmpty(sha1) && !HashFile(tmp, "sha1").Equals(sha1, StringComparison.OrdinalIgnoreCase))
+                    throw new Exception($"SHA-1 verification failed for {Path.GetFileName(path)}");
+                if (!string.IsNullOrEmpty(sha512) && !HashFile(tmp, "sha512").Equals(sha512, StringComparison.OrdinalIgnoreCase))
+                    throw new Exception($"SHA-512 verification failed for {Path.GetFileName(path)}");
+                File.Move(tmp, path, true);
+                return;
+            }
+            catch (Exception ex)
+            {
+                failure = ex;
+                TryDelete(tmp);
+                if (attempt < 3) await Task.Delay(1200 * attempt);
             }
         }
-        if (!string.IsNullOrEmpty(sha1) && !HashFile(tmp, "sha1").Equals(sha1, StringComparison.OrdinalIgnoreCase))
-            throw new Exception($"SHA-1 verification failed for {Path.GetFileName(path)}");
-        if (!string.IsNullOrEmpty(sha512) && !HashFile(tmp, "sha512").Equals(sha512, StringComparison.OrdinalIgnoreCase))
-            throw new Exception($"SHA-512 verification failed for {Path.GetFileName(path)}");
-        File.Move(tmp, path, true);
+        throw new Exception($"Download failed after 3 attempts: {failure?.Message}");
+    }
+
+    private static void TryDelete(string path)
+    {
+        try { File.Delete(path); } catch { }
     }
 
     public static string Json(object obj) => JsonSerializer.Serialize(obj);

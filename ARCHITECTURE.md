@@ -222,7 +222,7 @@ Luxis uses the **device-code flow** (no embedded credential form, no redirect UR
 ### Refresh & storage
 
 - Refresh via `POST https://login.live.com/oauth20/token` with `grant_type=refresh_token` (long-lived refresh token, rotated on use). Proactive refresh at T-5 min with single-flight locking to avoid duplicate refreshes.
-- **At rest:** access + refresh tokens are encrypted and stored in platform keychains — Windows Credential Manager (DPAPI-backed) via `windows-creds`, macOS Keychain via `security-framework`, Linux Secret Service via `secret-service`/`zbus` (fallback: DPAPI-equivalent encrypted file with OS-derived key). The app-data JSON stores only non-secret metadata (`uuid`, `username`, `expires_at`, `xuid`, token *key* handle).
+- **At rest:** access + refresh tokens are encrypted and stored in Windows Credential Manager (DPAPI-backed) via `windows-creds`. The app-data JSON stores only non-secret metadata (`uuid`, `username`, `expires_at`, `xuid`, token *key* handle).
 - **No tokens in the webview.** The renderer receives an `account_id` and display name only; launch injection happens in-core.
 - **CSRF/state:** device-code flow carries no browser redirect, so `state` is not applicable in the classic sense; each flow still generates an internal `flow_id` + random nonce bound to the in-flight poll to prevent event injection across flows. The `client_id` is registered with PKCE-compatible config where supported.
 - **Offline accounts:** created with a username only; UUID is derived; they **cannot** join authenticated servers, use skins/capes from Mojang, or refresh. The UI labels them clearly. Offline UUID derivation and `user_type=mojang` legacy behavior are preserved for LAN/local compatibility.
@@ -433,7 +433,7 @@ instances/<slug>/
 - `settings.json` — launcher-wide settings, update channel, telemetry consent.
 - `audit.log` — structured security events.
 
-Platform roots: `%APPDATA%\Luxis` (Windows), `~/Library/Application Support/Luxis` (macOS), `$XDG_DATA_HOME/lunacher` (Linux).
+Platform root: `%LOCALAPPDATA%\Luxis` on Windows.
 
 ### Versioning & migrations
 

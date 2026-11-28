@@ -1,6 +1,6 @@
 # Luxis — Minecraft Launcher
 
-A real Windows launcher: a self-contained native desktop app with a live Modrinth browser, real Microsoft login, and a working Minecraft launch pipeline.
+A Windows-only launcher: a self-contained native desktop app with a live Modrinth browser, real Microsoft login, and a working Minecraft launch pipeline.
 
 ## Multi-instance play
 
@@ -9,6 +9,10 @@ Pressing Play never closes a running game. The **Instances** tab lists every gam
 with its PID, uptime, live log tail, and an independent **Stop this instance** button. Games are
 tracked across launcher restarts, and the launcher refuses to reuse a profile folder that is
 already in use.
+
+## In-game mod
+
+The Luxis in-game mod is bundled inside the launcher only. It is not published as a separate JAR or source in this repository. Install it from the **Luxis Mod** tab.
 
 ## Mod installation
 
