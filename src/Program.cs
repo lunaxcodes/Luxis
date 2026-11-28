@@ -43,6 +43,8 @@ public sealed class MainForm : Form
         _java = new JavaInstaller(_root, Post);
 
         Text = "Luxis";
+        try { Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath); }
+        catch { /* keep the default window icon if the executable icon cannot be read */ }
         Size = new Size(1440, 900);
         MinimumSize = new Size(1024, 680);
         StartPosition = FormStartPosition.CenterScreen;
