@@ -113,7 +113,7 @@ public sealed class MainForm : Form
             _web.CoreWebView2.AddHostObjectToScript("bridge", new Bridge(this, _auth, _minecraft, _modrinth, _mrpack, _updates, _java, _root));
             await _web.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(
                 "window.__luxis = window.chrome?.webview?.hostObjects?.bridge || null;" +
-                "window.__luxisSync = window.chrome?.webview?.hostObjects?.sync?.bridge || null;");
+                "window.__luxisSync = window.chrome?.webview?.hostObjects?.sync?.bridge || window.__luxis || null;");
             _web.NavigationCompleted += (_, args) =>
             {
                 if (args.IsSuccess) File.WriteAllText(Path.Combine(appFiles, "ready.txt"), DateTimeOffset.UtcNow.ToString("O"));

@@ -648,7 +648,7 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const fmt=n=>n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':String(n);
 // Native bridge (present in Luxis.exe). The browser build falls back to simulated actions.
 const api=()=>window.__luxis||window.chrome?.webview?.hostObjects?.bridge||null;
-const native=()=>window.__luxisSync||window.chrome?.webview?.hostObjects?.sync?.bridge||null;
+const native=()=>window.__luxisSync||window.chrome?.webview?.hostObjects?.sync?.bridge||window.__luxis||window.chrome?.webview?.hostObjects?.bridge||null;
 function clientIdPreview(){try{return native()?.getMsClientId?.()||''}catch(e){return ''}}
 function updateUrlPreview(){try{return native()?.getUpdateUrl?.()||''}catch(e){return ''}}
 function clientTenant(){try{return native()?.getMsTenant?.()||'consumers'}catch(e){return 'consumers'}}

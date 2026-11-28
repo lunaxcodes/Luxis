@@ -18,7 +18,8 @@ dotnet publish src\Luxis.csproj -c Release -r win-x64 --self-contained true `
   -p:DebugType=none -o publish -v quiet -clp:ErrorsOnly
 
 New-Item -ItemType Directory -Force -Path 'release','installer' | Out-Null
-Copy-Item 'publish\Luxis.exe' 'Luxis.exe' -Force
+try { Copy-Item 'publish\Luxis.exe' 'Luxis.exe' -Force }
+catch { Write-Host 'Note: local Luxis.exe is running; release build continues without replacing it.' -ForegroundColor Yellow }
 Copy-Item 'publish\Luxis.exe' 'release\Luxis.exe' -Force
 Copy-Item 'version.txt' 'release\version.txt' -Force
 
