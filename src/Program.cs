@@ -78,7 +78,7 @@ public sealed class MainForm : Form
         catch { }
     }
 
-    private void Post(string json)
+    public void Post(string json)
     {
         try
         {
@@ -189,6 +189,7 @@ public sealed class Bridge
     private readonly UpdateService _updates;
     private readonly JavaInstaller _java;
     private readonly string _root;
+    private bool _javaScanStarted;
 
     public Bridge(MainForm form, AuthService auth, MinecraftService minecraft, ModrinthService modrinth, MrpackService mrpack, UpdateService updates, JavaInstaller java, string root)
     { _form = form; _auth = auth; _minecraft = minecraft; _modrinth = modrinth; _mrpack = mrpack; _updates = updates; _java = java; _root = root; }
@@ -227,11 +228,21 @@ public sealed class Bridge
     public string javaStatus()
     {
         var majors = new[] { 8, 17, 21, 25 };
-        return Util.Json(majors.ToDictionary(m => m.ToString(), m =>
+        string Status(int m)
         {
             var managed = _java.JavaExe(m);
-            return string.IsNullOrEmpty(managed) ? _minecraft.DetectJava(m) : managed;
-        }));
+            return string.IsNullOrEmpty(managed) ? _minecraft.CachedJava(m) : managed;
+        }
+        if (!_javaScanStarted)
+        {
+            _javaScanStarted = true;
+            _ = Task.Run(() =>
+            {
+                foreach (var m in majors) _minecraft.DetectJava(m);
+                _form.Post(Util.Json(new { type = "java-status", status = majors.ToDictionary(m => m.ToString(), Status) }));
+            });
+        }
+        return Util.Json(majors.ToDictionary(m => m.ToString(), Status));
     }
     public async Task<string> installJava(int major)
     {

@@ -40,17 +40,28 @@ public sealed class MinecraftService
 
     public string ToggleMod(string profileName, string fileName, bool enabled)
     {
-        var dir = Path.Combine(InstanceDir(profileName), "mods");
-        Directory.CreateDirectory(dir);
-        var name = Path.GetFileName(fileName);
-        var onPath = Path.Combine(dir, name.EndsWith(".jar", StringComparison.OrdinalIgnoreCase) ? name : name + ".jar");
-        var offPath = onPath + ".disabled";
-        if (enabled)
+        try
         {
-            if (File.Exists(offPath)) File.Move(offPath, onPath, true);
+            var dir = Path.Combine(InstanceDir(profileName), "mods");
+            Directory.CreateDirectory(dir);
+            var name = Path.GetFileName(fileName);
+            if (string.IsNullOrWhiteSpace(name)) return Util.Json(new { enabled = false, message = "No mod file was selected." });
+            var onPath = Path.Combine(dir, name.EndsWith(".jar", StringComparison.OrdinalIgnoreCase) ? name : name + ".jar");
+            var offPath = onPath + ".disabled";
+            if (!File.Exists(enabled ? offPath : onPath))
+                return Util.Json(new { enabled = enabled, file = name });
+            if (enabled) File.Move(offPath, onPath, true);
+            else File.Move(onPath, offPath, true);
+            return Util.Json(new { enabled, file = enabled ? Path.GetFileName(onPath) : Path.GetFileName(offPath) });
         }
-        else if (File.Exists(onPath)) File.Move(onPath, offPath, true);
-        return Util.Json(new { enabled, file = enabled ? Path.GetFileName(onPath) : Path.GetFileName(offPath) });
+        catch (IOException)
+        {
+            return Util.Json(new { enabled = false, message = "Close Minecraft before changing this mod." });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Util.Json(new { enabled = false, message = "Windows denied access to the mod file." });
+        }
     }
 
     // Explicit completion messages work on both the WebView2 COM bridge and the Mac bridge.
@@ -435,7 +446,12 @@ public sealed class MinecraftService
             try { if (File.Exists(path)) { File.Delete(path); return Util.Json(new { deleted = true }); } }
             catch { }
         }
-        return Util.Json(new { deleted = false });
+        return Util.Json(new { deleted = false, message = "Close Minecraft before deleting this mod." });
+    }
+
+    public string CachedJava(int major)
+    {
+        lock (JavaCache) return JavaCache.TryGetValue(major, out var cached) ? cached : "";
     }
 
     private static IEnumerable<string> GameArguments(JsonElement vj, Dictionary<string, string> dict)
