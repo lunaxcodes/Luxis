@@ -35,5 +35,5 @@ jobs:
             --arg url "$RELEASE_URL" \
             --arg title "${RELEASE_NAME:-Luxis $TAG}" \
             --arg body "$BODY" \
-            '{content: "@everyone\n**You can update right inside the launcher — no need to redownload!** Open the Updates tab in Luxis and click Download & install.", embeds: [{title: ("🚀 " + $title), url: $url, description: ($body[0:900]), color: 13145214, footer: {text: "New Luxis release"}}]}')
+            '{content: ("@everyone\n**" + $title + " — a big Luxis update is live.**\n\nYou can update right inside the launcher, no redownload needed. Open the Updates tab and click Download & install.\n\nFull changelog in the release notes below."), embeds: [{title: ("🚀 " + $title), url: $url, description: ($body[0:3500]), color: 13145214, footer: {text: "New Luxis release"}}]}')
           curl -fsS -H "Content-Type: application/json" -d "$payload" "$WEBHOOK"
